@@ -20,13 +20,14 @@ import { useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import FetchDataService from "./Services/FetchDataService";
 import Client from "./Components/modals/client";
-
+// import useScreenNavigator from "./Hooks/useScreenNavigator";
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userLoginStatus, setUserLoginStatus] = useState(false);
   const { fetchData } = FetchDataService();
-  const dispatch = useDispatch();
+  // const { navigateToRoute } = useScreenNavigator();
+  // const dispatch = useDispatch();
   I18nManager.allowRTL(true);
   I18nManager.forceRTL(true);
   let [fontsLoaded] = useFonts({
@@ -48,6 +49,7 @@ export default function App() {
     const checkLoginStatus = async () => {
       const isConnected = await retrieveData("user_id");
       setUserLoginStatus(isConnected);
+      console.log("user id[app]:", isConnected);
       if (isConnected) {
         const responseClients = await fetchData(
           process.env.API_BASE_URL + "api/clients.php",
@@ -58,9 +60,9 @@ export default function App() {
           responseClients.data.forEach((element) => {
             clients.push(new Client(element));
           });
-          dispatch(setClients(clients));
+          // dispatch(setClients(clients));
           // console.log("clients:", clients);
-          navigateToRoute(routes.ONBOARDING.ClientsList);
+          // navigateToRoute(routes.ONBOARDING.ClientsList);
         } else {
           console.log("error2:", responseClients.message);
         }
