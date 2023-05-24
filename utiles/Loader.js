@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 
 const Loader = ({
@@ -21,6 +21,7 @@ const Loader = ({
         size={size}
         style={loaderStyling}
       />
+      <Text style={{ marginTop: 10 }}>Loading...</Text>
     </View>
   );
 };

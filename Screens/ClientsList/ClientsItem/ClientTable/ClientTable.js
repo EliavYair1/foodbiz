@@ -11,6 +11,8 @@ import colors from "../../../../styles/colors";
 import { FlatList } from "react-native-gesture-handler";
 import fonts from "../../../../styles/fonts";
 import Loader from "../../../../utiles/Loader";
+import ClientTableRow from "./ClientTableRow/ClientTableRow";
+import ClientTableHeader from "./ClientTableHeader/ClientTableHeader";
 const ClientTable = ({ item, tableHeaders }) => {
   const [reportsData, setReportsData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,57 +32,9 @@ const ClientTable = ({ item, tableHeaders }) => {
     return tableHeaders;
   }, [tableHeaders]);
 
-  // table rows
-  const TableRow = React.memo(({ data }) => {
-    return (
-      <View style={styles.tableRowContainer}>
-        {memorizedTables.map((item, idx) => {
-          if (item.type === "actions") {
-            return (
-              <View
-                key={item.id}
-                style={{ ...styles.actionsContainer, flexBasis: item.width }}
-              >
-                {item.actions.map((action) => {
-                  return (
-                    <TouchableOpacity onPress={action.action} key={action.id}>
-                      <Image source={action.icon} style={styles.imgIcon} />
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            );
-          } else {
-            return (
-              <View style={styles.tableRowContainer} key={item.id}>
-                <Text style={{ ...styles.tableRow, flexBasis: item.width }}>
-                  {data[item.data]}
-                </Text>
-              </View>
-            );
-          }
-        })}
-      </View>
-    );
-  });
-
   return (
     <View style={styles.container}>
-      <View style={styles.tableHeadWrapper}>
-        {memorizedTables.map((item, idx) => {
-          return (
-            <View
-              key={item.id}
-              style={{
-                ...styles.tableHeadStyle,
-                flexBasis: item.width,
-              }}
-            >
-              <Text>{item.label}</Text>
-            </View>
-          );
-        })}
-      </View>
+      <ClientTableHeader memorizedArray={memorizedTables} />
       <View style={styles.hr}></View>
       {loading ? (
         <Loader />
@@ -90,7 +44,12 @@ const ClientTable = ({ item, tableHeaders }) => {
           initialNumToRender={4}
           windowSize={4}
           keyExtractor={(item) => item.data.id.toString()}
-          renderItem={({ item, index }) => <TableRow data={item.data} />}
+          renderItem={({ item, index }) => (
+            <ClientTableRow
+              data={item.data}
+              memorizedTables={memorizedTables}
+            />
+          )}
         />
       )}
     </View>

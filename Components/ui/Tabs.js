@@ -3,7 +3,35 @@ import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
 
-const Tabs = ({ tabs, activeTab, onTabPress }) => {
+const Tabs = ({ tabs, activeTab, onTabPress, tablePadding }) => {
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      backgroundColor: colors.lightBlue,
+      paddingHorizontal: tablePadding,
+      paddingVertical: 8,
+    },
+    tab: {
+      // flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 8,
+      // width: 72,
+      marginRight: 72,
+    },
+    activeTab: {
+      // backgroundColor: "#e0e0e0",
+    },
+    tabText: {
+      fontSize: 16,
+      color: colors.black,
+      fontFamily: fonts.ARegular,
+    },
+    activeTabText: {
+      color: "#000",
+      fontFamily: fonts.ABold,
+    },
+  });
   return (
     <View style={styles.container}>
       {tabs.map((tab, index) => (
@@ -25,33 +53,5 @@ const Tabs = ({ tabs, activeTab, onTabPress }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    backgroundColor: colors.lightBlue,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  tab: {
-    // flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-    width: 72,
-  },
-  activeTab: {
-    // backgroundColor: "#e0e0e0",
-  },
-  tabText: {
-    fontSize: 16,
-    color: colors.black,
-    fontFamily: fonts.ARegular,
-  },
-  activeTabText: {
-    color: "#000",
-    fontFamily: fonts.ABold,
-  },
-});
 
 export default Tabs;

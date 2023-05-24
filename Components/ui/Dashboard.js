@@ -4,7 +4,7 @@ import SearchBar from "./SearchBar";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
 // import { ClientAvatar } from "../../assets/icons";
-const Dashboard = () => {
+const Dashboard = ({ tableStyling, tablePadding }) => {
   const [searchText, setSearchText] = useState("");
 
   const handleSearchTextChange = (text) => {
@@ -15,6 +15,39 @@ const Dashboard = () => {
     console.log("Performing search for:", searchText);
     // Add your search logic here
   };
+  const styles = StyleSheet.create({
+    dashboardContainer: {
+      flexDirection: "column",
+      width: "100%",
+    },
+    container: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      height: 136,
+      backgroundColor: colors.toggleColor1,
+      width: "100%",
+      paddingHorizontal: 24,
+    },
+    header: {
+      fontFamily: fonts.ASemiBold,
+      fontSize: 26,
+      color: colors.white,
+    },
+    subHeaderContainer: {
+      flexDirection: "row",
+      backgroundColor: colors.toggleColor1,
+      paddingVertical: 12,
+      paddingHorizontal: tablePadding,
+    },
+
+    subHeaderText: {
+      fontFamily: fonts.ASemiBold,
+      color: colors.white,
+      fontSize: 15,
+      textAlign: "left",
+    },
+  });
 
   return (
     <View style={styles.dashboardContainer}>
@@ -34,60 +67,48 @@ const Dashboard = () => {
             fontFamily: fonts.ASemiBold,
             color: colors.white,
             fontSize: 15,
-            minWidth: 100,
             textAlign: "left",
-            marginRight: 116,
+            width: "25%",
           }}
         >
           שם הלקוח
         </Text>
-        <View
+        <Text
           style={{
-            flexDirection: "row",
-            alignSelf: "center",
-            flex: 1,
-            gap: 30,
+            fontFamily: fonts.ASemiBold,
+            color: colors.white,
+            fontSize: 15,
+            textAlign: "left",
+            width: "15%",
           }}
         >
-          <Text style={styles.subHeaderText}>נתוני דוח אחרון</Text>
-          <Text style={styles.subHeaderText}>ציונים לדוח אחרון</Text>
-          <Text style={styles.subHeaderText}>ממוצע 5 דוחות אחרונים</Text>
-        </View>
+          נתוני דוח אחרון
+        </Text>
+        <Text
+          style={{
+            fontFamily: fonts.ASemiBold,
+            color: colors.white,
+            fontSize: 15,
+            textAlign: "left",
+            width: "15%",
+          }}
+        >
+          ציונים לדוח אחרון
+        </Text>
+        <Text
+          style={{
+            fontFamily: fonts.ASemiBold,
+            color: colors.white,
+            fontSize: 15,
+            textAlign: "left",
+            width: "45%",
+          }}
+        >
+          ממוצע 5 דוחות אחרונים
+        </Text>
       </View>
     </View>
   );
 };
-const styles = StyleSheet.create({
-  dashboardContainer: {
-    flexDirection: "column",
-    width: "100%",
-  },
-  container: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    height: 136,
-    backgroundColor: colors.toggleColor1,
-    width: "100%",
-    paddingHorizontal: 24,
-  },
-  header: {
-    fontFamily: fonts.ASemiBold,
-    fontSize: 26,
-    color: colors.white,
-  },
-  subHeaderContainer: {
-    flexDirection: "row",
-    backgroundColor: colors.toggleColor1,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-  },
-
-  subHeaderText: {
-    fontFamily: fonts.ASemiBold,
-    color: colors.white,
-    fontSize: 15,
-  },
-});
 
 export default Dashboard;

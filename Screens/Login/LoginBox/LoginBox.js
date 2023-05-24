@@ -16,8 +16,8 @@ import FetchDataService from "../../../Services/FetchDataService";
 import colors from "../../../styles/colors";
 import fonts from "../../../styles/fonts";
 import { storeData, retrieveData } from "../../../Services/StorageService";
-import Client from "../../../Components/modals/client";
 import { setClients } from "../../../store/redux/reducers/clientSlice";
+import Client from "../../../Components/modals/client";
 const LoginBox = () => {
   const [passwordShowToggle, setPasswordShowToggle] = useState(true);
   const [formData, setFormData] = useState({});
@@ -98,33 +98,41 @@ const LoginBox = () => {
 
   //submiting the form after validation of the input
   const onSubmitForm = async () => {
+    // checking if scheme is valid
     if (isSchemaValid) {
       console.log("scheme is valid");
+
+      //fetching the user
       const response = await fetchData(
         process.env.API_BASE_URL + "api/login.php",
         formData
       );
       console.log("response", response);
+
+      // if success push the user && fetch client data
       if (response.success) {
         storeData("user_id", response.user_id);
         dispatch(setUser(response.user_id));
 
+        // fetch the client data
         const responseClients = await fetchData(
           process.env.API_BASE_URL + "api/clients.php",
           { id: response.user_id }
         );
+        // if success push the client data && and navigate to another screen
         if (responseClients.success) {
           let clients = [];
           responseClients.data.forEach((element) => {
             clients.push(new Client(element));
           });
           dispatch(setClients(clients));
-          // console.log("clients:", clients);
           navigateToRoute(routes.ONBOARDING.ClientsList);
         } else {
+          // if fail to fetch client data
           console.log("error2:", responseClients.message);
         }
       } else {
+        // if fail to fetch user data
         console.log("error:", response.message);
       }
     }
