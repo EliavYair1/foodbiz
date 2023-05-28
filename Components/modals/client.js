@@ -11,6 +11,7 @@ export default class Client {
     this.hoursToRemindSecond = data.hoursToRemindSecond;
     this.active = data.active;
     this.order = data.order;
+    this.logo = data.logo;
 
     this.reports = [];
     this.files_catgories = [];
@@ -22,10 +23,6 @@ export default class Client {
     this.createCategoriesModels(data.files_catgories);
     this.createUsersModels(data.users);
   }
-
-  // createLastReportModal(last_report) {
-  //   this.lastReport = new Report(last_report);
-  // }
 
   createReportsModels(reports) {
     reports.forEach((element) => {
@@ -51,6 +48,12 @@ export default class Client {
   }
   getReports() {
     return this.reports;
+  }
+  getUsers() {
+    return this.users;
+  }
+  getFiles() {
+    return this.files_catgories;
   }
 
   getData(attr) {

@@ -48,7 +48,8 @@ const ClientsList = () => {
             return (
               <ClientItem
                 title={item.getData("company")}
-                item={item}
+                logo={item.getData("logo")}
+                data={item}
                 tableStyling={tableHeadWidth}
                 tablePadding={tablePadding}
               />

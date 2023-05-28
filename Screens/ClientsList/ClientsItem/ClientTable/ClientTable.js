@@ -13,21 +13,40 @@ import fonts from "../../../../styles/fonts";
 import Loader from "../../../../utiles/Loader";
 import ClientTableRow from "./ClientTableRow/ClientTableRow";
 import ClientTableHeader from "./ClientTableHeader/ClientTableHeader";
-const ClientTable = ({ item, tableHeaders }) => {
+const ClientTable = ({ getData, tableHeaders, reports, users }) => {
   const [reportsData, setReportsData] = useState([]);
+  const [usersData, setusersData] = useState([]);
+  const [filesData, setFilesData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    const fetchReportsData = async () => {
-      const data = await item.getReports();
-      setReportsData(data);
-    };
+    fetchData();
+  }, [getData]);
+  const fetchData = async () => {
+    const fetchedreports = await getData.getReports();
+    setReportsData(fetchedreports);
+
+    const fetchedUsers = await getData.getUsers();
+    setusersData(fetchedUsers);
+
+    const fetchedFiles = await getData.getFiles();
+    setFilesData(fetchedFiles);
     setLoading(false);
-    fetchReportsData();
-  }, [item]);
+  };
 
   const memoizedReportsData = useMemo(() => reportsData, [reportsData]);
+  const memoizedUsersData = useMemo(() => usersData, [usersData]);
+  const memoizedFilesData = useMemo(() => filesData, [filesData]);
+  const dataToDisplay = () => {
+    if (reports) {
+      return memoizedReportsData;
+    } else if (users) {
+      return memoizedUsersData;
+    } else {
+      return memoizedFilesData;
+    }
+  };
   const memorizedTables = useMemo(() => {
     return tableHeaders;
   }, [tableHeaders]);
@@ -40,10 +59,10 @@ const ClientTable = ({ item, tableHeaders }) => {
         <Loader />
       ) : (
         <FlatList
-          data={memoizedReportsData}
+          data={dataToDisplay()}
           initialNumToRender={4}
           windowSize={4}
-          keyExtractor={(item) => item.data.id.toString()}
+          keyExtractor={(item) => item.data?.id?.toString()}
           renderItem={({ item, index }) => (
             <ClientTableRow
               data={item.data}

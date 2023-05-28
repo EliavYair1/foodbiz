@@ -22,17 +22,14 @@ import ClientTable from "./ClientTable/ClientTable";
 import { useSelector } from "react-redux";
 import Accordion from "../../../Components/ui/Accordion";
 import { debounce } from "react-lodash";
-
-const ClientItem = ({ title, item, tableStyling, tablePadding }) => {
+import LastFiveReportDetails from "./GradeReport/LastFiveReportDetails";
+import ReportDetails from "./GradeReport/ReportDetails";
+const ClientItem = ({ title, data, tablePadding, logo }) => {
   const contentRef = useRef();
   const [open, setOpen] = useState(false);
   const arrayOfTabs = ["דוחות", "קבצים", "בעלי גישה"];
   const [activeTab, setActiveTab] = useState(arrayOfTabs[0]);
   const heightAnim = useRef(new Animated.Value(0)).current;
-
-  // const handleTabPress = (tab) => {
-  //   setActiveTab(tab);
-  // };
 
   const handleTabPress = useCallback((tab) => {
     setActiveTab(tab);
@@ -50,9 +47,8 @@ const ClientItem = ({ title, item, tableStyling, tablePadding }) => {
     }).start();
   }, [open, heightAnim]);
 
-  const lastReport = item.getLastReportData();
-  const lastFiveReport = item.getLastFiveReportsData();
-
+  const lastReport = data.getLastReportData();
+  const lastFiveReport = data.getLastFiveReportsData();
   const { haveCulinaryGrade, haveGrade, haveNutritionGrade, haveSafetyGrade } =
     lastReport.data;
 
@@ -156,54 +152,34 @@ const ClientItem = ({ title, item, tableStyling, tablePadding }) => {
     {
       id: 0,
       label: "תחנה",
-      width: "12.5%",
+      width: "20%",
       data: "station_name",
     },
     {
       id: 1,
-      label: "סוקר",
-      width: "12.5%",
+      label: "שם הקובץ",
+      width: "20%",
       data: "name",
     },
     {
       id: 2,
-      label: "מלווה",
-      width: "12.5%",
+      label: "כותב",
+      width: "20%",
       data: "accompany",
     },
     {
       id: 3,
-      label: "ת. סקירה",
-      width: "12.5%",
+      label: "תאריך",
+      width: "20%",
       data: "timeOfReport",
-    },
-    {
-      id: 4,
-      label: "ת. עדכון",
-      width: "12.5%",
-      data: "timeLastSave",
-    },
-    {
-      id: 5,
-      label: "ציון",
-      width: "15%",
-      data: "grade",
     },
 
     {
-      id: 6,
+      id: 4,
       label: "פעולות",
       width: "20%",
       type: "actions",
       actions: [
-        {
-          id: 0,
-          icon: require("../../../assets/imgs/Icon_feather-share.png"),
-
-          action: () => {
-            console.log("share");
-          },
-        },
         {
           id: 1,
           icon: require("../../../assets/imgs/Eye_icon.png"),
@@ -234,89 +210,77 @@ const ClientItem = ({ title, item, tableStyling, tablePadding }) => {
   const usersTable = [
     {
       id: 0,
-      label: "תחנה",
-      width: "12.5%",
-      data: "station_name",
-    },
-    {
-      id: 1,
-      label: "סוקר",
-      width: "12.5%",
+      label: "שם מלא",
+      width: "16.6666667%",
       data: "name",
     },
     {
+      id: 1,
+      label: "תפקיד",
+      width: "16.6666667%",
+      data: "role",
+    },
+    {
       id: 2,
-      label: "מלווה",
-      width: "12.5%",
-      data: "accompany",
+      label: "דוא״ל",
+      width: "16.6666667%",
+      data: "email",
     },
     {
       id: 3,
-      label: "ת. סקירה",
-      width: "12.5%",
-      data: "timeOfReport",
+      label: "טלפון",
+      width: "16.6666667%",
+      data: "phone",
     },
     {
       id: 4,
-      label: "ת. עדכון",
-      width: "12.5%",
-      data: "timeLastSave",
+      label: "מקבל מייל",
+      width: "16.6666667%",
+      data: "receivingReminders",
     },
     {
       id: 5,
-      label: "ציון",
-      width: "5%",
-      data: "grade",
-    },
-    {
-      id: 6,
-      label: "סטטוס",
-      width: "12.5%",
-      data: "reportStatuses",
-    },
-    {
-      id: 7,
-      label: "פעולות",
-      width: "17.5%",
-      type: "actions",
-      actions: [
-        {
-          id: 0,
-          icon: require("../../../assets/imgs/Icon_feather-share.png"),
-
-          action: () => {
-            console.log("share");
-          },
-        },
-        {
-          id: 1,
-          icon: require("../../../assets/imgs/Eye_icon.png"),
-
-          action: () => {
-            console.log("eye");
-          },
-        },
-        {
-          id: 2,
-          icon: require("../../../assets/imgs/Edit_icon.png"),
-
-          action: () => {
-            console.log("Edit_icon");
-          },
-        },
-      ],
+      label: "תחנה",
+      width: "16.6666667%",
+      data: "station_name",
     },
   ];
 
   const handleDisplayedTab = useMemo(() => {
     if (activeTab === "דוחות") {
-      return <ClientTable item={item} tableHeaders={reportsTable} />;
+      return (
+        <ClientTable
+          getData={data}
+          tableHeaders={reportsTable}
+          reports={true}
+          users={false}
+        />
+      );
     } else if (activeTab === "קבצים") {
-      return <ClientTable item={item} tableHeaders={filesTable} />;
+      return (
+        <Accordion
+          items={data.files_catgories}
+          children={
+            <ClientTable
+              getData={data}
+              tableHeaders={filesTable}
+              reports={false}
+              users={false}
+            />
+          }
+        />
+      );
     } else {
-      return <ClientTable item={item} tableHeaders={usersTable} />;
+      return (
+        <ClientTable
+          getData={data}
+          tableHeaders={usersTable}
+          reports={false}
+          users={true}
+        />
+      );
     }
-  }, [activeTab, item]);
+  }, [activeTab, data]);
 
   const styles = StyleSheet.create({
     itemContainer: {
@@ -351,22 +315,41 @@ const ClientItem = ({ title, item, tableStyling, tablePadding }) => {
     },
   });
 
-  const testArray = ["jhedsad", "dsadsa", "dsadsads", "fsadfasfa"];
   return (
     <>
       <TouchableOpacity style={styles.itemContainer} onPress={handleClick}>
-        <Text
+        <View
           style={{
-            fontFamily: fonts.ASemiBold,
-            color: colors.black,
-            fontSize: 15,
-            alignSelf: "center",
-            textAlign: "left",
             width: "25%",
+            alignSelf: "center",
+            flexDirection: "row",
+            justifyContent: "flex-start",
           }}
         >
-          {title}
-        </Text>
+          <Text
+            style={{
+              fontFamily: fonts.ASemiBold,
+              color: colors.black,
+              fontSize: 15,
+              alignSelf: "center",
+              textAlign: "left",
+              // width: "25%",
+            }}
+          >
+            {logo}
+          </Text>
+          <Text
+            style={{
+              fontFamily: fonts.ASemiBold,
+              color: colors.black,
+              fontSize: 15,
+
+              textAlign: "left",
+            }}
+          >
+            {title}
+          </Text>
+        </View>
 
         <View style={{ alignSelf: "center", width: "15%" }}>
           <Text style={styles.subHeaderText}>
@@ -377,32 +360,13 @@ const ClientItem = ({ title, item, tableStyling, tablePadding }) => {
           </Text>
         </View>
 
-        <View style={{ alignSelf: "center", width: "15%" }}>
-          <Text style={styles.subHeaderText}>
-            כללי :
-            <Text style={{ fontFamily: fonts.ABold }}>
-              {haveGrade ? lastReport.data.grade : null}
-            </Text>
-          </Text>
-          <Text style={styles.subHeaderText}>
-            בטיחות מזון:
-            <Text style={{ fontFamily: fonts.ABold }}>
-              {haveNutritionGrade ? lastReport.data.nutritionGrade : null}
-            </Text>
-          </Text>
-          <Text style={styles.subHeaderText}>
-            ציון בטיחות:
-            <Text style={{ fontFamily: fonts.ABold }}>
-              {haveSafetyGrade ? lastReport.data.safetyGrade : null}
-            </Text>
-          </Text>
-          <Text style={styles.subHeaderText}>
-            קולינארי:
-            <Text style={{ fontFamily: fonts.ABold }}>
-              {haveCulinaryGrade ? lastReport.data.culinaryGrade : null}
-            </Text>
-          </Text>
-        </View>
+        <ReportDetails
+          lastReport={lastReport}
+          haveGrade={haveGrade}
+          haveNutritionGrade={haveNutritionGrade}
+          haveSafetyGrade={haveSafetyGrade}
+          haveCulinaryGrade={haveCulinaryGrade}
+        />
 
         <View
           style={{
@@ -413,33 +377,7 @@ const ClientItem = ({ title, item, tableStyling, tablePadding }) => {
             width: "40%",
           }}
         >
-          <View style={{}}>
-            <Text style={styles.subHeaderText}>
-              כללי :
-              <Text style={{ fontFamily: fonts.ABold }}>
-                {lastFiveReport.grade}
-              </Text>
-            </Text>
-            <Text style={styles.subHeaderText}>
-              בטיחות מזון:
-              <Text style={{ fontFamily: fonts.ABold }}>
-                {lastFiveReport.nutritionGrade}
-              </Text>
-            </Text>
-            <Text style={styles.subHeaderText}>
-              ציון בטיחות:
-              <Text style={{ fontFamily: fonts.ABold }}>
-                {lastFiveReport.safetyGrade}
-              </Text>
-            </Text>
-            <Text style={styles.subHeaderText}>
-              קולינארי:
-              <Text style={{ fontFamily: fonts.ABold }}>
-                {lastFiveReport.culinaryGrade}
-              </Text>
-            </Text>
-          </View>
-
+          <LastFiveReportDetails lastFiveReport={lastFiveReport} />
           <View style={{ alignSelf: "center" }}>
             <Button
               buttonText={"דוח חדש"}

@@ -25,7 +25,7 @@ const ClientTableRow = ({ data, memorizedTables }) => {
                   <TouchableOpacity
                     onPress={action.action}
                     key={action.id}
-                    disabled={!action.isActive(data)}
+                    // disabled={!action.isActive(data)}
                   >
                     <Image source={action.icon} style={styles.imgIcon} />
                   </TouchableOpacity>
@@ -37,7 +37,7 @@ const ClientTableRow = ({ data, memorizedTables }) => {
           return (
             <View style={styles.tableRowContainer} key={item.id}>
               <Text style={{ ...styles.tableRow, flexBasis: item.width }}>
-                {data[item.data]}
+                {data && data[item.data]}
               </Text>
             </View>
           );
