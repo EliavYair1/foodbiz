@@ -1,6 +1,6 @@
 import LastFiveReports from "./LastFiveReport";
 import LastReport from "./LastReport";
-import Category from "./category";
+import FileCategory from "./fileCategory";
 import Report from "./report";
 import User from "./user";
 export default class Client {
@@ -31,7 +31,7 @@ export default class Client {
   }
   createCategoriesModels(catgories) {
     catgories.forEach((element) => {
-      this.files_catgories.push(new Category(element));
+      this.files_catgories.push(new FileCategory(element));
     });
   }
 
@@ -52,10 +52,12 @@ export default class Client {
   getUsers() {
     return this.users;
   }
-  getFiles() {
+  getFilesCategory() {
     return this.files_catgories;
   }
-
+  getCompany() {
+    return this.company;
+  }
   getData(attr) {
     return this[attr];
   }

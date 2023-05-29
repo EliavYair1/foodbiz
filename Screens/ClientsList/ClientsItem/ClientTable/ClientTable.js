@@ -1,52 +1,14 @@
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableHighlight,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import React, { useEffect, useState, useMemo } from "react";
+import { StyleSheet, View } from "react-native";
+import React, { useMemo } from "react";
 import colors from "../../../../styles/colors";
 import { FlatList } from "react-native-gesture-handler";
 import fonts from "../../../../styles/fonts";
-import Loader from "../../../../utiles/Loader";
 import ClientTableRow from "./ClientTableRow/ClientTableRow";
 import ClientTableHeader from "./ClientTableHeader/ClientTableHeader";
-const ClientTable = ({ getData, tableHeaders, reports, users }) => {
-  const [reportsData, setReportsData] = useState([]);
-  const [usersData, setusersData] = useState([]);
-  const [filesData, setFilesData] = useState([]);
-  const [loading, setLoading] = useState(false);
+import uuid from "uuid-random";
 
-  useEffect(() => {
-    setLoading(true);
-    fetchData();
-  }, [getData]);
-  const fetchData = async () => {
-    const fetchedreports = await getData.getReports();
-    setReportsData(fetchedreports);
-
-    const fetchedUsers = await getData.getUsers();
-    setusersData(fetchedUsers);
-
-    const fetchedFiles = await getData.getFiles();
-    setFilesData(fetchedFiles);
-    setLoading(false);
-  };
-
-  const memoizedReportsData = useMemo(() => reportsData, [reportsData]);
-  const memoizedUsersData = useMemo(() => usersData, [usersData]);
-  const memoizedFilesData = useMemo(() => filesData, [filesData]);
-  const dataToDisplay = () => {
-    if (reports) {
-      return memoizedReportsData;
-    } else if (users) {
-      return memoizedUsersData;
-    } else {
-      return memoizedFilesData;
-    }
-  };
+const ClientTable = ({ getData, tableHeaders, filesTable = [] }) => {
+  const memoizedData = useMemo(() => getData, [getData]);
   const memorizedTables = useMemo(() => {
     return tableHeaders;
   }, [tableHeaders]);
@@ -55,22 +17,22 @@ const ClientTable = ({ getData, tableHeaders, reports, users }) => {
     <View style={styles.container}>
       <ClientTableHeader memorizedArray={memorizedTables} />
       <View style={styles.hr}></View>
-      {loading ? (
-        <Loader />
-      ) : (
-        <FlatList
-          data={dataToDisplay()}
-          initialNumToRender={4}
-          windowSize={4}
-          keyExtractor={(item) => item.data?.id?.toString()}
-          renderItem={({ item, index }) => (
+      <FlatList
+        data={memoizedData}
+        initialNumToRender={4}
+        windowSize={4}
+        keyExtractor={() => uuid()}
+        renderItem={({ item, index }) => {
+          // console.log("item", item);
+          return (
             <ClientTableRow
-              data={item.data}
+              data={item}
               memorizedTables={memorizedTables}
+              filesTable={filesTable}
             />
-          )}
-        />
-      )}
+          );
+        }}
+      />
     </View>
   );
 };

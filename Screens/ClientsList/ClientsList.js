@@ -1,18 +1,24 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Dashboard from "../../Components/ui/Dashboard";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
 import { FlatList } from "react-native-gesture-handler";
 import colors from "../../styles/colors";
 import Loader from "../../utiles/Loader";
-import { List, Divider, IconButton } from "react-native-paper";
 import ClientItem from "./ClientsItem/ClientItem";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import fonts from "../../styles/fonts";
+import useScreenNavigator from "../../Hooks/useScreenNavigator";
+import { removeData } from "../../Services/StorageService";
+import routes from "../../Navigation/routes";
+import { setUser } from "../../store/redux/reducers/userSlice";
 const ClientsList = () => {
   const clients = useSelector((state) => state.clients);
-  // console.log("clients[client list]:", clients);
+  const user = useSelector((state) => state.user);
+  const { navigateToRoute } = useScreenNavigator();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-
+  const [filteredData, setFilteredData] = useState(clients);
   useEffect(() => {
     const fetchingClientsData = async () => {
       if (clients) {
@@ -26,12 +32,25 @@ const ClientsList = () => {
     fetchingClientsData();
   }, []);
 
+  // sign out button logic
+  const handleSignOutUser = () => {
+    removeData("user_id");
+    dispatch(setUser(null));
+    navigateToRoute(routes.ONBOARDING.Login);
+  };
+  // search bar filtering
+  const handleSearch = (filteredClients) => {
+    setFilteredData(filteredClients);
+  };
+
   //fetching memorized clients to spare uneccery randering.
   const memoizedClients = useMemo(() => clients, [clients]);
 
-  const tableHeadWidth = 100;
   const tablePadding = 12;
-
+  const arr = [];
+  memoizedClients.forEach((item) => {
+    arr.push(item.company);
+  });
   return (
     <ScreenWrapper
       edges={[]}
@@ -39,18 +58,21 @@ const ClientsList = () => {
       isConnectedUser={true}
     >
       <View style={{ flex: 1, alignItems: "center" }}>
-        <Dashboard tableStyling={tableHeadWidth} tablePadding={tablePadding} />
+        <Dashboard
+          tablePadding={tablePadding}
+          data={memoizedClients}
+          onSearch={handleSearch}
+        />
         <Loader size={"large"} color={colors.red} visible={loading} />
         <FlatList
           style={{ flexGrow: 0, width: "100%" }}
-          data={memoizedClients}
+          data={filteredData}
           renderItem={({ item }) => {
             return (
               <ClientItem
                 title={item.getData("company")}
                 logo={item.getData("logo")}
                 data={item}
-                tableStyling={tableHeadWidth}
                 tablePadding={tablePadding}
               />
             );
@@ -58,6 +80,29 @@ const ClientsList = () => {
           keyExtractor={(item) => item.getData("id").toString()}
         />
       </View>
+      <TouchableOpacity
+        style={{
+          backgroundColor: "#EBF5FF",
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+        onPress={() => {
+          handleSignOutUser();
+        }}
+      >
+        <Text
+          style={{
+            alignSelf: "center",
+            textDecorationLine: "underline",
+            paddingVertical: 12,
+            fontSize: 16,
+            fontFamily: fonts.ARegular,
+          }}
+        >
+          התנתק
+        </Text>
+      </TouchableOpacity>
     </ScreenWrapper>
   );
 };

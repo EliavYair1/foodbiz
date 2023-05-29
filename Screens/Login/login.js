@@ -1,10 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  ImageBackground,
-} from "react-native";
+import { StyleSheet, Text, View, ImageBackground } from "react-native";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
 import LoginBox from "./LoginBox/LoginBox";
 

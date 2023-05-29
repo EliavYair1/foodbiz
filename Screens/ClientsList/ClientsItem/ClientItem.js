@@ -15,22 +15,18 @@ import React, {
 import colors from "../../../styles/colors";
 import fonts from "../../../styles/fonts";
 import Button from "../../../Components/ui/Button";
-import { Avatar, List } from "react-native-paper";
 import Tabs from "../../../Components/ui/Tabs";
-// import ClientFilesTable from "./ClientFilesTable/ClientFilesTable";
 import ClientTable from "./ClientTable/ClientTable";
-import { useSelector } from "react-redux";
-import Accordion from "../../../Components/ui/Accordion";
-import { debounce } from "react-lodash";
+import Accordion from "./FileCategoryRow/FileCategoryRow";
 import LastFiveReportDetails from "./GradeReport/LastFiveReportDetails";
 import ReportDetails from "./GradeReport/ReportDetails";
+import icon from "../../../assets/imgs/fileIcon.png";
 const ClientItem = ({ title, data, tablePadding, logo }) => {
   const contentRef = useRef();
   const [open, setOpen] = useState(false);
   const arrayOfTabs = ["דוחות", "קבצים", "בעלי גישה"];
   const [activeTab, setActiveTab] = useState(arrayOfTabs[0]);
   const heightAnim = useRef(new Animated.Value(0)).current;
-
   const handleTabPress = useCallback((tab) => {
     setActiveTab(tab);
   }, []);
@@ -148,65 +144,6 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
       ],
     },
   ];
-  const filesTable = [
-    {
-      id: 0,
-      label: "תחנה",
-      width: "20%",
-      data: "station_name",
-    },
-    {
-      id: 1,
-      label: "שם הקובץ",
-      width: "20%",
-      data: "name",
-    },
-    {
-      id: 2,
-      label: "כותב",
-      width: "20%",
-      data: "accompany",
-    },
-    {
-      id: 3,
-      label: "תאריך",
-      width: "20%",
-      data: "timeOfReport",
-    },
-
-    {
-      id: 4,
-      label: "פעולות",
-      width: "20%",
-      type: "actions",
-      actions: [
-        {
-          id: 1,
-          icon: require("../../../assets/imgs/Eye_icon.png"),
-
-          action: () => {
-            console.log("eye");
-          },
-        },
-        {
-          id: 2,
-          icon: require("../../../assets/imgs/Edit_icon.png"),
-
-          action: () => {
-            console.log("Edit_icon");
-          },
-        },
-        {
-          id: 3,
-          icon: require("../../../assets/imgs/Trash_icon.png"),
-
-          action: () => {
-            console.log("Trash_icon");
-          },
-        },
-      ],
-    },
-  ];
   const usersTable = [
     {
       id: 0,
@@ -246,39 +183,27 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
     },
   ];
 
+  // console.log(data.files_catgories[2].getFiles());
   const handleDisplayedTab = useMemo(() => {
     if (activeTab === "דוחות") {
-      return (
-        <ClientTable
-          getData={data}
-          tableHeaders={reportsTable}
-          reports={true}
-          users={false}
-        />
-      );
+      const reports = data.getReports();
+      return <ClientTable getData={reports} tableHeaders={reportsTable} />;
     } else if (activeTab === "קבצים") {
+      const files = data.getFilesCategory();
+      let fixedFiles = [];
+      files.forEach((file) => {
+        fixedFiles.push({ data: file.files });
+      });
       return (
         <Accordion
           items={data.files_catgories}
-          children={
-            <ClientTable
-              getData={data}
-              tableHeaders={filesTable}
-              reports={false}
-              users={false}
-            />
-          }
-        />
+          icon={icon}
+          tableHeadText={"קבצים"}
+        ></Accordion>
       );
     } else {
-      return (
-        <ClientTable
-          getData={data}
-          tableHeaders={usersTable}
-          reports={false}
-          users={true}
-        />
-      );
+      const users = data.getUsers();
+      return <ClientTable getData={users} tableHeaders={usersTable} />;
     }
   }, [activeTab, data]);
 
@@ -289,7 +214,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
       marginVertical: 1,
       flexDirection: "row",
       height: 98,
-      paddingHorizontal: tablePadding,
+      paddingHorizontal: 12,
     },
     title: {
       fontSize: 16,
@@ -314,7 +239,6 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
       fontFamily: fonts.ARegular,
     },
   });
-
   return (
     <>
       <TouchableOpacity style={styles.itemContainer} onPress={handleClick}>

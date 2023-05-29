@@ -3,8 +3,7 @@ import React, { useState } from "react";
 import SearchBar from "./SearchBar";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
-// import { ClientAvatar } from "../../assets/icons";
-const Dashboard = ({ tableStyling, tablePadding }) => {
+const Dashboard = ({ tablePadding, data, onSearch }) => {
   const [searchText, setSearchText] = useState("");
 
   const handleSearchTextChange = (text) => {
@@ -13,8 +12,15 @@ const Dashboard = ({ tableStyling, tablePadding }) => {
 
   const handleSearch = () => {
     console.log("Performing search for:", searchText);
-    // Add your search logic here
+    onSearch(filterData(searchText));
   };
+  const filterData = (text) => {
+    const filteredData = data.filter((item) =>
+      item.getData("company").includes(text)
+    );
+    return filteredData;
+  };
+
   const styles = StyleSheet.create({
     dashboardContainer: {
       flexDirection: "column",

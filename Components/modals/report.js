@@ -34,7 +34,7 @@ export default class Report {
     return this.data.accompany;
   }
 
-  getReportData(attr) {
+  getData(attr) {
     return this.data[attr];
   }
 }

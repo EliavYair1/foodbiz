@@ -1,7 +1,7 @@
 import React from "react";
-import { Searchbar, IconButton } from "react-native-paper";
+import { Searchbar } from "react-native-paper";
 import colors from "../../styles/colors";
-import { StyleSheet, Text, View, FlatList } from "react-native";
+import { StyleSheet } from "react-native";
 
 const SearchBar = ({ placeholder, onChangeText, onSearch }) => {
   return (

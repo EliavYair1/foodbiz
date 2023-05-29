@@ -1,19 +1,15 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
 import React from "react";
 import colors from "../../../../../styles/colors";
 import fonts from "../../../../../styles/fonts";
 
 const ClientTableRow = ({ data, memorizedTables }) => {
+  // console.log("filesTable:", filesTable);
   return (
     <View style={styles.tableRowContainer}>
       {memorizedTables.map((item, idx) => {
+        // console.log("data", data);
+
         if (item.type === "actions") {
           return (
             <View
@@ -23,9 +19,9 @@ const ClientTableRow = ({ data, memorizedTables }) => {
               {item.actions.map((action) => {
                 return (
                   <TouchableOpacity
-                    onPress={action.action}
+                    onPress={() => action.action(data)}
                     key={action.id}
-                    // disabled={!action.isActive(data)}
+                    disabled={!action.isActive(data)}
                   >
                     <Image source={action.icon} style={styles.imgIcon} />
                   </TouchableOpacity>
@@ -34,10 +30,12 @@ const ClientTableRow = ({ data, memorizedTables }) => {
             </View>
           );
         } else {
+          const rowData = data && data.getData(item.data);
+          // console.log("rowData", data);
           return (
             <View style={styles.tableRowContainer} key={item.id}>
               <Text style={{ ...styles.tableRow, flexBasis: item.width }}>
-                {data && data[item.data]}
+                {rowData}
               </Text>
             </View>
           );

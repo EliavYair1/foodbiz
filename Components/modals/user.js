@@ -14,10 +14,7 @@ export default class User {
     this.data = data;
   }
 
-  getUserData(attr) {
+  getData(attr) {
     return this.data[attr];
-  }
-  getUserData(attr) {
-    return this[attr];
   }
 }
