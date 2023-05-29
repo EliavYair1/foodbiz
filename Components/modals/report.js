@@ -21,6 +21,9 @@ export default class Report {
   getReportStatuses() {
     return this.data.reportStatuses;
   }
+  getStatus() {
+    return this.data.status;
+  }
   getReportStationName() {
     return this.data.station_name;
   }
@@ -48,4 +51,8 @@ export default class Report {
 5.timeOfReport
 6.nutritionGrade
 7.reportStatuses
+*/
+/* נשלח ללקוח - 3 
+בתהליך כתיבה - 1
+סגור -5
 */

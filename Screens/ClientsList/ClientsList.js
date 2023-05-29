@@ -42,15 +42,16 @@ const ClientsList = () => {
   const handleSearch = (filteredClients) => {
     setFilteredData(filteredClients);
   };
+  const ClientCompanyFilterFunction = (item, text) => {
+    const company = item.company;
+    return company && company.includes(text);
+  };
 
   //fetching memorized clients to spare uneccery randering.
   const memoizedClients = useMemo(() => clients, [clients]);
 
   const tablePadding = 12;
-  const arr = [];
-  memoizedClients.forEach((item) => {
-    arr.push(item.company);
-  });
+
   return (
     <ScreenWrapper
       edges={[]}
@@ -62,6 +63,7 @@ const ClientsList = () => {
           tablePadding={tablePadding}
           data={memoizedClients}
           onSearch={handleSearch}
+          filterFunction={ClientCompanyFilterFunction}
         />
         <Loader size={"large"} color={colors.red} visible={loading} />
         <FlatList

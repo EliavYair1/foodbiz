@@ -17,21 +17,25 @@ import fonts from "../../../styles/fonts";
 import Button from "../../../Components/ui/Button";
 import Tabs from "../../../Components/ui/Tabs";
 import ClientTable from "./ClientTable/ClientTable";
-import Accordion from "./FileCategoryRow/FileCategoryRow";
+import FileCategoryRow from "./FileCategoryRow/FileCategoryRow";
 import LastFiveReportDetails from "./GradeReport/LastFiveReportDetails";
 import ReportDetails from "./GradeReport/ReportDetails";
-import icon from "../../../assets/imgs/fileIcon.png";
+import fileIcon from "../../../assets/imgs/fileIcon.png";
+import plusIconWhite from "../../../assets/imgs/plusIconWhite.png";
 const ClientItem = ({ title, data, tablePadding, logo }) => {
   const contentRef = useRef();
   const [open, setOpen] = useState(false);
   const arrayOfTabs = ["דוחות", "קבצים", "בעלי גישה"];
   const [activeTab, setActiveTab] = useState(arrayOfTabs[0]);
   const heightAnim = useRef(new Animated.Value(0)).current;
+
+  // tabs handler
   const handleTabPress = useCallback((tab) => {
     setActiveTab(tab);
   }, []);
 
-  const handleClick = () => {
+  // accodrion handler
+  const handleAccordionOpening = () => {
     setOpen(!open);
   };
 
@@ -43,11 +47,25 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
     }).start();
   }, [open, heightAnim]);
 
+  // defining the color of the last report status background color
+  const statusBgColor = (status) => {
+    if (status == "נשלח ללקוח") {
+      return colors.statusSentToClient;
+    } else if (status == "בתהליך כתיבה") {
+      return colors.statusProcess;
+    } else if (status == "סגור") {
+      return colors.statusClose;
+    } else if (status == "נשלח לאישור מנהל") {
+      return colors.statusSentForApproval;
+    } else {
+      return colors.statusReturnWithRemarks;
+    }
+  };
+
   const lastReport = data.getLastReportData();
   const lastFiveReport = data.getLastFiveReportsData();
   const { haveCulinaryGrade, haveGrade, haveNutritionGrade, haveSafetyGrade } =
     lastReport.data;
-
   const reportsTable = [
     {
       id: 0,
@@ -90,6 +108,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
       label: "סטטוס",
       width: "12.5%",
       data: "reportStatuses",
+      statusBackground: statusBgColor(lastReport.data.reportStatuses),
     },
     {
       id: 7,
@@ -183,7 +202,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
     },
   ];
 
-  // console.log(data.files_catgories[2].getFiles());
+  // handling nested tables
   const handleDisplayedTab = useMemo(() => {
     if (activeTab === "דוחות") {
       const reports = data.getReports();
@@ -195,11 +214,11 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
         fixedFiles.push({ data: file.files });
       });
       return (
-        <Accordion
+        <FileCategoryRow
           items={data.files_catgories}
-          icon={icon}
+          icon={fileIcon}
           tableHeadText={"קבצים"}
-        ></Accordion>
+        ></FileCategoryRow>
       );
     } else {
       const users = data.getUsers();
@@ -238,10 +257,25 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
       textAlign: "left",
       fontFamily: fonts.ARegular,
     },
+    statusText: {
+      alignSelf: "flex-start",
+      textAlign: "left",
+      fontFamily: fonts.ARegular,
+      backgroundColor: statusBgColor(lastReport.data.reportStatuses),
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    buttonIcon: {
+      width: 20,
+      height: 20,
+    },
   });
   return (
     <>
-      <TouchableOpacity style={styles.itemContainer} onPress={handleClick}>
+      <TouchableOpacity
+        style={styles.itemContainer}
+        onPress={handleAccordionOpening}
+      >
         <View
           style={{
             width: "25%",
@@ -279,7 +313,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
           <Text style={styles.subHeaderText}>
             {lastReport.data.timeOfReport}
           </Text>
-          <Text style={styles.subHeaderText}>
+          <Text style={styles.statusText}>
             {lastReport.data.reportStatuses}
           </Text>
         </View>
@@ -308,9 +342,8 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
               buttonStyle={styles.newReportButton}
               buttonTextStyle={styles.newReportButtonText}
               icon={true}
-              IconColor={colors.white}
-              iconSize={20}
-              iconName={"plus"}
+              iconPath={plusIconWhite}
+              iconStyle={styles.buttonIcon}
               buttonWidth={113}
               buttonFunction={() => console.log("new report")}
             />

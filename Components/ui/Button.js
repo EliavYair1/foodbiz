@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
 import React from "react";
 import fonts from "../../styles/fonts";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -10,10 +10,9 @@ export default function Button({
   buttonTextStyle,
   buttonText,
   icon = false,
-  iconName,
-  iconSize,
-  IconColor,
   buttonWidth,
+  iconStyle,
+  iconPath,
 }) {
   const styles = StyleSheet.create({
     button: {
@@ -39,7 +38,7 @@ export default function Button({
       onPress={() => buttonFunction()}
       disabled={disableLogic}
     >
-      {icon && <Icon name={iconName} color={IconColor} size={iconSize} />}
+      {icon && <Image style={iconStyle ?? ""} source={iconPath} />}
 
       <Text style={[buttonTextStyle, styles.text]}>{buttonText}</Text>
     </TouchableOpacity>

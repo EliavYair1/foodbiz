@@ -16,7 +16,7 @@ import ClientTable from "../ClientTable/ClientTable";
 import Category from "../../../../Components/modals/fileCategory";
 import { FlatList } from "react-native-gesture-handler";
 import * as WebBrowser from "expo-web-browser";
-
+import plusIconBlack from "../../../../assets/imgs/plusIconblack.png";
 const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
   const heightAnim = useRef(new Animated.Value(0)).current;
   const [openId, setOpenId] = useState(null);
@@ -183,9 +183,8 @@ const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
                 buttonStyle={styles.newReportButton}
                 buttonTextStyle={styles.newReportButtonText}
                 icon={true}
-                IconColor={colors.black}
-                iconSize={20}
-                iconName={"plus"}
+                iconPath={plusIconBlack}
+                iconStyle={{ width: 16, height: 16 }}
                 buttonWidth={113}
                 buttonFunction={() => console.log("new file")}
               />

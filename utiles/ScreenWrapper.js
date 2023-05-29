@@ -3,6 +3,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { LinearGradient } from "expo-linear-gradient";
 import { ImageBackground, StyleSheet, Text, View } from "react-native";
 import React from "react";
+import background from "../assets/imgs/background.png";
 const ScreenWrapper = ({
   children,
   isForm = false,
@@ -13,10 +14,7 @@ const ScreenWrapper = ({
   const renderBackground = () => {
     if (isConnectedUser) {
       return (
-        <ImageBackground
-          style={styles.backgroundImage}
-          source={require("../assets/imgs/background.png")}
-        >
+        <ImageBackground style={styles.backgroundImage} source={background}>
           {children}
         </ImageBackground>
       );

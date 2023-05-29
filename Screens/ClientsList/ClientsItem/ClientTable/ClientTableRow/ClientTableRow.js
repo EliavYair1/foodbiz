@@ -31,10 +31,15 @@ const ClientTableRow = ({ data, memorizedTables }) => {
           );
         } else {
           const rowData = data && data.getData(item.data);
-          // console.log("rowData", data);
           return (
             <View style={styles.tableRowContainer} key={item.id}>
-              <Text style={{ ...styles.tableRow, flexBasis: item.width }}>
+              <Text
+                style={{
+                  ...styles.tableRow,
+                  flexBasis: item.width,
+                  backgroundColor: item.statusBackground,
+                }}
+              >
                 {rowData}
               </Text>
             </View>

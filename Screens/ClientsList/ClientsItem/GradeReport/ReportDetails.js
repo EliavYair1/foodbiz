@@ -10,22 +10,19 @@ const ReportDetails = ({
 }) => {
   return (
     <View style={{ alignSelf: "center", width: "15%" }}>
-      <GradeDetails
-        title="כללי"
-        grade={haveGrade ? lastReport.data.grade : null}
-      />
-      <GradeDetails
-        title="בטיחות מזון"
-        grade={haveNutritionGrade ? lastReport.data.nutritionGrade : null}
-      />
-      <GradeDetails
-        title="ציון בטיחות"
-        grade={haveSafetyGrade ? lastReport.data.safetyGrade : null}
-      />
-      <GradeDetails
-        title="קולינארי"
-        grade={haveCulinaryGrade ? lastReport.data.culinaryGrade : null}
-      />
+      {haveGrade && <GradeDetails title="כללי" grade={lastReport.data.grade} />}
+      {haveNutritionGrade && (
+        <GradeDetails
+          title="בטיחות מזון"
+          grade={lastReport.data.nutritionGrade}
+        />
+      )}
+      {haveSafetyGrade && (
+        <GradeDetails title="ציון בטיחות" grade={lastReport.data.safetyGrade} />
+      )}
+      {haveCulinaryGrade && (
+        <GradeDetails title="קולינארי" grade={lastReport.data.culinaryGrade} />
+      )}
     </View>
   );
 };

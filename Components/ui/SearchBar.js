@@ -3,7 +3,7 @@ import { Searchbar } from "react-native-paper";
 import colors from "../../styles/colors";
 import { StyleSheet } from "react-native";
 
-const SearchBar = ({ placeholder, onChangeText, onSearch }) => {
+const SearchBar = ({ placeholder, onChangeText, onSearch, inputStyle }) => {
   return (
     <Searchbar
       style={styles.barStyle}
