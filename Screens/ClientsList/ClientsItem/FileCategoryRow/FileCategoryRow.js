@@ -17,13 +17,33 @@ import Category from "../../../../Components/modals/fileCategory";
 import { FlatList } from "react-native-gesture-handler";
 import * as WebBrowser from "expo-web-browser";
 import plusIconBlack from "../../../../assets/imgs/plusIconblack.png";
+import CameraIcon from "../../../../assets/imgs/CameraIcon.png";
+import libraryIcon from "../../../../assets/imgs/libraryIcon.png";
+import PopUp from "../../../../Components/ui/popUp";
+import SelectMenu from "../../../../Components/ui/SelectMenu";
+import useMediaPicker from "../../../../Hooks/useMediaPicker";
 const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
   const heightAnim = useRef(new Animated.Value(0)).current;
   const [openId, setOpenId] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState(null);
+  const handleMediaChange = (mediaType, uri) => {
+    setSelectedMedia(uri);
+  };
+
+  const deleteSelectedMedia = () => {
+    setSelectedMedia(null);
+  };
+  console.log("selectedMedia:", selectedMedia);
+  const [media, pickMedia, mediaError] = useMediaPicker(handleMediaChange);
+
+  const onCloseNewFileModal = () => {
+    setModalVisible(!modalVisible);
+    setSelectedMedia(null);
+  };
   const handleItemClick = (itemId) => {
     setOpenId(itemId === openId ? null : itemId);
   };
-
   useEffect(() => {
     Animated.timing(heightAnim, {
       toValue: openId ? 320 : 0,
@@ -119,7 +139,7 @@ const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
             return true;
           },
           action: (file) => {
-            console.log("Edit_icon");
+            console.log("Edit_icon", file.getData("url"));
           },
         },
         {
@@ -150,7 +170,11 @@ const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
         return "<";
       }
     };
-    // console.log("item.getFiles()", item.getFiles());
+    let arr = [];
+    files.forEach((element) => {
+      arr.push(element.data);
+    });
+    // console.log("arr:", arr);
     return (
       <>
         <TouchableOpacity
@@ -186,17 +210,54 @@ const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
                 iconPath={plusIconBlack}
                 iconStyle={{ width: 16, height: 16 }}
                 buttonWidth={113}
-                buttonFunction={() => console.log("new file")}
+                buttonFunction={() => setModalVisible(!modalVisible)}
               />
             </View>
           </View>
         </TouchableOpacity>
         <Divider />
-
         {isOpen && (
           <View style={{ height: "100%" }}>
-            <ClientTable getData={item.getFiles()} tableHeaders={filesTable} />
+            <ClientTable rowsData={item.getFiles()} headers={filesTable} />
           </View>
+        )}
+
+        {modalVisible && (
+          <PopUp
+            deleteSelectedMedia={deleteSelectedMedia}
+            selectedMedia={selectedMedia}
+            isVisible={modalVisible}
+            onCloseModal={onCloseNewFileModal}
+            modalHeight={768}
+            modalWidth={480}
+            modalHeaderText={
+              "הוספה / עריכה של קובץ בתיקיית אישורים\n עבור בנק הפועלים"
+            }
+            selectWidth={400}
+            selectOptions={[1, 23, 4, 5, 45, 46, 46, 8, 7]}
+            animationType={"fade"}
+            firstButtonFunction={() => pickMedia("image")}
+            secondButtonFunction={() => {
+              console.log("image picked");
+            }}
+            buttonText1={
+              selectedMedia == null ? "מספריית התמונות" : "תמונה נבחרה"
+            }
+            buttonText2={"מצלמה"}
+            icon1={libraryIcon}
+            icon2={CameraIcon}
+            buttonHeaderText="העלאת קובץ"
+            selectHeader={"תחנה"}
+            // inputData={arr}
+            remarksInputText={"הערות"}
+            submitText="שמירה"
+            submitButtonFunction={() => {
+              console.log("data saved");
+            }}
+            firstInputText={"שם הקובץ"}
+            secondInputText={"שם הכותב"}
+            thirdInputText={"תאריך"}
+          />
         )}
       </>
     );

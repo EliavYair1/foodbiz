@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoPicker from "expo-image-picker";
 
-const useMediaPicker = () => {
+const useMediaPicker = (handleInputChange) => {
   const [media, setMedia] = useState(null);
   const [error, setError] = useState(null);
 
@@ -19,8 +19,11 @@ const useMediaPicker = () => {
         throw new Error(`Invalid media type: ${mediaType}`);
       }
 
-      if (!result.cancelled) {
-        setMedia(result.uri);
+      if (!result.canceled) {
+        const selectedMedia = result.assets[0].uri;
+        // setMedia(result.uri);
+        setMedia(selectedMedia);
+        handleInputChange(mediaType, selectedMedia);
       }
     } catch (error) {
       console.error(error);

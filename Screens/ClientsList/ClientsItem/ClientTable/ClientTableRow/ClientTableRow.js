@@ -3,25 +3,27 @@ import React from "react";
 import colors from "../../../../../styles/colors";
 import fonts from "../../../../../styles/fonts";
 
-const ClientTableRow = ({ data, memorizedTables }) => {
+const ClientTableRow = ({ rowData, headers }) => {
   // console.log("filesTable:", filesTable);
   return (
     <View style={styles.tableRowContainer}>
-      {memorizedTables.map((item, idx) => {
-        // console.log("data", data);
-
-        if (item.type === "actions") {
+      {headers.map((header, idx) => {
+        // console.log("rowData", rowData);
+        if (header.type === "actions") {
           return (
             <View
-              key={item.id}
-              style={{ ...styles.actionsContainer, flexBasis: item.width }}
+              key={header.id}
+              style={{
+                ...styles.actionsContainer,
+                flexBasis: header.width,
+              }}
             >
-              {item.actions.map((action) => {
+              {header.actions.map((action) => {
                 return (
                   <TouchableOpacity
-                    onPress={() => action.action(data)}
+                    onPress={() => action.action(rowData)}
                     key={action.id}
-                    disabled={!action.isActive(data)}
+                    disabled={!action.isActive(rowData)}
                   >
                     <Image source={action.icon} style={styles.imgIcon} />
                   </TouchableOpacity>
@@ -30,17 +32,18 @@ const ClientTableRow = ({ data, memorizedTables }) => {
             </View>
           );
         } else {
-          const rowData = data && data.getData(item.data);
+          const cellValue = rowData && rowData.getData(header.data);
           return (
-            <View style={styles.tableRowContainer} key={item.id}>
+            <View style={styles.tableRowContainer} key={header.id}>
               <Text
                 style={{
                   ...styles.tableRow,
-                  flexBasis: item.width,
-                  backgroundColor: item.statusBackground,
+                  flexBasis: header.width,
+                  backgroundColor:
+                    header.backgroundColor && header.backgroundColor(cellValue),
                 }}
               >
-                {rowData}
+                {cellValue}
               </Text>
             </View>
           );

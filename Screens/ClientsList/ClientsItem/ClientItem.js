@@ -22,6 +22,7 @@ import LastFiveReportDetails from "./GradeReport/LastFiveReportDetails";
 import ReportDetails from "./GradeReport/ReportDetails";
 import fileIcon from "../../../assets/imgs/fileIcon.png";
 import plusIconWhite from "../../../assets/imgs/plusIconWhite.png";
+
 const ClientItem = ({ title, data, tablePadding, logo }) => {
   const contentRef = useRef();
   const [open, setOpen] = useState(false);
@@ -41,7 +42,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
 
   useEffect(() => {
     Animated.timing(heightAnim, {
-      toValue: open ? 320 : 0,
+      toValue: open ? 800 : 0,
       duration: 250,
       useNativeDriver: false,
     }).start();
@@ -108,7 +109,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
       label: "סטטוס",
       width: "12.5%",
       data: "reportStatuses",
-      statusBackground: statusBgColor(lastReport.data.reportStatuses),
+      backgroundColor: (color) => statusBgColor(color),
     },
     {
       id: 7,
@@ -206,23 +207,20 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
   const handleDisplayedTab = useMemo(() => {
     if (activeTab === "דוחות") {
       const reports = data.getReports();
-      return <ClientTable getData={reports} tableHeaders={reportsTable} />;
+      return <ClientTable rowsData={reports} headers={reportsTable} />;
     } else if (activeTab === "קבצים") {
       const files = data.getFilesCategory();
-      let fixedFiles = [];
-      files.forEach((file) => {
-        fixedFiles.push({ data: file.files });
-      });
+      // console.log("files", files);
       return (
         <FileCategoryRow
-          items={data.files_catgories}
+          items={files}
           icon={fileIcon}
           tableHeadText={"קבצים"}
         ></FileCategoryRow>
       );
     } else {
       const users = data.getUsers();
-      return <ClientTable getData={users} tableHeaders={usersTable} />;
+      return <ClientTable rowsData={users} headers={usersTable} />;
     }
   }, [activeTab, data]);
 
@@ -268,6 +266,9 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
     buttonIcon: {
       width: 20,
       height: 20,
+    },
+    tableContentHight: {
+      height: 600,
     },
   });
   return (
@@ -366,7 +367,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
           { height: heightAnim },
         ]}
       >
-        <View style={{ height: 320, backgroundColor: colors.white }}>
+        <View style={[{ backgroundColor: colors.white, height: "100%" }]}>
           <Tabs
             tabs={arrayOfTabs}
             activeTab={activeTab}

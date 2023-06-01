@@ -34,6 +34,11 @@ export default class Client {
       this.files_catgories.push(new FileCategory(element));
     });
   }
+  // createCategoriesModels(catgories) {
+  //   catgories.forEach((element) => {
+  //     this.files_catgories.push(element);
+  //   });
+  // }
 
   createUsersModels(users) {
     users.forEach((element) => {

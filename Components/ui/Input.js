@@ -20,6 +20,8 @@ const Input = ({
   onSubmitEditing,
   secureTextEntry = false,
   inputIcon = false,
+  outlineColor,
+  activeOutlineColor,
 }) => {
   return (
     <>
@@ -52,6 +54,8 @@ const Input = ({
               onBlur={onBlur}
               value={value}
               mode={mode}
+              activeOutlineColor={activeOutlineColor}
+              outlineColor={outlineColor}
               underlineColor={underlineColor}
               activeUnderlineColor={activeUnderlineColor}
               contentStyle={contentStyle}

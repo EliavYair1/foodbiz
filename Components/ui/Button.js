@@ -3,6 +3,7 @@ import React from "react";
 import fonts from "../../styles/fonts";
 import Icon from "react-native-vector-icons/FontAwesome";
 import colors from "../../styles/colors";
+import { HelperText } from "react-native-paper";
 export default function Button({
   buttonFunction,
   buttonStyle,
@@ -13,6 +14,7 @@ export default function Button({
   buttonWidth,
   iconStyle,
   iconPath,
+  errorMessage = false,
 }) {
   const styles = StyleSheet.create({
     button: {
@@ -23,6 +25,7 @@ export default function Button({
       alignItems: "center",
       flexDirection: "row",
       gap: 8,
+      borderColor: errorMessage ? "#b3261e" : null,
     },
     text: {
       textAlign: "center",
@@ -33,14 +36,28 @@ export default function Button({
     },
   });
   return (
-    <TouchableOpacity
-      style={[buttonStyle, styles.button]}
-      onPress={() => buttonFunction()}
-      disabled={disableLogic}
-    >
-      {icon && <Image style={iconStyle ?? ""} source={iconPath} />}
+    <>
+      <View style={{ flexDirection: "column" }}>
+        <TouchableOpacity
+          style={[buttonStyle, styles.button]}
+          onPress={() => buttonFunction()}
+          disabled={disableLogic ?? ""}
+        >
+          {icon && <Image style={iconStyle ?? ""} source={iconPath} />}
 
-      <Text style={[buttonTextStyle, styles.text]}>{buttonText}</Text>
-    </TouchableOpacity>
+          <Text style={[buttonTextStyle, styles.text]}>{buttonText}</Text>
+        </TouchableOpacity>
+        {errorMessage && (
+          <HelperText
+            type="error"
+            style={{
+              fontFamily: fonts.AMedium,
+            }}
+          >
+            {errorMessage}
+          </HelperText>
+        )}
+      </View>
+    </>
   );
 }

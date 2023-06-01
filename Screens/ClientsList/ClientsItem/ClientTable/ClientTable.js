@@ -7,30 +7,25 @@ import ClientTableRow from "./ClientTableRow/ClientTableRow";
 import ClientTableHeader from "./ClientTableHeader/ClientTableHeader";
 import uuid from "uuid-random";
 
-const ClientTable = ({ getData, tableHeaders, filesTable = [] }) => {
-  const memoizedData = useMemo(() => getData, [getData]);
-  const memorizedTables = useMemo(() => {
-    return tableHeaders;
-  }, [tableHeaders]);
+const ClientTable = ({ rowsData, headers }) => {
+  const memoizedRowsData = useMemo(() => rowsData, [rowsData]);
+  const memorizedHeaders = useMemo(() => {
+    return headers;
+  }, [headers]);
 
   return (
     <View style={styles.container}>
-      <ClientTableHeader memorizedArray={memorizedTables} />
+      <ClientTableHeader memorizedArray={memorizedHeaders} />
       <View style={styles.hr}></View>
       <FlatList
-        data={memoizedData}
+        // scrollEnabled={true}
+        data={memoizedRowsData}
         initialNumToRender={4}
         windowSize={4}
         keyExtractor={() => uuid()}
         renderItem={({ item, index }) => {
           // console.log("item", item);
-          return (
-            <ClientTableRow
-              data={item}
-              memorizedTables={memorizedTables}
-              filesTable={filesTable}
-            />
-          );
+          return <ClientTableRow rowData={item} headers={memorizedHeaders} />;
         }}
       />
     </View>
