@@ -59,30 +59,27 @@ const DatePicker = ({ errorMessage, label, control, name, onchange }) => {
               title="Show Date Picker"
               onPress={showDatePicker}
             >
-              <View>
-                <Image
-                  source={datePickerIcon}
-                  style={{ width: 20, height: 20 }}
-                />
-                <Text
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    paddingHorizontal: 20,
-                    paddingVertical: 14,
-                    borderWidth: errorMessage && !datePicked ? 1.5 : 0.5,
-                    borderColor:
-                      errorMessage && !datePicked ? "#b3261e" : colors.black,
-                    borderRadius: 8,
-                    textAlign: "left",
-                    color:
-                      errorMessage && !datePicked ? "#b3261e" : colors.black,
-                  }}
-                >
-                  {datePicked ? datePicked.toDateString() : "Date Picker"}
-                </Text>
-              </View>
+              {/* <Image
+                source={datePickerIcon}
+                style={{ width: 20, height: 20 }}
+              /> */}
+              <Text
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingHorizontal: 20,
+                  paddingVertical: 14,
+                  borderWidth: errorMessage && !datePicked ? 1.5 : 0.5,
+                  borderColor:
+                    errorMessage && !datePicked ? "#b3261e" : colors.black,
+                  borderRadius: 8,
+                  textAlign: "left",
+                  color: errorMessage && !datePicked ? "#b3261e" : colors.black,
+                }}
+              >
+                {datePicked ? datePicked.toDateString() : "Date Picker"}
+              </Text>
             </TouchableWithoutFeedback>
             <DateTimePickerModal
               isVisible={isDatePickerVisible}
