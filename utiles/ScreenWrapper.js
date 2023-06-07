@@ -4,17 +4,22 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ImageBackground, StyleSheet, Text, View } from "react-native";
 import React from "react";
 import background from "../assets/imgs/background.png";
+import newReportBackground from "../assets/imgs/newworkeReportBackgroundImg.png";
 const ScreenWrapper = ({
   children,
   isForm = false,
   edges = ["top", "right", "bottom", "left"],
   wrapperStyle,
   isConnectedUser = false,
+  newReportBackGroundImg,
 }) => {
   const renderBackground = () => {
     if (isConnectedUser) {
       return (
-        <ImageBackground style={styles.backgroundImage} source={background}>
+        <ImageBackground
+          style={styles.backgroundImage}
+          source={newReportBackGroundImg ? newReportBackground : background}
+        >
           {children}
         </ImageBackground>
       );

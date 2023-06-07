@@ -14,7 +14,18 @@ export default class User {
     this.data = data;
   }
 
+  getStationName() {
+    if (this.getData("type") == 1) {
+      return "כל התחנות";
+    } else {
+      return this.getData("station_name");
+    }
+  }
+
   getData(attr) {
+    if (attr == "station") {
+      return this.getStationName();
+    }
     return this.data[attr];
   }
 }

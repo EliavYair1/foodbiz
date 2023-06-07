@@ -41,18 +41,3 @@ export default class Report {
     return this.data[attr];
   }
 }
-
-// report data to be fetch
-/* 
-1.safetyGrade
-2.grade
-3.culinaryGrade
-4.status
-5.timeOfReport
-6.nutritionGrade
-7.reportStatuses
-*/
-/* נשלח ללקוח - 3 
-בתהליך כתיבה - 1
-סגור -5
-*/

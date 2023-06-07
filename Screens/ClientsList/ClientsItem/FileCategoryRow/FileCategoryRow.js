@@ -22,24 +22,19 @@ import libraryIcon from "../../../../assets/imgs/libraryIcon.png";
 import PopUp from "../../../../Components/ui/popUp";
 import SelectMenu from "../../../../Components/ui/SelectMenu";
 import useMediaPicker from "../../../../Hooks/useMediaPicker";
-const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
+const FileCategoryRow = ({
+  children,
+  items,
+  icon,
+  tableHeadText,
+  stations,
+}) => {
   const heightAnim = useRef(new Animated.Value(0)).current;
   const [openId, setOpenId] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState(null);
-  const handleMediaChange = (mediaType, uri) => {
-    setSelectedMedia(uri);
-  };
-
-  const deleteSelectedMedia = () => {
-    setSelectedMedia(null);
-  };
-  console.log("selectedMedia:", selectedMedia);
-  const [media, pickMedia, mediaError] = useMediaPicker(handleMediaChange);
-
+  const [media, pickMedia, mediaError] = useMediaPicker();
   const onCloseNewFileModal = () => {
     setModalVisible(!modalVisible);
-    setSelectedMedia(null);
   };
   const handleItemClick = (itemId) => {
     setOpenId(itemId === openId ? null : itemId);
@@ -170,10 +165,7 @@ const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
         return "<";
       }
     };
-    let arr = [];
-    files.forEach((element) => {
-      arr.push(element.data);
-    });
+    let arr = stations.map((element) => element);
     // console.log("arr:", arr);
     return (
       <>
@@ -224,8 +216,6 @@ const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
 
         {modalVisible && (
           <PopUp
-            deleteSelectedMedia={deleteSelectedMedia}
-            selectedMedia={selectedMedia}
             isVisible={modalVisible}
             onCloseModal={onCloseNewFileModal}
             modalHeight={768}
@@ -234,15 +224,12 @@ const FileCategoryRow = ({ children, items, icon, tableHeadText }) => {
               "הוספה / עריכה של קובץ בתיקיית אישורים\n עבור בנק הפועלים"
             }
             selectWidth={400}
-            selectOptions={[1, 23, 4, 5, 45, 46, 46, 8, 7]}
+            selectOptions={arr}
             animationType={"fade"}
-            firstButtonFunction={() => pickMedia("image")}
             secondButtonFunction={() => {
               console.log("image picked");
             }}
-            buttonText1={
-              selectedMedia == null ? "מספריית התמונות" : "תמונה נבחרה"
-            }
+            buttonText1={"מספריית התמונות"}
             buttonText2={"מצלמה"}
             icon1={libraryIcon}
             icon2={CameraIcon}

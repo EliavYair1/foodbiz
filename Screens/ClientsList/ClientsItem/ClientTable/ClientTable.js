@@ -20,7 +20,7 @@ const ClientTable = ({ rowsData, headers }) => {
       <FlatList
         // scrollEnabled={true}
         data={memoizedRowsData}
-        initialNumToRender={4}
+        initialNumToRender={8}
         windowSize={4}
         keyExtractor={() => uuid()}
         renderItem={({ item, index }) => {

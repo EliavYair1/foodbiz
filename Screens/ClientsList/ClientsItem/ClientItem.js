@@ -4,6 +4,8 @@ import {
   View,
   TouchableOpacity,
   Animated,
+  Share,
+  Image,
 } from "react-native";
 import React, {
   useState,
@@ -22,13 +24,20 @@ import LastFiveReportDetails from "./GradeReport/LastFiveReportDetails";
 import ReportDetails from "./GradeReport/ReportDetails";
 import fileIcon from "../../../assets/imgs/fileIcon.png";
 import plusIconWhite from "../../../assets/imgs/plusIconWhite.png";
-
+import ClientItemArrow from "../../../assets/imgs/ClientItemArrow.png";
+import "@env";
+import * as WebBrowser from "expo-web-browser";
+import useScreenNavigator from "../../../Hooks/useScreenNavigator";
+import routes from "../../../Navigation/routes";
 const ClientItem = ({ title, data, tablePadding, logo }) => {
   const contentRef = useRef();
   const [open, setOpen] = useState(false);
   const arrayOfTabs = ["דוחות", "קבצים", "בעלי גישה"];
   const [activeTab, setActiveTab] = useState(arrayOfTabs[0]);
   const heightAnim = useRef(new Animated.Value(0)).current;
+  const { navigateToRoute } = useScreenNavigator();
+  const users = data.getUsers();
+  const [filteredData, setFilteredData] = useState(users);
 
   // tabs handler
   const handleTabPress = useCallback((tab) => {
@@ -40,6 +49,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
     setOpen(!open);
   };
 
+  // accordion animation
   useEffect(() => {
     Animated.timing(heightAnim, {
       toValue: open ? 800 : 0,
@@ -67,6 +77,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
   const lastFiveReport = data.getLastFiveReportsData();
   const { haveCulinaryGrade, haveGrade, haveNutritionGrade, haveSafetyGrade } =
     lastReport.data;
+
   const reportsTable = [
     {
       id: 0,
@@ -124,8 +135,14 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
           isActive: (report) => {
             return true;
           },
-          action: () => {
-            console.log("share");
+          action: async (report) => {
+            let url = `${report.getData("viewUrl")}`;
+
+            const result = await Share.share({
+              message: `להלן דוח מפודביז מתחנה ${report.getData(
+                "station_name"
+              )} מתאריך ${report.getData("timeOfReport")}\n${url}`,
+            });
           },
         },
         {
@@ -135,8 +152,10 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
           isActive: (report) => {
             return true;
           },
-          action: () => {
-            console.log("eye");
+          action: async (report) => {
+            let url = `${report.getData("viewUrl")}`;
+            await WebBrowser.openBrowserAsync(url);
+            console.log("eye", url);
           },
         },
         {
@@ -144,9 +163,10 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
           icon: require("../../../assets/imgs/Edit_icon.png"),
 
           isActive: (report) => {
-            return true;
+            return report.data.status < 5;
           },
-          action: () => {
+          action: (report) => {
+            // console.log(report.data.status);
             console.log("Edit_icon");
           },
         },
@@ -155,15 +175,29 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
           icon: require("../../../assets/imgs/Trash_icon.png"),
 
           isActive: (report) => {
-            return report.grade == 87;
+            return report.data.status == 1;
           },
           action: () => {
             console.log("Trash_icon");
           },
         },
+        {
+          id: 4,
+          icon: require("../../../assets/imgs/workPageIcon.png"),
+
+          isActive: (report) => {
+            return true;
+          },
+          action: async (report) => {
+            let url = `${report.getData("workUrl")}`;
+            await WebBrowser.openBrowserAsync(url);
+            console.log("workPage icon", url);
+          },
+        },
       ],
     },
   ];
+
   const usersTable = [
     {
       id: 0,
@@ -199,7 +233,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
       id: 5,
       label: "תחנה",
       width: "16.6666667%",
-      data: "station_name",
+      data: "station",
     },
   ];
 
@@ -210,20 +244,22 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
       return <ClientTable rowsData={reports} headers={reportsTable} />;
     } else if (activeTab === "קבצים") {
       const files = data.getFilesCategory();
-      // console.log("files", files);
+      const stations = data.getStations();
+      // console.log("stations:", stations);
       return (
         <FileCategoryRow
+          stations={stations}
           items={files}
           icon={fileIcon}
           tableHeadText={"קבצים"}
         ></FileCategoryRow>
       );
     } else {
-      const users = data.getUsers();
-      return <ClientTable rowsData={users} headers={usersTable} />;
+      return <ClientTable rowsData={filteredData} headers={usersTable} />;
     }
-  }, [activeTab, data]);
+  }, [activeTab, data, filteredData]);
 
+  // styling
   const styles = StyleSheet.create({
     itemContainer: {
       backgroundColor: colors.white,
@@ -271,6 +307,22 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
       height: 600,
     },
   });
+
+  // navigating on new report button (temp name)
+  const newReportNavigation = () => {
+    navigateToRoute(routes.ONBOARDING.WorkerNewReport);
+  };
+
+  // handling users filter on search bar
+  const handleSearch = (filteredUsers) => {
+    setFilteredData(filteredUsers);
+  };
+  const usersFilterFunction = (item, text) => {
+    const name = item.getData("name");
+    return name && name.includes(text);
+  };
+  const memoizedUsers = useMemo(() => users, [users]);
+
   return (
     <>
       <TouchableOpacity
@@ -346,12 +398,28 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
               iconPath={plusIconWhite}
               iconStyle={styles.buttonIcon}
               buttonWidth={113}
-              buttonFunction={() => console.log("new report")}
+              buttonFunction={() => newReportNavigation()}
             />
           </View>
 
           <View style={{ alignSelf: "center", width: 52 }}>
-            <Text>{open ? "v" : "^"}</Text>
+            <Text>
+              {open ? (
+                <Image
+                  source={ClientItemArrow}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    transform: [{ rotate: "-90deg" }],
+                  }}
+                />
+              ) : (
+                <Image
+                  source={ClientItemArrow}
+                  style={{ width: 20, height: 20 }}
+                />
+              )}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -373,6 +441,10 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
             activeTab={activeTab}
             onTabPress={handleTabPress}
             tablePadding={tablePadding}
+            usersTab={activeTab === "בעלי גישה"}
+            data={memoizedUsers}
+            onSearch={handleSearch}
+            filterFunction={usersFilterFunction}
           />
           {handleDisplayedTab}
         </View>

@@ -20,6 +20,7 @@ const SelectMenu = ({
   name,
   errorMessage,
   onChange,
+  propertyName = false,
 }) => {
   const [visible, setVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -27,10 +28,11 @@ const SelectMenu = ({
   const closeMenu = () => setVisible(false);
   const handleItemPick = (item) => {
     setSelectedItem(item);
-    console.log("item selected:", item);
+    // console.log("item selected:", item);
     onChange(item);
     closeMenu();
   };
+
   const styles = StyleSheet.create({
     container: {
       paddingTop: 50,
@@ -75,14 +77,15 @@ const SelectMenu = ({
       zIndex: 20,
     },
   });
-  const renderMenuItem = ({ item }) => {
+
+  const renderMenuItem = ({ item, idx }) => {
     return (
       <TouchableOpacity
         key={item.id}
         style={styles.menuItem}
-        onPress={() => handleItemPick(item)}
+        onPress={() => handleItemPick(item[propertyName])}
       >
-        <Text style={styles.menuItemText}>{item}</Text>
+        <Text style={styles.menuItemText}>{item[propertyName]}</Text>
       </TouchableOpacity>
     );
   };

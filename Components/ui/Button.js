@@ -15,6 +15,7 @@ export default function Button({
   iconStyle,
   iconPath,
   errorMessage = false,
+  isCameraButton = false,
 }) {
   const styles = StyleSheet.create({
     button: {
@@ -41,7 +42,7 @@ export default function Button({
         <TouchableOpacity
           style={[buttonStyle, styles.button]}
           onPress={() => buttonFunction()}
-          disabled={disableLogic ?? ""}
+          // disabled={disableLogic ?? ""}
         >
           {icon && <Image style={iconStyle ?? ""} source={iconPath} />}
 
@@ -52,6 +53,8 @@ export default function Button({
             type="error"
             style={{
               fontFamily: fonts.AMedium,
+              backgroundColor: "white",
+              borderColor: "transparent",
             }}
           >
             {errorMessage}

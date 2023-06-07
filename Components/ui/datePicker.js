@@ -5,12 +5,14 @@ import {
   TouchableWithoutFeedback,
   Text,
   StyleSheet,
+  Image,
 } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useForm, Controller } from "react-hook-form";
 import { HelperText } from "react-native-paper";
 import fonts from "../../styles/fonts";
 import colors from "../../styles/colors";
+import datePickerIcon from "../../assets/imgs/datePickerIcon.png";
 const DatePicker = ({ errorMessage, label, control, name, onchange }) => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [datePicked, setDatePicked] = useState("");
@@ -57,23 +59,30 @@ const DatePicker = ({ errorMessage, label, control, name, onchange }) => {
               title="Show Date Picker"
               onPress={showDatePicker}
             >
-              <Text
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  paddingHorizontal: 20,
-                  paddingVertical: 14,
-                  borderWidth: errorMessage && !datePicked ? 1.5 : 0.5,
-                  borderColor:
-                    errorMessage && !datePicked ? "#b3261e" : colors.black,
-                  borderRadius: 8,
-                  textAlign: "left",
-                  color: errorMessage && !datePicked ? "#b3261e" : colors.black,
-                }}
-              >
-                {datePicked ? datePicked.toDateString() : "Date Picker"}
-              </Text>
+              <View>
+                <Image
+                  source={datePickerIcon}
+                  style={{ width: 20, height: 20 }}
+                />
+                <Text
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 20,
+                    paddingVertical: 14,
+                    borderWidth: errorMessage && !datePicked ? 1.5 : 0.5,
+                    borderColor:
+                      errorMessage && !datePicked ? "#b3261e" : colors.black,
+                    borderRadius: 8,
+                    textAlign: "left",
+                    color:
+                      errorMessage && !datePicked ? "#b3261e" : colors.black,
+                  }}
+                >
+                  {datePicked ? datePicked.toDateString() : "Date Picker"}
+                </Text>
+              </View>
             </TouchableWithoutFeedback>
             <DateTimePickerModal
               isVisible={isDatePickerVisible}

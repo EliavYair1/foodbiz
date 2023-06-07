@@ -2,6 +2,7 @@ import LastFiveReports from "./LastFiveReport";
 import LastReport from "./LastReport";
 import FileCategory from "./fileCategory";
 import Report from "./report";
+import Station from "./station";
 import User from "./user";
 export default class Client {
   constructor(data) {
@@ -16,14 +17,16 @@ export default class Client {
     this.reports = [];
     this.files_catgories = [];
     this.users = [];
+    this.stations = data.stations;
+    // this.stations = [];
 
     this.lastReport = data.last_report ? new Report(data.last_report) : null;
     this.last_five_reports = data.last_five_reports;
     this.createReportsModels(data.reports);
     this.createCategoriesModels(data.files_catgories);
     this.createUsersModels(data.users);
+    // this.createStationsModels(data.stations);
   }
-
   createReportsModels(reports) {
     reports.forEach((element) => {
       this.reports.push(new Report(element));
@@ -34,20 +37,26 @@ export default class Client {
       this.files_catgories.push(new FileCategory(element));
     });
   }
-  // createCategoriesModels(catgories) {
-  //   catgories.forEach((element) => {
-  //     this.files_catgories.push(element);
-  //   });
-  // }
 
   createUsersModels(users) {
     users.forEach((element) => {
       this.users.push(new User(element));
     });
   }
+
+  // createStationsModels(stations) {
+  //   stations.forEach((element) => {
+  //     this.stations.push(new Station(element));
+  //   });
+  // }
   getLastReportData() {
     return this.lastReport;
   }
+
+  getStations() {
+    return this.stations;
+  }
+
   getLastFiveReportsData() {
     return this.last_five_reports;
   }

@@ -3,6 +3,7 @@ const routes = Object.freeze({
     Home: "Home",
     Login: "Login",
     ClientsList: "ClientsList",
+    WorkerNewReport: "WorkerNewReport",
   },
 });
 export default routes;

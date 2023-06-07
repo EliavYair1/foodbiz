@@ -1,5 +1,18 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  SectionList,
+} from "react-native";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import Dashboard from "../../Components/ui/Dashboard";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
 import { FlatList } from "react-native-gesture-handler";
@@ -12,13 +25,19 @@ import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import { removeData } from "../../Services/StorageService";
 import routes from "../../Navigation/routes";
 import { setUser } from "../../store/redux/reducers/userSlice";
+
+import uuid from "uuid-random";
 const ClientsList = () => {
   const clients = useSelector((state) => state.clients);
   const user = useSelector((state) => state.user);
   const { navigateToRoute } = useScreenNavigator();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
+
+  // const [filteredData, setFilteredData] = useState(clients);
   const [filteredData, setFilteredData] = useState(clients);
+  const flatListRef = useRef(null);
+
   useEffect(() => {
     const fetchingClientsData = async () => {
       if (clients) {
@@ -49,9 +68,12 @@ const ClientsList = () => {
 
   //fetching memorized clients to spare uneccery randering.
   const memoizedClients = useMemo(() => clients, [clients]);
+  const handleLastTabOpen = () => {
+    // Scroll to the top of the screen
+    flatListRef.current.scrollToOffset({ offset: 0, animated: true });
+  };
 
   const tablePadding = 12;
-
   return (
     <ScreenWrapper
       edges={[]}
@@ -66,7 +88,9 @@ const ClientsList = () => {
           filterFunction={ClientCompanyFilterFunction}
         />
         <Loader size={"large"} color={colors.red} visible={loading} />
+
         <FlatList
+          ref={flatListRef}
           style={{ flexGrow: 0, width: "100%" }}
           data={filteredData}
           renderItem={({ item }) => {
@@ -79,9 +103,10 @@ const ClientsList = () => {
               />
             );
           }}
-          keyExtractor={(item) => item.getData("id").toString()}
+          keyExtractor={(item) => uuid()}
         />
       </View>
+
       <TouchableOpacity
         style={{
           backgroundColor: "#EBF5FF",

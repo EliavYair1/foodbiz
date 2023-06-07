@@ -1,9 +1,33 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
+import SearchBar from "./SearchBar";
+const Tabs = ({
+  tabs,
+  activeTab,
+  onTabPress,
+  tablePadding,
+  usersTab = false,
+  data,
+  onSearch,
+  filterFunction,
+}) => {
+  const [searchText, setSearchText] = useState("");
+  const handleSearchTextChange = (text) => {
+    setSearchText(text);
+    onSearch(filterData(text));
+  };
+  const handleSearch = () => {
+    // console.log("Performing search for:", searchText);
+    onSearch(filterData(searchText));
+  };
+  const filterData = (text) => {
+    const filteredData = data.filter((item) => filterFunction(item, text));
+    // console.log(filteredData);
+    return filteredData;
+  };
 
-const Tabs = ({ tabs, activeTab, onTabPress, tablePadding }) => {
   const styles = StyleSheet.create({
     container: {
       flexDirection: "row",
@@ -31,7 +55,13 @@ const Tabs = ({ tabs, activeTab, onTabPress, tablePadding }) => {
       color: "#000",
       fontFamily: fonts.ABold,
     },
+    searchInput: {
+      backgroundColor: "#D1E7FF",
+      borderColor: "rgba(12, 20, 48, 0.2)",
+      width: 218,
+    },
   });
+
   return (
     <View style={styles.container}>
       {tabs.map((tab, index) => (
@@ -50,6 +80,16 @@ const Tabs = ({ tabs, activeTab, onTabPress, tablePadding }) => {
           </Text>
         </TouchableOpacity>
       ))}
+      {usersTab && (
+        <View style={{ alignSelf: "center", marginLeft: "auto" }}>
+          <SearchBar
+            placeholder={"חיפוש "}
+            onChangeText={handleSearchTextChange}
+            onSearch={handleSearch}
+            searchBarStyling={styles.searchInput}
+          />
+        </View>
+      )}
     </View>
   );
 };

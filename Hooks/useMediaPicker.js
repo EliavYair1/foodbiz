@@ -23,10 +23,10 @@ const useMediaPicker = (handleInputChange) => {
         const selectedMedia = result.assets[0].uri;
         // setMedia(result.uri);
         setMedia(selectedMedia);
-        handleInputChange(mediaType, selectedMedia);
+        handleInputChange("url", selectedMedia);
       }
     } catch (error) {
-      console.error(error);
+      console.error("error:", error);
       setError("Failed to pick media.");
     }
   };

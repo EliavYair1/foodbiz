@@ -8,7 +8,9 @@ const useScreenNavigator = () => {
     const navigateToRoute = (routeName) => {
       navigation.navigate(routeName);
     };
-
+    const navigateTogoBack = () => {
+      navigation.goBack();
+    };
     // Clean up the effect
     return () => {
       // You can perform any cleanup operations here if needed
@@ -17,6 +19,7 @@ const useScreenNavigator = () => {
 
   return {
     navigateToRoute: (routeName) => navigation.navigate(routeName),
+    navigateTogoBack: () => navigation.goBack(),
   };
 };
 

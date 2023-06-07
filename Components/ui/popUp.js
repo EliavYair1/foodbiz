@@ -1,12 +1,4 @@
-import {
-  View,
-  Text,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Platform,
-  Image,
-} from "react-native";
+import { View, Text, Modal, StyleSheet, Image } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { BlurView } from "expo-blur";
@@ -15,15 +7,17 @@ import fonts from "../../styles/fonts";
 import CloseIcon from "../../assets/imgs/CloseModalIcon.png";
 import SelectMenu from "./SelectMenu";
 import { FlatList } from "react-native-gesture-handler";
-import { Divider, PaperProvider } from "react-native-paper";
+import { PaperProvider } from "react-native-paper";
 import Input from "./Input";
-import uuid from "uuid-random";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { TextInput } from "react-native-paper";
 import DatePicker from "./datePicker";
 import Button from "../ui/Button";
+import useMediaPicker from "../../Hooks/useMediaPicker";
+import { Camera } from "expo-camera";
+import Loader from "../../utiles/Loader";
+
 const PopUp = ({
   animationType,
   modalHeaderText,
@@ -31,37 +25,50 @@ const PopUp = ({
   modalHeight,
   modalWidth,
   visible,
-  firstButtonFunction,
-  secondButtonFunction,
   icon1,
   icon2,
   buttonText1,
   buttonText2,
   buttonHeaderText,
-  submitButtonFunction,
   submitText,
   selectWidth,
   selectOptions,
   selectHeader,
-  inputData,
   remarksInputText,
   firstInputText, //temp
   secondInputText, //temp
   thirdInputText, //temp
-  selectedMedia,
-  deleteSelectedMedia,
 }) => {
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({});
-  const [ImagePicked, setImagePicked] = useState(null);
+  const [imagePicked, setImagePicked] = useState(false);
+  const [hasPermission, setHasPermission] = useState(null);
+  const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
+  const [Loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === "granted");
+    })();
+  }, []);
+
+  const handleTakePhoto = async () => {
+    if (hasPermission) {
+      const { uri } = await camera.takePictureAsync();
+      setCameraCaptureImageUrl(uri);
+      handleFormChange("cameraPhoto", uri);
+    }
+  };
+
   const schema = yup.object().shape({
     station: yup.string().required("station is required"),
     fileName: yup.string().required("file name is required"),
     authorName: yup.string().required("author name is required"),
     date: yup.string().required("date is required"),
-    libraryChoice: yup.string().required("image is required"),
-    phone: yup.string().required("image pick is required"),
+    url: yup.string().required("image is required"),
     remarks: yup.string(),
+    cameraPhoto: yup.string().required("image pick is required"),
   });
   const {
     control,
@@ -131,7 +138,7 @@ const PopUp = ({
       backgroundColor: colors.blue,
       paddingVertical: 8,
       borderRadius: 8,
-      opacity: !isSchemaValid ? 0.6 : 1,
+      opacity: 1,
     },
     submitButtonText: {
       color: colors.white,
@@ -139,6 +146,15 @@ const PopUp = ({
     inputContentStyling: { backgroundColor: "white" },
     inputStyling: { minWidth: "100%", backgroundColor: "white" },
     contentContainer: {},
+    disabled: {
+      width: "100%",
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: colors.blue,
+      paddingVertical: 8,
+      borderRadius: 8,
+      opacity: 0.6,
+    },
   });
   const inputRef = useRef();
   const popUpInputInformation = [
@@ -239,12 +255,19 @@ const PopUp = ({
     },
   ];
 
-  // handling the input change
-  const handleInputChange = (name, value) => {
+  // handling image pick
+  const handleImagePick = () => {
+    pickMedia("image");
+    setImagePicked(true);
+  };
+
+  // handling the form changes
+  const handleFormChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
     setIsSchemaValid(true);
   };
 
+  const [media, pickMedia, mediaError] = useMediaPicker(handleFormChange);
   // validate the scheme on every change of the state
   useEffect(() => {
     schema
@@ -253,16 +276,21 @@ const PopUp = ({
       .catch(() => setIsSchemaValid(false));
   }, [formData, schema]);
 
-  const onSubmitForm = async () => {
+  const onSubmitForm = () => {
     // checking if scheme is valid
     console.log("formData:", formData);
+
     if (isSchemaValid) {
       console.log("scheme is valid");
     }
   };
-  // console.log(isSchemaValid, formData);
-  // console.log(selectedMedia);
+  if (hasPermission === null) {
+    return <View />;
+  }
 
+  if (hasPermission === false) {
+    return <Text>No access to camera</Text>;
+  }
   return (
     <Modal
       visible={visible}
@@ -306,10 +334,11 @@ const PopUp = ({
                   selectWidth={selectWidth}
                   selectOptions={selectOptions}
                   name={"station"}
-                  errorMessage={errors.date && errors.station.message}
+                  errorMessage={errors.station && errors.station.message}
                   onChange={(value) => {
-                    handleInputChange("station", value);
+                    handleFormChange("station", value);
                   }}
+                  propertyName="company"
                 />
                 <Text style={styles.subtextStyle}>{firstInputText}</Text>
                 <Input
@@ -322,7 +351,7 @@ const PopUp = ({
                   mode={"outlined"}
                   inputStyle={{ backgroundColor: "white" }}
                   onChangeFunction={(value) => {
-                    handleInputChange("fileName", value);
+                    handleFormChange("fileName", value);
                   }}
                 />
                 <Text style={styles.subtextStyle}>{secondInputText}</Text>
@@ -335,7 +364,7 @@ const PopUp = ({
                   control={control}
                   mode={"outlined"}
                   onChangeFunction={(value) => {
-                    handleInputChange("authorName", value);
+                    handleFormChange("authorName", value);
                   }}
                   inputStyle={{ backgroundColor: "white" }}
                 />
@@ -346,7 +375,7 @@ const PopUp = ({
                   name={"date"}
                   errorMessage={errors.date && errors.date.message}
                   onchange={(value) => {
-                    handleInputChange("date", value);
+                    handleFormChange("date", value);
                   }}
                 />
               </View>
@@ -354,32 +383,64 @@ const PopUp = ({
               <View>
                 <Text style={styles.subtextStyle}>{buttonHeaderText}</Text>
                 <View style={styles.buttonWrapper}>
-                  <Button
-                    buttonStyle={styles.button}
-                    icon={true}
-                    buttonFunction={firstButtonFunction}
-                    iconPath={icon1}
-                    iconStyle={styles.IconStyle}
-                    buttonTextStyle={styles.buttonText}
-                    buttonText={buttonText1}
-                    buttonWidth={184}
-                    errorMessage={
-                      !selectedMedia
-                        ? errors.libraryChoice && errors.libraryChoice.message
-                        : null
-                    }
-                  />
-                  <Button
-                    buttonWidth={194}
-                    buttonStyle={styles.button}
-                    buttonFunction={secondButtonFunction}
-                    icon={true}
-                    iconPath={icon2}
-                    iconStyle={styles.IconStyle}
-                    buttonTextStyle={styles.buttonText}
-                    buttonText={buttonText2}
-                    errorMessage={errors.phone && errors.phone.message}
-                  />
+                  <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
+                    <Button
+                      buttonStyle={styles.button}
+                      icon={true}
+                      buttonFunction={handleImagePick}
+                      iconPath={icon1}
+                      iconStyle={styles.IconStyle}
+                      buttonTextStyle={styles.buttonText}
+                      buttonText={buttonText1}
+                      buttonWidth={184}
+                      errorMessage={
+                        !imagePicked ? errors.url && errors.url.message : null
+                      }
+                    />
+                    {imagePicked && (
+                      <Image
+                        source={{ uri: media }}
+                        style={{ width: 100, height: 100 }}
+                      />
+                    )}
+                  </View>
+
+                  <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
+                    <Camera
+                      style={{
+                        borderRadius: 8,
+                        backgroundColor: "transparent",
+                        height: 46,
+                      }}
+                      type={Camera.Constants.Type.back}
+                      ref={(ref) => (camera = ref)}
+                    >
+                      <Button
+                        buttonWidth={194}
+                        buttonStyle={[
+                          styles.button,
+                          { backgroundColor: "white" },
+                        ]}
+                        buttonFunction={handleTakePhoto}
+                        icon={true}
+                        iconPath={icon2}
+                        iconStyle={styles.IconStyle}
+                        buttonTextStyle={styles.buttonText}
+                        buttonText={buttonText2}
+                        errorMessage={
+                          !CameraCaptureImageUrl
+                            ? errors.cameraPhoto && errors.cameraPhoto.message
+                            : null
+                        }
+                      />
+                    </Camera>
+                    {CameraCaptureImageUrl && (
+                      <Image
+                        source={{ uri: CameraCaptureImageUrl }}
+                        style={{ width: 100, height: 100 }}
+                      />
+                    )}
+                  </View>
                 </View>
               </View>
               {/* input remarks */}
@@ -393,7 +454,7 @@ const PopUp = ({
                   maxLength={40}
                   mode="outlined"
                   onChangeFunction={(value) => {
-                    handleInputChange("remarks", value);
+                    handleFormChange("remarks", value);
                   }}
                   activeOutlineColor="grey"
                   inputStyle={{
@@ -407,8 +468,8 @@ const PopUp = ({
               </View>
               {/* submit button */}
               <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleSubmit(onSubmitForm)}
+                style={!isSchemaValid ? styles.disabled : styles.submitButton}
+                onPress={handleSubmit(onSubmitForm())}
                 // disabled={!isSchemaValid}
               >
                 <Text style={styles.submitButtonText}>{submitText}</Text>

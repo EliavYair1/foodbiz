@@ -2,6 +2,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import Login from "../Screens/Login/login";
 import ClientsList from "../Screens/ClientsList/ClientsList";
 import Home from "../Screens/Home/Home";
+import WorkerNewReport from "../Screens/WorkerNewReport/WorkerNewReport";
 const Stack = createStackNavigator();
 const FoodbizNavigator = () => {
   return (
@@ -20,6 +21,11 @@ const FoodbizNavigator = () => {
         name="ClientsList"
         options={{ headerShown: false }}
         component={ClientsList}
+      />
+      <Stack.Screen
+        name="WorkerNewReport"
+        options={{ headerShown: false }}
+        component={WorkerNewReport}
       />
     </Stack.Navigator>
   );

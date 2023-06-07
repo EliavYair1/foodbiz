@@ -4,7 +4,6 @@ import colors from "../../../../../styles/colors";
 import fonts from "../../../../../styles/fonts";
 
 const ClientTableRow = ({ rowData, headers }) => {
-  // console.log("filesTable:", filesTable);
   return (
     <View style={styles.tableRowContainer}>
       {headers.map((header, idx) => {
@@ -33,6 +32,7 @@ const ClientTableRow = ({ rowData, headers }) => {
           );
         } else {
           const cellValue = rowData && rowData.getData(header.data);
+
           return (
             <View style={styles.tableRowContainer} key={header.id}>
               <Text
