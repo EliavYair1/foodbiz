@@ -24,11 +24,16 @@ import * as yup from "yup";
 import { useSelector } from "react-redux";
 import Input from "../../Components/ui/Input";
 import ToggleSwitch from "../../Components/ui/ToggleSwitch";
+import DatePicker from "../../Components/ui/datePicker";
 const WorkerNewReport = () => {
   const clients = useSelector((state) => state.clients);
   const { navigateTogoBack } = useScreenNavigator();
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({});
+  // fetching the the current data from spacific client
+  const currentClient = useSelector(
+    (state) => state.currentClient.currentClient
+  );
   const [switchStates, setSwitchStates] = useState({
     switch1: false,
     switch2: false,
@@ -37,11 +42,18 @@ const WorkerNewReport = () => {
     switch5: false,
     switch6: false,
   });
-
+  const [selectedStation, setSelectedStation] = useState(null);
+  const filteredStationsResult = currentClient
+    .getReports()
+    .filter((report) => report.getData("clientStationId") === selectedStation);
+  // console.log("filteredStationsResult:", filteredStationsResult);
+  // console.log("currentClient : ", currentClient.getData("id"));
+  // console.log(currentClient.getReports());
   const schema = yup.object().shape({
     station: yup.string().required("station is required"),
-    reportLocation: yup.string().required("station is required"),
+    reportLocation: yup.string().required("reportLocation is required"),
     accompany: yup.string().required("accompany is required"),
+    date: yup.string().required("date is required"),
   });
   const {
     control,
@@ -83,14 +95,16 @@ const WorkerNewReport = () => {
             <SelectMenu
               control={control}
               selectWidth={240}
-              selectOptions={[1, 2, 3, 4, 5, 6, 7]}
+              selectOptions={currentClient.getStations()}
               name={"station"}
               errorMessage={errors.station && errors.station.message}
               onChange={(value) => {
-                // handleFormChange("station", value);
-                console.log(value);
+                handleFormChange("station", value.id);
+                setSelectedStation(value.id);
+                console.log("value-station:", value);
               }}
-              // propertyName="company"
+              propertyName="company"
+              returnObject={true}
             />
           ),
         },
@@ -101,16 +115,30 @@ const WorkerNewReport = () => {
             <SelectMenu
               control={control}
               selectWidth={240}
-              selectOptions={[1, 2, 3, 4, 5, 6, 7]}
+              selectOptions={[
+                // todo : 2. make every input reactive based on timeOfReport selector selected except reportTime &&  timeOfReport(date picker)
+                // * list of toggle names by order to react to the timeOfReport selector
+                /* 
+                1.haveFine
+                2.haveAmountOfItems
+                3.haveSafetyGrade
+                4.haveCulinaryGrade
+                5.haveNutritionGrade
+                6.haveCategoriesNameForCriticalItems
+                */
+
+                { timeOfReport: "דוח חדש", id: 0 },
+                ...filteredStationsResult, //clientStationId
+              ]}
               name={"reportLocation"}
               errorMessage={
                 errors.reportLocation && errors.reportLocation.message
               }
               onChange={(value) => {
-                // handleFormChange("station", value);
-                console.log(value);
+                handleFormChange("reportLocation", value);
+                console.log("value-reportLocation:", value);
               }}
-              // propertyName="company"
+              propertyName="timeOfReport"
             />
           ),
         },
@@ -196,7 +224,7 @@ const WorkerNewReport = () => {
           id: 8,
           text: "שם המלווה",
           boxItem: (
-            <View style={{ justifyContent: "flex-end" }}>
+            <View style={{ justifyContent: "flex-end", alignSelf: "center" }}>
               <Input
                 mode={"outlined"}
                 control={control}
@@ -216,8 +244,40 @@ const WorkerNewReport = () => {
             </View>
           ),
         },
-        { id: 9, text: "תאריך ביקורת", boxItem: <Text>off</Text> },
-        { id: 10, text: "זמן הביקורת", boxItem: <Text>off</Text> },
+        {
+          id: 9,
+          text: "תאריך ביקורת",
+          boxItem: (
+            <DatePicker
+              control={control}
+              name={"date"}
+              errorMessage={errors.date && errors.date.message}
+              onchange={(value) => {
+                handleFormChange("date", value);
+              }}
+              dateInputWidth={240}
+            />
+          ),
+        },
+        {
+          id: 10,
+          text: "זמן הביקורת",
+          boxItem: (
+            <SelectMenu
+              control={control}
+              selectWidth={240}
+              selectOptions={[1, 2, 3, 4, 5, 6, 7]}
+              name={"station"}
+              errorMessage={errors.station && errors.station.message}
+              onChange={(value) => {
+                // handleFormChange("station", value);
+                console.log(value);
+              }}
+              // propertyName="company"
+              // selectMenuStyling={{ marginBottom: 16 }}
+            />
+          ),
+        },
       ],
     },
     {
@@ -279,7 +339,9 @@ const WorkerNewReport = () => {
           </TouchableOpacity>
           <Text style={styles.navigationText}>חזרה לרשימת הלקוחות</Text>
         </View>
-        <Text style={styles.header}>יצירת דוח חדש עבור בנק הפועלים</Text>
+        <Text style={styles.header}>
+          יצירת דוח חדש עבור {currentClient.getCompany()}
+        </Text>
         <FlatList
           data={accordionData}
           renderItem={renderAccordion}

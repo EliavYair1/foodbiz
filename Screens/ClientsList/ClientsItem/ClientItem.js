@@ -29,15 +29,18 @@ import "@env";
 import * as WebBrowser from "expo-web-browser";
 import useScreenNavigator from "../../../Hooks/useScreenNavigator";
 import routes from "../../../Navigation/routes";
-const ClientItem = ({ title, data, tablePadding, logo }) => {
+import { useDispatch } from "react-redux";
+import { getCurrentClient } from "../../../store/redux/reducers/currentClientSlice";
+const ClientItem = ({ client, tablePadding, logo }) => {
   const contentRef = useRef();
   const [open, setOpen] = useState(false);
   const arrayOfTabs = ["דוחות", "קבצים", "בעלי גישה"];
   const [activeTab, setActiveTab] = useState(arrayOfTabs[0]);
   const heightAnim = useRef(new Animated.Value(0)).current;
   const { navigateToRoute } = useScreenNavigator();
-  const users = data.getUsers();
+  const users = client.getUsers();
   const [filteredData, setFilteredData] = useState(users);
+  const dispatch = useDispatch();
 
   // tabs handler
   const handleTabPress = useCallback((tab) => {
@@ -73,8 +76,8 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
     }
   };
 
-  const lastReport = data.getLastReportData();
-  const lastFiveReport = data.getLastFiveReportsData();
+  const lastReport = client.getLastReportData();
+  const lastFiveReport = client.getLastFiveReportsData();
   const { haveCulinaryGrade, haveGrade, haveNutritionGrade, haveSafetyGrade } =
     lastReport.data;
 
@@ -240,12 +243,11 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
   // handling nested tables
   const handleDisplayedTab = useMemo(() => {
     if (activeTab === "דוחות") {
-      const reports = data.getReports();
+      const reports = client.getReports();
       return <ClientTable rowsData={reports} headers={reportsTable} />;
     } else if (activeTab === "קבצים") {
-      const files = data.getFilesCategory();
-      const stations = data.getStations();
-      // console.log("stations:", stations);
+      const files = client.getFilesCategory();
+      const stations = client.getStations();
       return (
         <FileCategoryRow
           stations={stations}
@@ -257,7 +259,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
     } else {
       return <ClientTable rowsData={filteredData} headers={usersTable} />;
     }
-  }, [activeTab, data, filteredData]);
+  }, [activeTab, client, filteredData]);
 
   // styling
   const styles = StyleSheet.create({
@@ -323,6 +325,11 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
   };
   const memoizedUsers = useMemo(() => users, [users]);
 
+  const handleNewReport = () => {
+    dispatch(getCurrentClient(client));
+    navigateToRoute(routes.ONBOARDING.WorkerNewReport);
+  };
+
   return (
     <>
       <TouchableOpacity
@@ -358,7 +365,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
               textAlign: "left",
             }}
           >
-            {title}
+            {client.getCompany()}
           </Text>
         </View>
 
@@ -398,7 +405,7 @@ const ClientItem = ({ title, data, tablePadding, logo }) => {
               iconPath={plusIconWhite}
               iconStyle={styles.buttonIcon}
               buttonWidth={113}
-              buttonFunction={() => newReportNavigation()}
+              buttonFunction={handleNewReport}
             />
           </View>
 

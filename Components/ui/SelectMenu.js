@@ -21,6 +21,8 @@ const SelectMenu = ({
   errorMessage,
   onChange,
   propertyName = false,
+  selectMenuStyling,
+  returnObject = false,
 }) => {
   const [visible, setVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -28,7 +30,7 @@ const SelectMenu = ({
   const closeMenu = () => setVisible(false);
   const handleItemPick = (item) => {
     setSelectedItem(item);
-    // console.log("item selected:", item);
+    console.log("item selected:", item);
     onChange(item);
     closeMenu();
   };
@@ -83,9 +85,19 @@ const SelectMenu = ({
       <TouchableOpacity
         key={item.id}
         style={styles.menuItem}
-        onPress={() => handleItemPick(item[propertyName])}
+        onPress={() =>
+          handleItemPick(
+            returnObject
+              ? item
+              : item.getData
+              ? item.getData(propertyName)
+              : item[propertyName]
+          )
+        }
       >
-        <Text style={styles.menuItemText}>{item[propertyName]}</Text>
+        <Text style={styles.menuItemText}>
+          {item.getData ? item.getData(propertyName) : item[propertyName]}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -97,11 +109,14 @@ const SelectMenu = ({
         control={control}
         render={({ field: { value, onChange } }) => (
           <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
+            style={[
+              {
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+              },
+              selectMenuStyling ?? "",
+            ]}
           >
             <Menu
               visible={visible}
@@ -121,7 +136,13 @@ const SelectMenu = ({
                       }}
                     />
                     <Text style={styles.menuItemText}>
-                      {selectedItem ? selectedItem : "בחירה"}
+                      {selectedItem
+                        ? returnObject
+                          ? selectedItem.getData
+                            ? selectedItem.getData(propertyName)
+                            : selectedItem[propertyName]
+                          : selectedItem
+                        : "בחירה"}
                     </Text>
                   </View>
                 </TouchableOpacity>

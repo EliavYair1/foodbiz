@@ -34,8 +34,8 @@ const ClientsList = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
 
-  // const [filteredData, setFilteredData] = useState(clients);
-  const [filteredData, setFilteredData] = useState(clients);
+  // const [filteredClients, setFilteredClients] = useState(clients);
+  const [filteredClients, setFilteredClients] = useState(clients);
   const flatListRef = useRef(null);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ const ClientsList = () => {
   };
   // search bar filtering
   const handleSearch = (filteredClients) => {
-    setFilteredData(filteredClients);
+    setFilteredClients(filteredClients);
   };
   const ClientCompanyFilterFunction = (item, text) => {
     const company = item.company;
@@ -68,6 +68,7 @@ const ClientsList = () => {
 
   //fetching memorized clients to spare uneccery randering.
   const memoizedClients = useMemo(() => clients, [clients]);
+
   const handleLastTabOpen = () => {
     // Scroll to the top of the screen
     flatListRef.current.scrollToOffset({ offset: 0, animated: true });
@@ -92,13 +93,12 @@ const ClientsList = () => {
         <FlatList
           ref={flatListRef}
           style={{ flexGrow: 0, width: "100%" }}
-          data={filteredData}
+          data={filteredClients}
           renderItem={({ item }) => {
             return (
               <ClientItem
-                title={item.getData("company")}
                 logo={item.getData("logo")}
-                data={item}
+                client={item}
                 tablePadding={tablePadding}
               />
             );

@@ -43,6 +43,7 @@ const Home = () => {
           dispatch(setClients({ clients: clients }));
           // console.log("clients[Home]:", clients);
           navigateToRoute(routes.ONBOARDING.ClientsList);
+          // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
         } else {
           console.log("error2:", responseClients.message);
         }
