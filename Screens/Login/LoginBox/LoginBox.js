@@ -179,7 +179,6 @@ const LoginBox = () => {
         buttonStyle={styles.button}
         buttonTextStyle={styles.buttonText}
         disableLogic={!isSchemaValid}
-        buttonWidth={"100%"}
       />
     </View>
   );
@@ -211,10 +210,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 17,
     borderRadius: 100,
+    justifyContent: "center",
+    textAlign: "center",
+    alignSelf: "center",
+    alignItems: "center",
   },
   buttonText: {
     fontSize: 20,
     color: colors.white,
+    textAlign: "center",
+    width: "100%",
   },
 });
 

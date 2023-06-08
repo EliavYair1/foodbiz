@@ -1,4 +1,12 @@
-import { View, Text, Modal, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  Modal,
+  StyleSheet,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { BlurView } from "expo-blur";
@@ -22,7 +30,6 @@ const PopUp = ({
   animationType,
   modalHeaderText,
   onCloseModal = false,
-  modalHeight,
   modalWidth,
   visible,
   icon1,
@@ -44,7 +51,6 @@ const PopUp = ({
   const [imagePicked, setImagePicked] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
-  const [Loading, setLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -284,6 +290,7 @@ const PopUp = ({
       console.log("scheme is valid");
     }
   };
+
   if (hasPermission === null) {
     return <View />;
   }
@@ -300,182 +307,187 @@ const PopUp = ({
     >
       <PaperProvider>
         <BlurView style={{ flex: 1 }} intensity={100} tint="dark">
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 10,
-            }}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
           >
             <View
               style={{
-                backgroundColor: "white",
-                borderRadius: 10,
-                width: modalWidth,
-                height: modalHeight,
-                paddingHorizontal: 40,
-                paddingVertical: 20,
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
                 zIndex: 10,
               }}
             >
-              <TouchableOpacity onPress={onCloseModal} style={{}}>
-                <Image source={CloseIcon} style={styles.closeIconStyle} />
-              </TouchableOpacity>
-              {/* HEADER */}
-              <Text style={styles.textStyle}>{modalHeaderText}</Text>
-              {/* selector */}
+              <View
+                style={{
+                  backgroundColor: "white",
+                  borderRadius: 10,
+                  width: modalWidth,
+                  paddingHorizontal: 40,
+                  paddingVertical: 20,
+                  zIndex: 10,
+                }}
+              >
+                <TouchableOpacity onPress={onCloseModal} style={{}}>
+                  <Image source={CloseIcon} style={styles.closeIconStyle} />
+                </TouchableOpacity>
+                {/* HEADER */}
+                <Text style={styles.textStyle}>{modalHeaderText}</Text>
+                {/* selector */}
 
-              {/* inputs */}
-              <View style={styles.inputWrapper}>
-                <Text style={styles.subtextStyle}>{selectHeader}</Text>
-                <SelectMenu
-                  control={control}
-                  selectWidth={selectWidth}
-                  selectOptions={selectOptions}
-                  name={"station"}
-                  errorMessage={errors.station && errors.station.message}
-                  onChange={(value) => {
-                    handleFormChange("station", value);
-                  }}
-                  propertyName="company"
-                />
-                <Text style={styles.subtextStyle}>{firstInputText}</Text>
-                <Input
-                  proxyRef={inputRef}
-                  name={"fileName"}
-                  // label={firstInputText}
-                  activeOutlineColor={"grey"}
-                  outlineColor={"grey"}
-                  control={control}
-                  mode={"outlined"}
-                  inputStyle={{ backgroundColor: "white" }}
-                  onChangeFunction={(value) => {
-                    handleFormChange("fileName", value);
-                  }}
-                />
-                <Text style={styles.subtextStyle}>{secondInputText}</Text>
-                <Input
-                  proxyRef={inputRef}
-                  name={"authorName"}
-                  // label={secondInputText}
-                  outlineColor={"grey"}
-                  activeOutlineColor={"grey"}
-                  control={control}
-                  mode={"outlined"}
-                  onChangeFunction={(value) => {
-                    handleFormChange("authorName", value);
-                  }}
-                  inputStyle={{ backgroundColor: "white" }}
-                />
-                <Text style={styles.subtextStyle}>{thirdInputText}</Text>
-                <DatePicker
-                  label={thirdInputText}
-                  control={control}
-                  name={"date"}
-                  errorMessage={errors.date && errors.date.message}
-                  onchange={(value) => {
-                    handleFormChange("date", value);
-                  }}
-                />
-              </View>
-              {/* upload buttons */}
-              <View>
-                <Text style={styles.subtextStyle}>{buttonHeaderText}</Text>
-                <View style={styles.buttonWrapper}>
-                  <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
-                    <Button
-                      buttonStyle={styles.button}
-                      icon={true}
-                      buttonFunction={handleImagePick}
-                      iconPath={icon1}
-                      iconStyle={styles.IconStyle}
-                      buttonTextStyle={styles.buttonText}
-                      buttonText={buttonText1}
-                      buttonWidth={184}
-                      errorMessage={
-                        !imagePicked ? errors.url && errors.url.message : null
-                      }
-                    />
-                    {imagePicked && (
-                      <Image
-                        source={{ uri: media }}
-                        style={{ width: 100, height: 100 }}
-                      />
-                    )}
-                  </View>
-
-                  <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
-                    <Camera
-                      style={{
-                        borderRadius: 8,
-                        backgroundColor: "transparent",
-                        height: 46,
-                      }}
-                      type={Camera.Constants.Type.back}
-                      ref={(ref) => (camera = ref)}
-                    >
+                {/* inputs */}
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.subtextStyle}>{selectHeader}</Text>
+                  <SelectMenu
+                    control={control}
+                    selectWidth={selectWidth}
+                    selectOptions={selectOptions}
+                    name={"station"}
+                    errorMessage={errors.station && errors.station.message}
+                    onChange={(value) => {
+                      handleFormChange("station", value);
+                    }}
+                    propertyName="company"
+                  />
+                  <Text style={styles.subtextStyle}>{firstInputText}</Text>
+                  <Input
+                    proxyRef={inputRef}
+                    name={"fileName"}
+                    // label={firstInputText}
+                    activeOutlineColor={"grey"}
+                    outlineColor={"grey"}
+                    control={control}
+                    mode={"outlined"}
+                    inputStyle={{ backgroundColor: "white" }}
+                    onChangeFunction={(value) => {
+                      handleFormChange("fileName", value);
+                    }}
+                  />
+                  <Text style={styles.subtextStyle}>{secondInputText}</Text>
+                  <Input
+                    proxyRef={inputRef}
+                    name={"authorName"}
+                    // label={secondInputText}
+                    outlineColor={"grey"}
+                    activeOutlineColor={"grey"}
+                    control={control}
+                    mode={"outlined"}
+                    onChangeFunction={(value) => {
+                      handleFormChange("authorName", value);
+                    }}
+                    inputStyle={{ backgroundColor: "white" }}
+                  />
+                  <Text style={styles.subtextStyle}>{thirdInputText}</Text>
+                  <DatePicker
+                    label={thirdInputText}
+                    control={control}
+                    name={"date"}
+                    dateInputWidth={"100%"}
+                    errorMessage={errors.date && errors.date.message}
+                    onchange={(value) => {
+                      handleFormChange("date", value);
+                    }}
+                  />
+                </View>
+                {/* upload buttons */}
+                <View>
+                  <Text style={styles.subtextStyle}>{buttonHeaderText}</Text>
+                  <View style={styles.buttonWrapper}>
+                    <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
                       <Button
-                        buttonWidth={194}
-                        buttonStyle={[
-                          styles.button,
-                          { backgroundColor: "white" },
-                        ]}
-                        buttonFunction={handleTakePhoto}
+                        buttonStyle={styles.button}
                         icon={true}
-                        iconPath={icon2}
+                        buttonFunction={handleImagePick}
+                        iconPath={icon1}
                         iconStyle={styles.IconStyle}
                         buttonTextStyle={styles.buttonText}
-                        buttonText={buttonText2}
+                        buttonText={buttonText1}
+                        buttonWidth={184}
                         errorMessage={
-                          !CameraCaptureImageUrl
-                            ? errors.cameraPhoto && errors.cameraPhoto.message
-                            : null
+                          !imagePicked ? errors.url && errors.url.message : null
                         }
                       />
-                    </Camera>
-                    {CameraCaptureImageUrl && (
-                      <Image
-                        source={{ uri: CameraCaptureImageUrl }}
-                        style={{ width: 100, height: 100 }}
-                      />
-                    )}
+                      {imagePicked && (
+                        <Image
+                          source={{ uri: media }}
+                          style={{ width: 100, height: 100 }}
+                        />
+                      )}
+                    </View>
+
+                    <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
+                      <Camera
+                        style={{
+                          borderRadius: 8,
+                          backgroundColor: "transparent",
+                          height: 46,
+                        }}
+                        type={Camera.Constants.Type.back}
+                        ref={(ref) => (camera = ref)}
+                      >
+                        <Button
+                          buttonWidth={194}
+                          buttonStyle={[
+                            styles.button,
+                            { backgroundColor: "white" },
+                          ]}
+                          buttonFunction={handleTakePhoto}
+                          icon={true}
+                          iconPath={icon2}
+                          iconStyle={styles.IconStyle}
+                          buttonTextStyle={styles.buttonText}
+                          buttonText={buttonText2}
+                          errorMessage={
+                            !CameraCaptureImageUrl
+                              ? errors.cameraPhoto && errors.cameraPhoto.message
+                              : null
+                          }
+                        />
+                      </Camera>
+                      {CameraCaptureImageUrl && (
+                        <Image
+                          source={{ uri: CameraCaptureImageUrl }}
+                          style={{ width: 100, height: 100 }}
+                        />
+                      )}
+                    </View>
                   </View>
                 </View>
+                {/* input remarks */}
+                <View style={styles.remarksInputWrapper}>
+                  <Text style={styles.subtextStyle}>{remarksInputText}</Text>
+                  <Input
+                    control={control}
+                    name={"remarks"}
+                    multiline
+                    numberOfLines={4}
+                    maxLength={40}
+                    mode="outlined"
+                    onChangeFunction={(value) => {
+                      handleFormChange("remarks", value);
+                    }}
+                    activeOutlineColor="grey"
+                    inputStyle={{
+                      backgroundColor: colors.white,
+                      width: 400,
+                      height: 80,
+                      borderRadius: 8,
+                      borderColor: "rgba(12, 20, 48, 0.2)",
+                    }}
+                  />
+                </View>
+                {/* submit button */}
+                <TouchableOpacity
+                  style={!isSchemaValid ? styles.disabled : styles.submitButton}
+                  onPress={handleSubmit(onSubmitForm)}
+                  // disabled={!isSchemaValid}
+                >
+                  <Text style={styles.submitButtonText}>{submitText}</Text>
+                </TouchableOpacity>
               </View>
-              {/* input remarks */}
-              <View style={styles.remarksInputWrapper}>
-                <Text style={styles.subtextStyle}>{remarksInputText}</Text>
-                <Input
-                  control={control}
-                  name={"remarks"}
-                  multiline
-                  numberOfLines={4}
-                  maxLength={40}
-                  mode="outlined"
-                  onChangeFunction={(value) => {
-                    handleFormChange("remarks", value);
-                  }}
-                  activeOutlineColor="grey"
-                  inputStyle={{
-                    backgroundColor: colors.white,
-                    width: 400,
-                    height: 80,
-                    borderRadius: 8,
-                    borderColor: "rgba(12, 20, 48, 0.2)",
-                  }}
-                />
-              </View>
-              {/* submit button */}
-              <TouchableOpacity
-                style={!isSchemaValid ? styles.disabled : styles.submitButton}
-                onPress={handleSubmit(onSubmitForm())}
-                // disabled={!isSchemaValid}
-              >
-                <Text style={styles.submitButtonText}>{submitText}</Text>
-              </TouchableOpacity>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </BlurView>
       </PaperProvider>
     </Modal>

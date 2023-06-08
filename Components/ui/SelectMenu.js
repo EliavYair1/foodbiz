@@ -122,7 +122,6 @@ const SelectMenu = ({
               visible={visible}
               onDismiss={closeMenu}
               contentStyle={{
-                height: 300,
                 backgroundColor: "white",
               }}
               anchor={

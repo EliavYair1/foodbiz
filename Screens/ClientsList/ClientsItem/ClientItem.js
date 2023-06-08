@@ -91,7 +91,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     {
       id: 1,
       label: "סוקר",
-      width: "12.5%",
+      width: "10%",
       data: "name",
     },
     {
@@ -128,7 +128,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     {
       id: 7,
       label: "פעולות",
-      width: "17.5%",
+      width: "25%",
       type: "actions",
       actions: [
         {

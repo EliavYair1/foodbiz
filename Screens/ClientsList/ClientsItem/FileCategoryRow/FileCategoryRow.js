@@ -218,7 +218,7 @@ const FileCategoryRow = ({
           <PopUp
             isVisible={modalVisible}
             onCloseModal={onCloseNewFileModal}
-            modalHeight={768}
+            modalHeight={686}
             modalWidth={480}
             modalHeaderText={
               "הוספה / עריכה של קובץ בתיקיית אישורים\n עבור בנק הפועלים"
