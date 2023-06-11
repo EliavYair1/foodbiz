@@ -319,10 +319,12 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const handleSearch = (filteredUsers) => {
     setFilteredData(filteredUsers);
   };
+
   const usersFilterFunction = (item, text) => {
     const name = item.getData("name");
     return name && name.includes(text);
   };
+
   const memoizedUsers = useMemo(() => users, [users]);
 
   const handleNewReport = () => {

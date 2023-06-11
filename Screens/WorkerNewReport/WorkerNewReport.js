@@ -48,13 +48,19 @@ const WorkerNewReport = () => {
     .filter((report) => report.getData("clientStationId") === selectedStation);
   // console.log("filteredStationsResult:", filteredStationsResult);
   // console.log("currentClient : ", currentClient.getData("id"));
-  // console.log(currentClient.getReports());
+  // console.log(filteredStationsResult);
+  // currentClient.getReports().map((item) => console.log("item:", item));
+  // const report = currentClient
+  //   .getReports()
+  //   .map((report) => report.getData("haveFine"));
+  // console.log("report:", report);
   const schema = yup.object().shape({
     station: yup.string().required("station is required"),
-    reportLocation: yup.string().required("reportLocation is required"),
+    previousReports: yup.string().required("previousReports is required"),
     accompany: yup.string().required("accompany is required"),
     date: yup.string().required("date is required"),
   });
+
   const {
     control,
     handleSubmit,
@@ -67,6 +73,53 @@ const WorkerNewReport = () => {
   const handleFormChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
     setIsSchemaValid(true);
+
+    // Update switch states based on the selected option
+    if (name === "previousReports") {
+      if (value === "דוח חדש") {
+        // Reset switch states if "דוח חדש" is selected
+        setSwitchStates({
+          switch1: false,
+          switch2: false,
+          switch3: false,
+          switch4: false,
+          switch5: false,
+          switch6: false,
+        });
+      } else {
+        const selectedReport = filteredStationsResult.find(
+          (report) => report.getData("timeOfReport") === value
+        );
+
+        if (selectedReport) {
+          setSwitchStates({
+            switch1: selectedReport.getData("haveFine") == 0 ? false : true,
+            switch2:
+              selectedReport.getData("haveAmountOfItems") == 0 ? false : true,
+            switch3:
+              selectedReport.getData("haveSafetyGrade") == 0 ? false : true,
+            switch4:
+              selectedReport.getData("haveCulinaryGrade") == 0 ? false : true,
+            switch5:
+              selectedReport.getData("haveNutritionGrade") == 0 ? false : true,
+            switch6:
+              selectedReport.getData("haveCategoriesNameForCriticalItems") == 0
+                ? false
+                : true,
+          });
+        } else {
+          // Reset switch states if no report is selected
+          setSwitchStates({
+            switch1: false,
+            switch2: false,
+            switch3: false,
+            switch4: false,
+            switch5: false,
+            switch6: false,
+          });
+        }
+      }
+    }
   };
 
   // toggle switch function
@@ -130,13 +183,13 @@ const WorkerNewReport = () => {
                 { timeOfReport: "דוח חדש", id: 0 },
                 ...filteredStationsResult, //clientStationId
               ]}
-              name={"reportLocation"}
+              name={"previousReports"}
               errorMessage={
-                errors.reportLocation && errors.reportLocation.message
+                errors.previousReports && errors.previousReports.message
               }
               onChange={(value) => {
-                handleFormChange("reportLocation", value);
-                console.log("value-reportLocation:", value);
+                handleFormChange("previousReports", value);
+                console.log("value-previousReports:", value);
               }}
               propertyName="timeOfReport"
             />
