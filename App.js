@@ -12,9 +12,10 @@ import {
   Assistant_700Bold,
   Assistant_800ExtraBold,
 } from "@expo-google-fonts/assistant";
-import { I18nManager } from "react-native";
+import { I18nManager, AppRegistry } from "react-native";
 
 export default function App() {
+  AppRegistry.registerComponent("main", () => App);
   I18nManager.allowRTL(true);
   I18nManager.forceRTL(true);
   let [fontsLoaded] = useFonts({
