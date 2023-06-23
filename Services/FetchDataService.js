@@ -15,7 +15,11 @@ const FetchDataService = () => {
 
       return { success: true, ...(await axios(config)).data };
     } catch (error) {
-      return { success: false, ...error.response.data };
+      if (error.response) {
+        return { success: false, ...error.response.data };
+      } else {
+        return { success: false, error: "Network Error" };
+      }
     }
   };
 

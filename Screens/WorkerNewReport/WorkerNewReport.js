@@ -8,7 +8,7 @@ import {
   ScrollView,
   Switch,
 } from "react-native";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
 import rightDirectionIcon from "../../assets/imgs/rightDirIcon.png";
@@ -21,7 +21,7 @@ import SelectMenu from "../../Components/ui/SelectMenu";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Input from "../../Components/ui/Input";
 import ToggleSwitch from "../../Components/ui/ToggleSwitch";
 import DatePicker from "../../Components/ui/datePicker";
@@ -38,14 +38,20 @@ import ClientItemArrow from "../../assets/imgs/ClientItemArrow.png";
 import ClientItemArrowOpen from "../../assets/imgs/accodionOpenIndicatorBlack.png";
 import onDragIcon from "../../assets/imgs/onDragIcon.png";
 import Checkbox from "../../Components/ui/Checkbox";
+import { debounce, get } from "lodash";
+import FetchDataService from "../../Services/FetchDataService";
+import "@env";
+import axios from "axios";
+import { fetchCategories } from "../../store/redux/reducers/categoriesSlice";
+import CheckboxItem from "./CheckboxItem/CheckboxItem";
 const WorkerNewReport = () => {
   const richText = useRef();
-  const handleContentChange = (content) => {
-    console.log(content);
-  };
+  const dispatch = useDispatch();
+
   const clients = useSelector((state) => state.clients);
+  const categories = useSelector((state) => state.categories);
   const { navigateTogoBack } = useScreenNavigator();
-  // fetching the the current data from spacific client
+  // fetching the the current data from specific client
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
@@ -70,16 +76,48 @@ const WorkerNewReport = () => {
     "במהלך המשחק",
     "לפני ובמהלך המשחק",
   ]);
-  const selectOptions = reportTimeOptions.map((option, index) => ({
-    label: option,
-    value: index.toString(),
-  }));
-  // checkbox on change handler
-  const handleCheckboxToggle = (checked, label) => {
-    console.log(`${label} checked: ${checked}`);
-    // Perform any additional logic here based on the checkbox state
-  };
+  const [checkboxStatus, setCheckboxStatus] = useState({
+    foodSafetyReviewCbStatus: {
+      foodSafetyReviewCb1: false,
+      foodSafetyReviewCb2: false,
+      foodSafetyReviewCb3: false,
+      foodSafetyReviewCb4: false,
+      foodSafetyReviewCb5: false,
+      foodSafetyReviewCb6: false,
+      foodSafetyReviewCb7: false,
+      foodSafetyReviewCb8: false,
+      foodSafetyReviewCb9: false,
+      foodSafetyReviewCb10: false,
+      foodSafetyReviewCb11: false,
+    },
+    culinaryReviewCbStatus: {
+      culinaryReviewCb1: false,
+      culinaryReviewCb2: false,
+      culinaryReviewCb3: false,
+      culinaryReviewCb4: false,
+      culinaryReviewCb5: false,
+      culinaryReviewCb6: false,
+      culinaryReviewCb7: false,
+      culinaryReviewCb8: false,
+      culinaryReviewCb9: false,
+      culinaryReviewCb10: false,
+      culinaryReviewCb11: false,
+      culinaryReviewCb12: false,
+      culinaryReviewCb13: false,
+      culinaryReviewCb14: false,
+      culinaryReviewCb15: false,
+    },
+    nutritionReviewCbStatus: {
+      nutritionReviewCb1: false,
+      nutritionReviewCb2: false,
+      nutritionReviewCb3: false,
+      nutritionReviewCb4: false,
+    },
+  });
 
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [accompanySelected, setAccompanySelected] = useState(null);
+  const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
   const [switchStates, setSwitchStates] = useState({
     switch1: false,
     switch2: false,
@@ -88,23 +126,10 @@ const WorkerNewReport = () => {
     switch5: false,
     switch6: false,
   });
-  const [selectedStation, setSelectedStation] = useState(null);
-  const [accompanySelected, setAccompanySelected] = useState(null);
-  const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
-  const changeCategoryAccordionHeight = (height, toggle) => {
-    if (toggle) {
-      setCategoryAccordionHeight((prev) => prev + height);
-    } else {
-      setCategoryAccordionHeight((prev) => prev - height);
-    }
-  };
-  useEffect(() => {
-    console.log(categoryAccordionHeight);
-  }, [categoryAccordionHeight]);
-  const filteredStationsResult = currentClient
-    .getReports()
-    .filter((report) => report.getData("clientStationId") === selectedStation);
-
+  const selectOptions = reportTimeOptions.map((option, index) => ({
+    label: option,
+    value: index.toString(),
+  }));
   const schema = yup.object().shape({
     station: yup.string().required("station is required"),
     previousReports: yup.string().required("previousReports is required"),
@@ -121,8 +146,186 @@ const WorkerNewReport = () => {
     resolver: yupResolver(schema),
   });
 
-  // input onchange function
-  const handleFormChange = (name, value) => {
+  // * categories fetching start
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  const memoizedCategories = useMemo(() => categories, [categories]);
+  // newGeneralCommentTopText change handler
+  const handleContentChange = debounce((content) => {
+    console.log(content);
+  }, 300);
+
+  //  ! to refactor the checkbox and make the changes react to the state .
+  // todo 2 : make the checkboxs status change based on the report that being selected
+  // todo 3 : relay on the selected report prop "catergorys" array,concidering the ids of the...
+  // todo 3.1: ...categorys that in the selected report and display it in the accordion
+  // todo 4 : save all the changes in one place.
+  // ? categories checkboxes logic start
+
+  // * categories checkboxes Texts
+  const foodSafetyReviewTexts =
+    memoizedCategories?.categories?.[1]?.categories ?? [];
+  const culinaryReviewTexts =
+    memoizedCategories?.categories?.[2]?.categories ?? [];
+  const nutritionReviewTexts =
+    memoizedCategories?.categories?.[3]?.categories ?? [];
+
+  //  checkbox handler
+  // * check if the number of the categories is include in the array
+  const getUpdatedCategoryStatus = (categoryName, indices) => {
+    let categoryStatus = {};
+
+    // Determine the number of checkboxes based on the category name
+    let numCheckboxes;
+    switch (categoryName) {
+      case "foodSafetyReview":
+        numCheckboxes = 11;
+        break;
+      case "culinaryReview":
+        numCheckboxes = 15;
+        break;
+      case "nutritionReview":
+        numCheckboxes = 4;
+        break;
+      default:
+        numCheckboxes = 0;
+    }
+
+    // Loop from 1 to the number of checkboxes for this category
+    for (let i = 1; i <= numCheckboxes; i++) {
+      categoryStatus[`${categoryName}Cb${i}`] = indices.includes(i);
+    }
+
+    return categoryStatus;
+  };
+
+  // * update the checkboxStatuses state based on the location of the array of categories
+  const updateCheckboxStatus = (checkboxIndices) => {
+    setCheckboxStatus({
+      foodSafetyReviewCbStatus: getUpdatedCategoryStatus(
+        "foodSafetyReview",
+        checkboxIndices[0]
+      ),
+      culinaryReviewCbStatus: getUpdatedCategoryStatus(
+        "culinaryReview",
+        checkboxIndices[1]
+      ),
+      nutritionReviewCbStatus: getUpdatedCategoryStatus(
+        "nutritionReview",
+        checkboxIndices[2]
+      ),
+    });
+  };
+  // get the array of categories from the report and updates the state
+  useEffect(() => {
+    const categoriesReports = currentClient
+      .getReports()
+      .map((report) => report.getData("categorys"));
+
+    const convertToArrayOfNumbers = categoriesReports.map((str) =>
+      str
+        .split("|")
+        .filter(Boolean)
+        .map((item) => parseInt(item.replace(";", ""), 10))
+    );
+    function convertStringsToNumbers(stringsArray) {
+      return stringsArray.map(Number);
+    }
+    console.log(
+      convertStringsToNumbers(foodSafetyReviewTexts.map((item) => item.id))
+    );
+
+    // todo to filter the foodSafetyReview categories ids to the current report categories ids
+    // todo make the checkbox checked
+    // todo 2 : to make sure the checkbox in the selected report make the checkbox change reactively
+
+    updateCheckboxStatus(convertToArrayOfNumbers);
+  }, [currentClient]);
+
+  function compareArrays(array1, array2, action) {
+    // Loop through the first array
+    for (let i = 0; i < array1.length; i++) {
+      // Check if the current item is in the second array
+      if (array2.includes(array1[i])) {
+        // If the item is in both arrays, execute the action function
+        action(array1[i]);
+      }
+    }
+  }
+
+  const handleCheckboxToggle = (category, checked, label) => {
+    setCheckboxStatus((prevStatus) => {
+      const updatedCategoryStatus = { ...prevStatus[category] };
+      updatedCategoryStatus[label] = checked;
+
+      return { ...prevStatus, [category]: updatedCategoryStatus };
+    });
+  };
+  // inner accordionCategoriesItem
+  function accordionCategoriesItem(names, categoryName) {
+    return names.map((item, index) => {
+      const checkboxKey = `${categoryName}${index + 1}`;
+      const categoryStatus = checkboxStatus[`${categoryName}Status`];
+      const checkboxValue = categoryStatus
+        ? categoryStatus[checkboxKey]
+        : false;
+
+      return {
+        id: item.id,
+        text: (
+          <CheckboxItem
+            key={checkboxKey + checkboxValue}
+            label={checkboxKey}
+            checkboxItemText={item.name}
+            checked={checkboxValue}
+            handleChange={(checked) =>
+              handleCheckboxToggle(
+                `${categoryName}Status`,
+                checked,
+                checkboxKey
+              )
+            }
+          />
+        ),
+        boxItem: <Image style={{ width: 9, height: 14 }} source={onDragIcon} />,
+      };
+    });
+  }
+
+  // * checkbox counter
+  const getCheckedCount = (category) => {
+    return Object.values(checkboxStatus[category]).filter(
+      (value) => value === true
+    ).length;
+  };
+  // ! categories checkboxes logic end
+
+  // * redefine the Accordion height
+  const changeCategoryAccordionHeight = (height, toggle) => {
+    if (toggle) {
+      setCategoryAccordionHeight((prev) => prev + height);
+    } else {
+      setCategoryAccordionHeight((prev) => prev - height);
+    }
+  };
+
+  // * filtering the current client based on selected station
+  const filteredStationsResult = currentClient
+    .getReports()
+    .filter((report) => report.getData("clientStationId") === selectedStation);
+
+  // toggle switch function
+  const toggleSwitch = (id) => {
+    setSwitchStates((prevState) => ({
+      ...prevState,
+      [id]: !prevState[id],
+    }));
+  };
+
+  // * report onchange handler function
+  const handleFormChange = debounce((name, value) => {
     setFormData({ ...formData, [name]: value });
     setIsSchemaValid(true);
 
@@ -173,17 +376,34 @@ const WorkerNewReport = () => {
         }
       }
     }
-  };
+  }, 300);
 
-  // toggle switch function
-  const toggleSwitch = (id) => {
-    setSwitchStates((prevState) => ({
-      ...prevState,
-      [id]: !prevState[id],
-    }));
-  };
+  /* {
+oldReportId: 18503
+clientId: 34
+haveNewGeneralCommentsVersion: 1
+clientStationId: 66
+workerId: 23
+accompany: ללא ליווי
+haveFine: 0
+haveAmountOfItems: 0
+haveSafetyGrade: 1
+haveCulinaryGrade: 1
+haveNutritionGrade: 1
+haveCategoriesNameForCriticalItems: 0
+reportTime: 2
+newGeneralCommentTopText: ביקורת בתחנת פיליפס חיפה.
+התנור בתחנה לא עבד עד השעה 10:30, דבר שיצר קצת לחץ בתחנה.
+כמות סועדים קטנה ביחס לגודל של חדר האוכל, מה שנותן תחושה לא נעימה.
+יש לחשוב על תחימת חלק מחדר האוכל לשיפור  ההרגשה.
+קבלן ההסעדה לא מאשר למטבח מוצרים של IQF מה שיכול מאד לעזור לצוות לפי טענתו.
 
-  const accordionData = [
+timeOfReport: 22/06/2023
+categorys[]: 5
+} */
+
+  // * accordion FlatList array of Content
+  const NewReportAccordionContent = [
     {
       key: "settings",
       headerText: "הגדרות הדוח",
@@ -401,12 +621,17 @@ const WorkerNewReport = () => {
           id: 0,
           boxItem: (
             <Accordion
-              headerText="ביקורת בטיחות מזון (נבחור 3 קטגוריות)"
+              headerText={`${
+                memoizedCategories &&
+                memoizedCategories.categories &&
+                memoizedCategories.categories[1].name
+              } (נבחרו ${getCheckedCount("foodSafetyReviewCbStatus")} דוחות)`}
               contentHeight={336}
               headerHeight={50}
               accordionCloseIndicator={ClientItemArrow}
               accordionOpenIndicator={ClientItemArrowOpen}
               toggleHandler={changeCategoryAccordionHeight}
+              iconText={"בחר קטגוריות"}
               headerTogglerStyling={{
                 backgroundColor: "#D3E0FF",
               }}
@@ -416,141 +641,11 @@ const WorkerNewReport = () => {
                 color: colors.black,
                 fontFamily: fonts.ABold,
               }}
-              accordionContentData={[
-                {
-                  id: 0,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "foodSafetyReviewCb1")
-                        }
-                        label={"foodSafetyReviewCb1"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-
-                      <Text> ניקיון ותחזוקה</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 1,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "foodSafetyReviewCb2")
-                        }
-                        label={"foodSafetyReviewCb2"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> עובדים</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 2,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "foodSafetyReviewCb3")
-                        }
-                        label={"foodSafetyReviewCb3"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> מחסנים וקבלת סחורה</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 3,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "foodSafetyReviewCb4")
-                        }
-                        label={"foodSafetyReviewCb4"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> מערכת קירור</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 4,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "foodSafetyReviewCb5")
-                        }
-                        label={"foodSafetyReviewCb5"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> תהליכי ייצור עיבוד ירקות</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 5,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "foodSafetyReviewCb6")
-                        }
-                        label={"foodSafetyReviewCb6"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> תהליכי ייצור עיבוד בשר</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-              ]}
+              scrollEnabled={true}
+              accordionContentData={accordionCategoriesItem(
+                foodSafetyReviewTexts,
+                "foodSafetyReviewCb"
+              )}
               contentItemStyling={{
                 width: "100%",
                 height: 56,
@@ -565,11 +660,16 @@ const WorkerNewReport = () => {
           id: 1,
           boxItem: (
             <Accordion
-              headerText="ביקורת קולינרית (נבחרו 0 דוחות)"
+              headerText={`${
+                memoizedCategories &&
+                memoizedCategories.categories &&
+                memoizedCategories.categories[2].name
+              } (נבחרו ${getCheckedCount("culinaryReviewCbStatus")} דוחות)`}
               contentHeight={336}
               headerHeight={50}
               accordionCloseIndicator={ClientItemArrow}
               accordionOpenIndicator={ClientItemArrowOpen}
+              iconText={"בחר קטגוריות"}
               toggleHandler={changeCategoryAccordionHeight}
               headerTogglerStyling={{
                 ...styles.headerStyle,
@@ -577,145 +677,15 @@ const WorkerNewReport = () => {
               }}
               iconDisplay={true}
               boxHeight={50}
+              scrollEnabled={true}
               headerTextStyling={{
                 color: colors.black,
                 fontFamily: fonts.ABold,
               }}
-              accordionContentData={[
-                {
-                  id: 0,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "culinaryReviewCb1")
-                        }
-                        label={"culinaryReviewCb1"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-
-                      <Text> ניקיון ותחזוקה</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 1,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "culinaryReviewCb2")
-                        }
-                        label={"culinaryReviewCb2"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> עובדים</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 2,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "culinaryReviewCb3")
-                        }
-                        label={"culinaryReviewCb3"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> מחסנים וקבלת סחורה</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 3,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "culinaryReviewCb4")
-                        }
-                        label={"culinaryReviewCb4"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> מערכת קירור</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 4,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "culinaryReviewCb5")
-                        }
-                        label={"culinaryReviewCb5"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> תהליכי ייצור עיבוד ירקות</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 5,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "culinaryReviewCb6")
-                        }
-                        label={"culinaryReviewCb6"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> תהליכי ייצור עיבוד בשר</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-              ]}
+              accordionContentData={accordionCategoriesItem(
+                culinaryReviewTexts,
+                "culinaryReviewCb"
+              )}
               contentItemStyling={{
                 width: "100%",
                 height: 56,
@@ -730,157 +700,32 @@ const WorkerNewReport = () => {
           id: 2,
           boxItem: (
             <Accordion
-              headerText="ביקורת תזונה (נבחרו 0 דוחות)"
+              headerText={`${
+                memoizedCategories &&
+                memoizedCategories.categories &&
+                memoizedCategories.categories[3].name
+              } (נבחרו ${getCheckedCount("nutritionReviewCbStatus")}  דוחות)`}
               contentHeight={336}
               headerHeight={50}
               accordionCloseIndicator={ClientItemArrow}
               accordionOpenIndicator={ClientItemArrowOpen}
+              iconText={"בחר קטגוריות"}
               toggleHandler={changeCategoryAccordionHeight}
               headerTogglerStyling={{
                 ...styles.headerStyle,
                 backgroundColor: "#D3E0FF",
               }}
               iconDisplay={true}
+              scrollEnabled={true}
               boxHeight={50}
               headerTextStyling={{
                 color: colors.black,
                 fontFamily: fonts.ABold,
               }}
-              accordionContentData={[
-                {
-                  id: 0,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "nutritionReviewCb1")
-                        }
-                        label={"nutritionReviewCb1"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-
-                      <Text> ניקיון ותחזוקה</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 1,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "nutritionReviewCb2")
-                        }
-                        label={"nutritionReviewCb2"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> עובדים</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 2,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "nutritionReviewCb3")
-                        }
-                        label={"nutritionReviewCb3"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> מחסנים וקבלת סחורה</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 3,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "nutritionReviewCb4")
-                        }
-                        label={"nutritionReviewCb4"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> מערכת קירור</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 4,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "nutritionReviewCb5")
-                        }
-                        label={"nutritionReviewCb5"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> תהליכי ייצור עיבוד ירקות</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-                {
-                  id: 5,
-                  text: (
-                    <View style={{ flexDirection: "row" }}>
-                      <Checkbox
-                        onToggle={(checked) =>
-                          handleCheckboxToggle(checked, "nutritionReviewCb6")
-                        }
-                        label={"nutritionReviewCb6"}
-                        checkedColor={colors.black}
-                        unCheckedColor={colors.black}
-                      />
-                      <Text> תהליכי ייצור עיבוד בשר</Text>
-                    </View>
-                  ),
-                  boxItem: (
-                    <Image
-                      style={{ width: 9, height: 14 }}
-                      source={onDragIcon}
-                    />
-                  ),
-                },
-              ]}
+              accordionContentData={accordionCategoriesItem(
+                nutritionReviewTexts,
+                "nutritionReviewCb"
+              )}
               contentItemStyling={{
                 width: "100%",
                 height: 56,
@@ -959,6 +804,10 @@ const WorkerNewReport = () => {
                 editorInitializedCallback={() =>
                   console.log("Editor is initialized")
                 }
+                shouldStartLoadWithRequest={(request) => {
+                  // Only allow navigating within this website
+                  return request.url.startsWith("https://www.example.com");
+                }}
                 onChange={handleContentChange}
               />
             </View>
@@ -1006,7 +855,7 @@ const WorkerNewReport = () => {
           יצירת דוח חדש עבור {currentClient.getCompany()}
         </Text>
         <FlatList
-          data={accordionData}
+          data={NewReportAccordionContent}
           renderItem={renderAccordion}
           keyExtractor={(item, index) => index.toString()}
         />

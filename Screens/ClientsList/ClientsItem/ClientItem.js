@@ -262,53 +262,6 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   }, [activeTab, client, filteredData]);
 
   // styling
-  const styles = StyleSheet.create({
-    itemContainer: {
-      backgroundColor: colors.white,
-      // padding: 20,
-      marginVertical: 1,
-      flexDirection: "row",
-      height: 98,
-      paddingHorizontal: 12,
-    },
-    title: {
-      fontSize: 16,
-      paddingHorizontal: 16,
-      textAlign: "left",
-      paddingVertical: 16,
-      color: colors.white,
-      fontFamily: fonts.ABold,
-    },
-    newReportButton: {
-      borderRadius: 100,
-      backgroundColor: colors.blue,
-      paddingHorizontal: 15,
-      paddingVertical: 8,
-    },
-    newReportButtonText: {
-      color: colors.white,
-    },
-    subHeaderText: {
-      alignSelf: "flex-start",
-      textAlign: "left",
-      fontFamily: fonts.ARegular,
-    },
-    statusText: {
-      alignSelf: "flex-start",
-      textAlign: "left",
-      fontFamily: fonts.ARegular,
-      backgroundColor: statusBgColor(lastReport.data.reportStatuses),
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-    },
-    buttonIcon: {
-      width: 20,
-      height: 20,
-    },
-    tableContentHight: {
-      height: 600,
-    },
-  });
 
   // navigating on new report button (temp name)
   const newReportNavigation = () => {
@@ -375,7 +328,14 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           <Text style={styles.subHeaderText}>
             {lastReport.data.timeOfReport}
           </Text>
-          <Text style={styles.statusText}>
+          <Text
+            style={[
+              styles.statusText,
+              {
+                backgroundColor: statusBgColor(lastReport.data.reportStatuses),
+              },
+            ]}
+          >
             {lastReport.data.reportStatuses}
           </Text>
         </View>
@@ -461,5 +421,50 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     </>
   );
 };
-
+const styles = StyleSheet.create({
+  itemContainer: {
+    backgroundColor: colors.white,
+    // padding: 20,
+    marginVertical: 1,
+    flexDirection: "row",
+    height: 98,
+    paddingHorizontal: 12,
+  },
+  title: {
+    fontSize: 16,
+    paddingHorizontal: 16,
+    textAlign: "left",
+    paddingVertical: 16,
+    color: colors.white,
+    fontFamily: fonts.ABold,
+  },
+  newReportButton: {
+    borderRadius: 100,
+    backgroundColor: colors.blue,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+  },
+  newReportButtonText: {
+    color: colors.white,
+  },
+  subHeaderText: {
+    alignSelf: "flex-start",
+    textAlign: "left",
+    fontFamily: fonts.ARegular,
+  },
+  statusText: {
+    alignSelf: "flex-start",
+    textAlign: "left",
+    fontFamily: fonts.ARegular,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  buttonIcon: {
+    width: 20,
+    height: 20,
+  },
+  tableContentHight: {
+    height: 600,
+  },
+});
 export default React.memo(ClientItem);

@@ -6,11 +6,9 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
-// import accordionCloseIndicator from "../../assets/imgs/accordionCloseIndicator.png";
-// import accordionOpenIndicator from "../../assets/imgs/accordionOpenIndicator.png";
 import { FlatList } from "react-native-gesture-handler";
 import { Divider } from "react-native-paper";
 import uuid from "uuid-random";
@@ -31,76 +29,26 @@ const Accordion = ({
   accordionCloseIndicator,
   scrollEnabled = false,
   toggleHandler = false,
+  iconText,
 }) => {
   const [open, setOpen] = useState(false);
-  useEffect(() => {
-    console.log(contentHeight);
-  }, []);
-  const handleAccordionOpening = () => {
-    setOpen(!open);
+
+  const handleAccordionOpening = useCallback(() => {
+    setOpen((prevOpen) => !prevOpen);
     if (toggleHandler) {
       toggleHandler(contentHeight, !open);
     }
-  };
+  }, [open, toggleHandler, contentHeight]);
   const contentRef = useRef();
   const heightAnim = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
-    if (open) {
-      contentRef.current.measure((_, measuredHeight) => {
-        Animated.timing(heightAnim, {
-          toValue: contentHeight,
-          duration: 250,
-          useNativeDriver: false,
-        }).start();
-      });
-    } else {
-      Animated.timing(heightAnim, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: false,
-      }).start();
-    }
+    Animated.timing(heightAnim, {
+      toValue: open ? contentHeight : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
   }, [open, heightAnim, contentHeight]);
-  const styles = StyleSheet.create({
-    headerTogglerStyle: {
-      backgroundColor: colors.white,
-      // padding: 20,
-      marginVertical: 1,
-      flexDirection: "row",
-      height: headerHeight,
-      paddingHorizontal: 12,
-      alignItems: "center",
-      justifyContent: "space-between",
-      borderTopLeftRadius: 4,
-      borderTopRightRadius: 4,
-    },
-    headerText: {
-      alignItems: "center",
-      color: colors.white,
-      fontFamily: fonts.ABold,
-      fontSize: 18,
-    },
-    contentWrapper: {
-      backgroundColor: colors.white,
-      height: "100%",
-      borderBottomLeftRadius: 4,
-      borderBottomRightRadius: 4,
-    },
-    icon: {
-      width: 20,
-      height: 20,
-    },
-    contentBox: {
-      flexDirection: "row",
-      // height: boxHeight,
-      // paddingHorizontal: 16,
-      // alignItems: "center",
-      justifyContent: "space-between",
-    },
-    contentText: {
-      textAlign: "left",
-    },
-  });
 
   const renderAccordionItem = ({ item }) => {
     return (
@@ -120,15 +68,38 @@ const Accordion = ({
   return (
     <View>
       <TouchableOpacity
-        style={[styles.headerTogglerStyle, headerTogglerStyling ?? ""]}
+        style={[
+          styles.headerTogglerStyle,
+          headerTogglerStyling ?? "",
+          { height: headerHeight },
+        ]}
         onPress={handleAccordionOpening}
       >
         <Text style={[styles.headerText, headerTextStyling]}>{headerText}</Text>
         {iconDisplay && (
-          <Image
-            style={styles.icon}
-            source={open ? accordionOpenIndicator : accordionCloseIndicator}
-          />
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 8,
+              alignItems: "center",
+            }}
+          >
+            {iconText && (
+              <Text
+                style={{
+                  fontFamily: fonts.ARegular,
+                  fontSize: 16,
+                  alignSelf: "center",
+                }}
+              >
+                {iconText}
+              </Text>
+            )}
+            <Image
+              style={styles.icon}
+              source={open ? accordionOpenIndicator : accordionCloseIndicator}
+            />
+          </View>
         )}
       </TouchableOpacity>
       <Animated.View
@@ -154,5 +125,43 @@ const Accordion = ({
     </View>
   );
 };
-
-export default Accordion;
+const styles = StyleSheet.create({
+  headerTogglerStyle: {
+    backgroundColor: colors.white,
+    // padding: 20,
+    marginVertical: 1,
+    flexDirection: "row",
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+  },
+  headerText: {
+    alignItems: "center",
+    color: colors.white,
+    fontFamily: fonts.ABold,
+    fontSize: 18,
+  },
+  contentWrapper: {
+    backgroundColor: colors.white,
+    height: "100%",
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+  },
+  icon: {
+    width: 20,
+    height: 20,
+  },
+  contentBox: {
+    flexDirection: "row",
+    // height: boxHeight,
+    // paddingHorizontal: 16,
+    // alignItems: "center",
+    justifyContent: "space-between",
+  },
+  contentText: {
+    textAlign: "left",
+  },
+});
+export default React.memo(Accordion);

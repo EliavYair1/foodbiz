@@ -29,6 +29,7 @@
     "expo-splash-screen": "^0.18.2",
     "expo-status-bar": "~1.4.4",
     "expo-web-browser": "~12.1.1",
+    "lodash": "^4.17.21",
     "react": "18.2.0",
     "react-hook-form": "^7.43.9",
     "react-lodash": "^0.1.2",

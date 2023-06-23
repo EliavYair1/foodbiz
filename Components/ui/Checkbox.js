@@ -1,16 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import cbIcon from "../../assets/imgs/checkboxIcon.png";
-const Checkbox = ({ label, checkedColor, unCheckedColor, onToggle }) => {
-  const [isChecked, setIsChecked] = useState(false);
-
+const Checkbox = ({
+  label,
+  checkedColor,
+  unCheckedColor,
+  checked,
+  onToggle,
+}) => {
   const handleToggle = () => {
-    const newState = !isChecked;
-    setIsChecked(newState);
+    // console.log(`Before toggle - ${label}: ${checked}`);
+    const newState = !checked;
+    // setIsChecked(newState);
     onToggle(newState);
-    // console.log(`${label} checked: ${!isChecked}`);
+    // console.log(`After toggle - ${label}: ${newState}`);
   };
+  useEffect(() => {
+    // console.log(`Checkbox render - ${label}: ${checked}`);
+  }, [checked]);
 
   return (
     <TouchableOpacity onPress={handleToggle}>
@@ -21,13 +29,13 @@ const Checkbox = ({ label, checkedColor, unCheckedColor, onToggle }) => {
             height: 24,
             borderRadius: 4,
             borderWidth: 2,
-            borderColor: isChecked ? checkedColor : unCheckedColor,
+            borderColor: checked ? checkedColor : unCheckedColor,
             marginRight: 8,
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          {isChecked && (
+          {checked && (
             <View
               style={{
                 width: 20,
@@ -38,7 +46,10 @@ const Checkbox = ({ label, checkedColor, unCheckedColor, onToggle }) => {
                 alignItems: "center",
               }}
             >
-              <Image source={cbIcon} style={styles.checkbox} />
+              <Image
+                source={cbIcon}
+                style={{ ...styles.checkbox, tintColor: checkedColor }}
+              />
             </View>
           )}
         </View>
@@ -47,7 +58,7 @@ const Checkbox = ({ label, checkedColor, unCheckedColor, onToggle }) => {
   );
 };
 const styles = StyleSheet.create({
-  checkbox: { color: "#0C1430", width: 9, height: 9 },
+  checkbox: { width: 9, height: 9 },
 });
 
 export default Checkbox;
