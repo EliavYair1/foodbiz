@@ -7,6 +7,7 @@ import {
   Image,
   ScrollView,
   Switch,
+  KeyboardAvoidingView,
 } from "react-native";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
@@ -30,7 +31,9 @@ import {
   RichToolbar,
   actions,
 } from "react-native-pell-rich-editor";
-import { ColorPicker } from "react-native-color-picker";
+// import { ColorPicker, fromHsv } from "react-native-color-picker";
+import ColorPicker from "react-native-wheel-color-picker";
+
 import Expander from "../../Components/ui/Expander";
 import accordionCloseIcon from "../../assets/imgs/accordionCloseIndicator.png";
 import accordionOpenIcon from "../../assets/imgs/accordionOpenIndicator.png";
@@ -38,24 +41,28 @@ import ClientItemArrow from "../../assets/imgs/ClientItemArrow.png";
 import ClientItemArrowOpen from "../../assets/imgs/accodionOpenIndicatorBlack.png";
 import onDragIcon from "../../assets/imgs/onDragIcon.png";
 import Checkbox from "../../Components/ui/Checkbox";
-import { debounce, get } from "lodash";
+import { debounce, get, result } from "lodash";
 import FetchDataService from "../../Services/FetchDataService";
 import "@env";
 import axios from "axios";
 import { fetchCategories } from "../../store/redux/reducers/categoriesSlice";
 import CheckboxItem from "./CheckboxItem/CheckboxItem";
+import { fetchReportsTimes } from "../../store/redux/reducers/reportsTimesSlice";
+import Loader from "../../utiles/Loader";
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [colorSelected, setColorSelected] = useState(false);
   const clients = useSelector((state) => state.clients);
   const categories = useSelector((state) => state.categories);
+  const reportsTimes = useSelector((state) => state.reportsTimes);
+  // console.log("reportsTimes:", reportsTimes);
   const { navigateTogoBack } = useScreenNavigator();
   // fetching the the current data from specific client
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
-  const [SelectedReport, setSelectedReport] = useState(null);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({});
   const [reportTimeOptions, setreportTimeOptions] = useState([
@@ -87,12 +94,12 @@ const WorkerNewReport = () => {
   const [accompanySelected, setAccompanySelected] = useState(null);
   const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
   const [switchStates, setSwitchStates] = useState({
-    switch1: false,
-    switch2: false,
-    switch3: false,
-    switch4: false,
-    switch5: false,
-    switch6: false,
+    haveFineSwitch: false,
+    haveAmountOfItemsSwitch: false,
+    haveSafetyGradeSwitch: false,
+    haveCulinaryGradeSwitch: false,
+    haveNutritionGradeSwitch: false,
+    haveCategoriesNameForCriticalItemsSwitch: false,
   });
   const selectOptions = reportTimeOptions.map((option, index) => ({
     label: option,
@@ -117,6 +124,7 @@ const WorkerNewReport = () => {
   // * categories fetching start
   useEffect(() => {
     dispatch(fetchCategories());
+    dispatch(fetchReportsTimes());
   }, [dispatch]);
 
   const memoizedCategories = useMemo(() => categories, [categories]);
@@ -124,13 +132,8 @@ const WorkerNewReport = () => {
   const handleContentChange = debounce((content) => {
     console.log(content);
   }, 300);
-  // console.log("memoizedCategories:", memoizedCategories);
-  //  ! to refactor the checkbox and make the changes react to the state .
-  // todo 2 : make the checkboxs status change based on the report that being selected
-  // todo 3 : relay on the selected report prop "catergorys" array,concidering the ids of the...
-  // todo 3.1: ...categorys that in the selected report and display it in the accordion
+
   // todo 4 : save all the changes in one place.
-  // ? categories checkboxes logic start
 
   // * categories checkboxes Texts
   const foodSafetyReviewTexts =
@@ -142,7 +145,7 @@ const WorkerNewReport = () => {
 
   // get the array of categories from the report and updates the state
 
-  const handleCheckboxToggle = (category, checked, label) => {
+  const handleCategoriesCheckboxesToggle = (category, checked, label) => {
     setCheckboxStatus((prevStatus) => {
       const updatedCategoryStatus = [...prevStatus[category]];
       // find && parsing the index of the array
@@ -182,7 +185,11 @@ const WorkerNewReport = () => {
             checkboxItemText={item.name}
             checked={checkboxValue}
             handleChange={(checked) =>
-              handleCheckboxToggle(`${categoryName}Status`, checked, item.id)
+              handleCategoriesCheckboxesToggle(
+                `${categoryName}Status`,
+                checked,
+                item.id
+              )
             }
           />
         ),
@@ -197,7 +204,6 @@ const WorkerNewReport = () => {
     const categoryStatus = checkboxStatus[`${category}Status`];
     return categoryStatus ? categoryStatus.length : 0;
   };
-  // ! categories checkboxes logic end
 
   // * redefine the Accordion height
   const changeCategoryAccordionHeight = (height, toggle) => {
@@ -213,7 +219,7 @@ const WorkerNewReport = () => {
     .getReports()
     .filter((report) => report.getData("clientStationId") === selectedStation);
 
-  // toggle switch function
+  // * toggle switch function
   const toggleSwitch = (id) => {
     setSwitchStates((prevState) => ({
       ...prevState,
@@ -222,9 +228,8 @@ const WorkerNewReport = () => {
   };
 
   // * report onchange handler function
-
-  // * report onchange handler function
   const handleFormChange = debounce((name, value) => {
+    setIsLoading(true);
     setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
     setIsSchemaValid(true);
 
@@ -236,12 +241,12 @@ const WorkerNewReport = () => {
       };
 
       let newSwitchStates = {
-        switch1: false,
-        switch2: false,
-        switch3: false,
-        switch4: false,
-        switch5: false,
-        switch6: false,
+        haveFineSwitch: false,
+        haveAmountOfItemsSwitch: false,
+        haveSafetyGradeSwitch: false,
+        haveCulinaryGradeSwitch: false,
+        haveNutritionGradeSwitch: false,
+        haveCategoriesNameForCriticalItemsSwitch: false,
       };
 
       if (value === "דוח חדש") {
@@ -252,7 +257,6 @@ const WorkerNewReport = () => {
         const selectedReport = filteredStationsResult.find(
           (report) => report.getData("timeOfReport") === value
         );
-
         if (selectedReport) {
           // * getting the report categories
           const selectedReportCategory = selectedReport.getData("categorys");
@@ -294,16 +298,17 @@ const WorkerNewReport = () => {
           );
           // * checking if the report parameters match to their state true / false
           newSwitchStates = {
-            switch1: selectedReport.getData("haveFine") == 0 ? false : true,
-            switch2:
+            haveFineSwitch:
+              selectedReport.getData("haveFine") == 0 ? false : true,
+            haveAmountOfItemsSwitch:
               selectedReport.getData("haveAmountOfItems") == 0 ? false : true,
-            switch3:
+            haveSafetyGradeSwitch:
               selectedReport.getData("haveSafetyGrade") == 0 ? false : true,
-            switch4:
+            haveCulinaryGradeSwitch:
               selectedReport.getData("haveCulinaryGrade") == 0 ? false : true,
-            switch5:
+            haveNutritionGradeSwitch:
               selectedReport.getData("haveNutritionGrade") == 0 ? false : true,
-            switch6:
+            haveCategoriesNameForCriticalItemsSwitch:
               selectedReport.getData("haveCategoriesNameForCriticalItems") == 0
                 ? false
                 : true,
@@ -317,8 +322,9 @@ const WorkerNewReport = () => {
         }
       }
     }
+    setIsLoading(false);
   }, 300);
-
+  console.log("isLoading:", isLoading);
   /* {
 oldReportId: 18503
 clientId: 34
@@ -408,7 +414,7 @@ categorys[]: 5
           text: <Text> יש קנסות</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"switch1"}
+              id={"haveFineSwitch"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -421,7 +427,7 @@ categorys[]: 5
           text: <Text> להציג כמות סעיפים</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"switch2"}
+              id={"haveAmountOfItemsSwitch"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -434,7 +440,7 @@ categorys[]: 5
           text: <Text> "הצג ציון ביקורת בטיחות מזון"</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"switch3"}
+              id={"haveSafetyGradeSwitch"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -447,7 +453,7 @@ categorys[]: 5
           text: <Text> הצג ציון ביקורת קולינרית</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"switch4"}
+              id={"haveCulinaryGradeSwitch"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -460,7 +466,7 @@ categorys[]: 5
           text: <Text> הצג ציון תזונה</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"switch5"}
+              id={"haveNutritionGradeSwitch"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -473,7 +479,7 @@ categorys[]: 5
           text: <Text> הצג שמות קטגוריות בתמצית עבור ליקויים קריטיים</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"switch6"}
+              id={"haveCategoriesNameForCriticalItemsSwitch"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -527,14 +533,14 @@ categorys[]: 5
             <SelectMenu
               control={control}
               selectWidth={240}
-              selectOptions={selectOptions}
+              selectOptions={reportsTimes}
               name={"reportTime"}
               errorMessage={errors.station && errors.station.message}
               onChange={(value) => {
                 handleFormChange("reportTime", value);
                 console.log("reportTime:", value);
               }}
-              propertyName={false}
+              propertyName={"name"}
               returnObject={true}
               // selectMenuStyling={{ marginBottom: 16 }}
             />
@@ -684,7 +690,7 @@ categorys[]: 5
       key: "summary",
       headerText: "תמצית הדוח",
       contentText: "world",
-      contentHeight: 325,
+      contentHeight: 300,
       headerHeight: 48,
       headerTogglerStyling: styles.headerStyle,
       iconDisplay: true,
@@ -702,6 +708,7 @@ categorys[]: 5
                 flex: 1,
                 width: "100%",
                 marginTop: 20,
+                height: "100%",
               }}
             >
               <View
@@ -709,6 +716,9 @@ categorys[]: 5
                   backgroundColor: "#D3E0FF",
                   width: "100%",
                   alignItems: "flex-start",
+                  // marginBottom: 200,
+                  position: "relative",
+                  zIndex: 3,
                 }}
               >
                 <RichToolbar
@@ -723,35 +733,85 @@ categorys[]: 5
                     actions.setUnderline,
                     actions.setItalic,
                     actions.setBold,
-                    "custom", // Add a custom action
+                    "custom",
                   ]}
                   // onPressAddImage={onPressAddImage}
-                  // onAction={onAction}
-                  // iconMap={{
-                  //   custom: ({ selected }) => (
-                  //     <ColorPicker
-                  //       onColorSelected={(color) =>
-                  //         richText.current?.setEditorStyle({ color })
-                  //       }
-                  //       style={{ width: 150, height: 150 }}
-                  //     />
-                  //   ),
-                  // }}
+                  // onAction={onAction} // Add the onAction prop for custom actions
+                  iconMap={{
+                    ["custom"]: ({}) => <Text>C</Text>,
+                  }}
+                  custom={() => {
+                    setColorSelected(!colorSelected);
+                    console.log("object");
+                  }}
                 />
               </View>
-              <RichEditor
-                ref={richText}
-                placeholder="פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
-                customCSS={"body { text-<Text>align: right;  direction: rtl; }"}
-                editorInitializedCallback={() =>
-                  console.log("Editor is initialized")
-                }
-                shouldStartLoadWithRequest={(request) => {
-                  // Only allow navigating within this website
-                  return request.url.startsWith("https://www.example.com");
+              {colorSelected && (
+                <View
+                  style={{
+                    direction: "ltr",
+                    width: 200,
+                    position: "absolute",
+                    top: 20,
+                    zIndex: 3,
+                  }}
+                >
+                  <ColorPicker
+                    onColorChange={(color) => {
+                      console.log(color);
+                      richText.current?.setForeColor(color);
+                    }}
+                    sliderSize={20}
+                    thumbSize={60}
+                    gapSize={5}
+                    // noSnap={true}
+                    color="#000000"
+                    palette={[
+                      "#000000",
+                      "#ffff00",
+                      "#0000ff",
+                      "#ff0000",
+                      "#00ff00",
+                    ]}
+                    swatches={true}
+                  />
+                </View>
+              )}
+              <ScrollView
+                style={{
+                  // flex: Platform.OS === "ios" ? 1 : 0,
+                  flex: 1,
+                  direction: "ltr",
+                  overflow: "visible",
+                  height: "100%",
+                  minHeight: 250,
                 }}
-                onChange={handleContentChange}
-              />
+              >
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === "ios" ? "padding" : "height"}
+                  style={{ flex: 1 }}
+                >
+                  <RichEditor
+                    ref={richText}
+                    placeholder="פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
+                    // customCSS={`body { direction: ltr; text-align: left; color: ${selectedColor}; }`}
+                    editorInitializedCallback={() =>
+                      console.log("Editor is initialized")
+                    }
+                    shouldStartLoadWithRequest={(request) =>
+                      request.url.startsWith("https://www.example.com")
+                    }
+                    style={{
+                      minHeight: 123,
+                      direction: "ltr",
+                      borderWidth: 1,
+                      borderColor: "#eee",
+                      zIndex: 2,
+                      overflow: "visible",
+                    }}
+                  />
+                </KeyboardAvoidingView>
+              </ScrollView>
             </View>
           ),
         },
@@ -778,6 +838,9 @@ categorys[]: 5
       toggleHandler={item.toggleHandler}
     />
   );
+  // if (isLoading) {
+  //   return <Loader visible={isLoading} />;
+  // }
 
   return (
     <ScreenWrapper
@@ -814,7 +877,12 @@ categorys[]: 5
             alignItems: "center",
           }}
           onPress={() => {
+            // setIsLoading(true);
             console.log("new report");
+            // Simulate a delay with setTimeout
+            // setTimeout(() => {
+            //   setIsLoading(false);
+            // }, 2000);
           }}
         >
           <Text
