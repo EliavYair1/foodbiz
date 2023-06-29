@@ -49,6 +49,7 @@ import { fetchCategories } from "../../store/redux/reducers/categoriesSlice";
 import CheckboxItem from "./CheckboxItem/CheckboxItem";
 import { fetchReportsTimes } from "../../store/redux/reducers/reportsTimesSlice";
 import Loader from "../../utiles/Loader";
+import { HelperText } from "react-native-paper";
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
@@ -64,26 +65,8 @@ const WorkerNewReport = () => {
     (state) => state.currentClient.currentClient
   );
   const [isSchemaValid, setIsSchemaValid] = useState(false);
-  const [formData, setFormData] = useState({});
-  const [reportTimeOptions, setreportTimeOptions] = useState([
-    "שעות הבוקר ועד תחילת הארוחה",
-    "במהלך הארוחה ועד סופה",
-    "מתחילת הארוחה ועד סופה",
-    "ארוחת ערב",
-    "ארוחת לילה",
-    "שעות הבוקר",
-    "למשך יום שלם",
-    "במהלך הארוחה",
-    "משעות הבוקר ועד ה 1/3 הראשון של הארוחה",
-    "משעות הבוקר ועד אמצע הארוחה",
-    "שעות הבוקר ובמהלך הארוחה",
-    "שעות הצהריים",
-    "מבדק סגירה (מחוץ לשעות הפעילות)",
-    "דוח מרכז בטווח התאריכים שנרשמו",
-    "דוח ריכוז מבדקים שבועי",
-    "במהלך המשחק",
-    "לפני ובמהלך המשחק",
-  ]);
+  const [formData, setFormData] = useState({ clientId: currentClient.id });
+
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
@@ -92,6 +75,7 @@ const WorkerNewReport = () => {
   });
   const [selectedStation, setSelectedStation] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
+  // console.log("accompanySelected:", accompanySelected);
   const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
   const [switchStates, setSwitchStates] = useState({
     haveFineSwitch: false,
@@ -101,16 +85,16 @@ const WorkerNewReport = () => {
     haveNutritionGradeSwitch: false,
     haveCategoriesNameForCriticalItemsSwitch: false,
   });
-  const selectOptions = reportTimeOptions.map((option, index) => ({
-    label: option,
-    value: index.toString(),
-  }));
+
   const schema = yup.object().shape({
     station: yup.string().required("station is required"),
     previousReports: yup.string().required("previousReports is required"),
     accompany: yup.string().required("accompany is required"),
     date: yup.string().required("date is required"),
     reportTime: yup.string(),
+    categories: yup
+      .string()
+      .required("please choose at least one of each category"),
   });
 
   const {
@@ -120,7 +104,13 @@ const WorkerNewReport = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-
+  useEffect(() => {
+    schema
+      .validate(formData)
+      .then(() => setIsSchemaValid(true))
+      .catch(() => setIsSchemaValid(false));
+    console.log("formData:", formData);
+  }, [formData, schema]);
   // * categories fetching start
   useEffect(() => {
     dispatch(fetchCategories());
@@ -130,7 +120,12 @@ const WorkerNewReport = () => {
   const memoizedCategories = useMemo(() => categories, [categories]);
   // newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
-    console.log(content);
+    // console.log(content);
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      newGeneralCommentTopText: content,
+    }));
   }, 300);
 
   // todo 4 : save all the changes in one place.
@@ -158,7 +153,7 @@ const WorkerNewReport = () => {
       } else if (!checked && index !== -1) {
         updatedCategoryStatus.splice(index, 1);
       }
-
+      handleFormChange(category, updatedCategoryStatus);
       return { ...prevStatus, [category]: updatedCategoryStatus };
     });
   };
@@ -179,19 +174,21 @@ const WorkerNewReport = () => {
       return {
         id: item.id,
         text: (
-          <CheckboxItem
-            key={checkboxKey + checkboxValue}
-            label={checkboxKey}
-            checkboxItemText={item.name}
-            checked={checkboxValue}
-            handleChange={(checked) =>
-              handleCategoriesCheckboxesToggle(
-                `${categoryName}Status`,
-                checked,
-                item.id
-              )
-            }
-          />
+          <View>
+            <CheckboxItem
+              key={checkboxKey + checkboxValue}
+              label={checkboxKey}
+              checkboxItemText={item.name}
+              checked={checkboxValue}
+              handleChange={(checked) =>
+                handleCategoriesCheckboxesToggle(
+                  `${categoryName}Status`,
+                  checked,
+                  item.id
+                )
+              }
+            />
+          </View>
         ),
         boxItem: <Image style={{ width: 9, height: 14 }} source={onDragIcon} />,
       };
@@ -221,15 +218,19 @@ const WorkerNewReport = () => {
 
   // * toggle switch function
   const toggleSwitch = (id) => {
-    setSwitchStates((prevState) => ({
-      ...prevState,
-      [id]: !prevState[id],
-    }));
+    setSwitchStates((prevState) => {
+      const newState = {
+        ...prevState,
+        [id]: !prevState[id],
+      };
+      const value = newState[id] ? 1 : 0;
+      handleFormChange(id, value); // Call handleFormChange with the new switch state
+      return newState;
+    });
   };
 
   // * report onchange handler function
   const handleFormChange = debounce((name, value) => {
-    setIsLoading(true);
     setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
     setIsSchemaValid(true);
 
@@ -249,15 +250,42 @@ const WorkerNewReport = () => {
         haveCategoriesNameForCriticalItemsSwitch: false,
       };
 
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        ...Object.fromEntries(
+          Object.entries(newSwitchStates).map(([key, value]) => [
+            key,
+            value ? 1 : 0,
+          ])
+        ),
+      }));
+      const categorys = newCheckboxStatus.culinaryReviewCbStatus
+        .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
+        .concat(newCheckboxStatus.culinaryReviewCbStatus)
+        .concat(newCheckboxStatus.nutritionReviewCbStatus);
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        categorys,
+      }));
+
       if (value === "דוח חדש") {
         setCheckboxStatus(newCheckboxStatus);
         setSwitchStates(newSwitchStates);
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          oldReportId: "0",
+        }));
       } else {
         // * selected report filtered to the chosen station
         const selectedReport = filteredStationsResult.find(
           (report) => report.getData("timeOfReport") === value
         );
         if (selectedReport) {
+          // * setting the oldReportId from selected report
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            oldReportId: selectedReport.getData("id"),
+          }));
           // * getting the report categories
           const selectedReportCategory = selectedReport.getData("categorys");
           // * parsing the string to array of numbers
@@ -313,40 +341,81 @@ const WorkerNewReport = () => {
                 ? false
                 : true,
           };
+          // * saving their current status of the toggles based on the report selected
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            ...Object.fromEntries(
+              Object.entries(newSwitchStates).map(([key, value]) => [
+                key,
+                value ? 1 : 0,
+              ])
+            ),
+          }));
+          // * saving the categories checkbox status
+          const categorys = newCheckboxStatus.culinaryReviewCbStatus
+            .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
+            .concat(newCheckboxStatus.culinaryReviewCbStatus)
+            .concat(newCheckboxStatus.nutritionReviewCbStatus);
+
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            categorys,
+          }));
 
           setCheckboxStatus(newCheckboxStatus);
           setSwitchStates(newSwitchStates);
-          setAccompanySelected(selectedReport.getData("accompany"));
+          // * setting the accompany
+          const accompanyName = selectedReport.getData("accompany");
+          if (accompanyName == "ללא ליווי") {
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              accompany: "ללא ליווי",
+            }));
+          } else {
+            setAccompanySelected(accompanyName);
+            setFormData((prevFormData) => ({
+              ...prevFormData,
+              accompany: accompanyName,
+            }));
+          }
         } else {
           setSwitchStates(newSwitchStates);
         }
       }
     }
-    setIsLoading(false);
   }, 300);
-  console.log("isLoading:", isLoading);
-  /* {
-oldReportId: 18503
-clientId: 34
-haveNewGeneralCommentsVersion: 1
-clientStationId: 66
-workerId: 23
-accompany: ללא ליווי
-haveFine: 0
-haveAmountOfItems: 0
-haveSafetyGrade: 1
-haveCulinaryGrade: 1
-haveNutritionGrade: 1
-haveCategoriesNameForCriticalItems: 0
-reportTime: 2
-newGeneralCommentTopText: ביקורת בתחנת פיליפס חיפה.
-התנור בתחנה לא עבד עד השעה 10:30, דבר שיצר קצת לחץ בתחנה.
-כמות סועדים קטנה ביחס לגודל של חדר האוכל, מה שנותן תחושה לא נעימה.
-יש לחשוב על תחימת חלק מחדר האוכל לשיפור  ההרגשה.
-קבלן ההסעדה לא מאשר למטבח מוצרים של IQF מה שיכול מאד לעזור לצוות לפי טענתו.
 
-timeOfReport: 22/06/2023
-categorys[]: 5
+  const onSubmitForm = () => {
+    // checking if scheme is valid
+    console.log("formData:", formData);
+
+    if (isSchemaValid) {
+      console.log("scheme is valid");
+    }
+  };
+
+  /* {
+// oldReportId: 18503
+// clientId: 34
+// haveNewGeneralCommentsVersion: 1
+// clientStationId: 66
+workerId: 23
+// accompany: ללא ליווי
+// haveFine: 0 
+// haveAmountOfItems: 0
+// haveSafetyGrade: 1
+// haveCulinaryGrade: 1
+// haveNutritionGrade: 1
+// haveCategoriesNameForCriticalItems: 0
+// reportTime: 2
+// newGeneralCommentTopText: ביקורת בתחנת פיליפס חיפה.
+// התנור בתחנה לא עבד עד השעה 10:30, דבר שיצר קצת לחץ בתחנה.
+// כמות סועדים קטנה ביחס לגודל של חדר האוכל, מה שנותן תחושה לא נעימה.
+// יש לחשוב על תחימת חלק מחדר האוכל לשיפור  ההרגשה.
+// קבלן ההסעדה לא מאשר למטבח מוצרים של IQF מה שיכול מאד לעזור לצוות לפי טענתו.
+
+// timeOfReport: 22/06/2023
+// categorys[]: 5
 } */
 
   // * accordion FlatList array of Content
@@ -376,7 +445,7 @@ categorys[]: 5
               name={"station"}
               errorMessage={errors.station && errors.station.message}
               onChange={(value) => {
-                handleFormChange("station", value.id);
+                handleFormChange("clientStationId", value.id);
                 setSelectedStation(value.id);
                 console.log("value-station:", value);
               }}
@@ -401,9 +470,9 @@ categorys[]: 5
                 errors.previousReports && errors.previousReports.message
               }
               onChange={(value) => {
-                handleFormChange("previousReports", value);
+                handleFormChange("timeOfReport", value);
                 // setSelectedReport(value);
-                console.log("value-previousReports:", value);
+                console.log("value-timeOfReport:", value);
               }}
               propertyName="timeOfReport"
             />
@@ -502,7 +571,7 @@ categorys[]: 5
                   alignSelf: "center",
                 }}
                 activeOutlineColor={colors.blue}
-                label={accompanySelected ? accompanySelected : "מלווה"}
+                label={accompanySelected ? accompanySelected : "ללא  מלווה"}
                 outlineColor={"rgba(12, 20, 48, 0.2)"}
                 onChangeFunction={(value) => {
                   handleFormChange("accompany", value);
@@ -520,7 +589,7 @@ categorys[]: 5
               name={"date"}
               errorMessage={errors.date && errors.date.message}
               onchange={(value) => {
-                handleFormChange("date", value);
+                handleFormChange("timeOfReport", value);
               }}
               dateInputWidth={240}
             />
@@ -537,8 +606,8 @@ categorys[]: 5
               name={"reportTime"}
               errorMessage={errors.station && errors.station.message}
               onChange={(value) => {
-                handleFormChange("reportTime", value);
-                console.log("reportTime:", value);
+                handleFormChange("reportTime", value.id);
+                console.log("reportTime:", value.id);
               }}
               propertyName={"name"}
               returnObject={true}
@@ -647,41 +716,48 @@ categorys[]: 5
         {
           id: 2,
           boxItem: (
-            <Accordion
-              headerText={`${
-                memoizedCategories &&
-                memoizedCategories.categories &&
-                memoizedCategories.categories[3].name
-              } (נבחרו  ${getCheckedCount("nutritionReviewCb")} דוחות)`}
-              contentHeight={336}
-              headerHeight={50}
-              accordionCloseIndicator={ClientItemArrow}
-              accordionOpenIndicator={ClientItemArrowOpen}
-              iconText={"בחר קטגוריות"}
-              toggleHandler={changeCategoryAccordionHeight}
-              headerTogglerStyling={{
-                ...styles.headerStyle,
-                backgroundColor: "#D3E0FF",
-              }}
-              iconDisplay={true}
-              scrollEnabled={true}
-              boxHeight={50}
-              headerTextStyling={{
-                color: colors.black,
-                fontFamily: fonts.ABold,
-              }}
-              accordionContentData={accordionCategoriesItem(
-                nutritionReviewTexts,
-                "nutritionReviewCb"
+            <>
+              <Accordion
+                headerText={`${
+                  memoizedCategories &&
+                  memoizedCategories.categories &&
+                  memoizedCategories.categories[3].name
+                } (נבחרו  ${getCheckedCount("nutritionReviewCb")} דוחות)`}
+                contentHeight={336}
+                headerHeight={50}
+                accordionCloseIndicator={ClientItemArrow}
+                accordionOpenIndicator={ClientItemArrowOpen}
+                iconText={"בחר קטגוריות"}
+                toggleHandler={changeCategoryAccordionHeight}
+                headerTogglerStyling={{
+                  ...styles.headerStyle,
+                  backgroundColor: "#D3E0FF",
+                }}
+                iconDisplay={true}
+                scrollEnabled={true}
+                boxHeight={50}
+                headerTextStyling={{
+                  color: colors.black,
+                  fontFamily: fonts.ABold,
+                }}
+                accordionContentData={accordionCategoriesItem(
+                  nutritionReviewTexts,
+                  "nutritionReviewCb"
+                )}
+                contentItemStyling={{
+                  width: "100%",
+                  height: 56,
+                  alignItems: "center",
+                  paddingHorizontal: 16,
+                }}
+                hasDivider={true}
+              />
+              {errors.categories && (
+                <HelperText type="error">
+                  {errors.categories.message}
+                </HelperText>
               )}
-              contentItemStyling={{
-                width: "100%",
-                height: 56,
-                alignItems: "center",
-                paddingHorizontal: 16,
-              }}
-              hasDivider={true}
-            />
+            </>
           ),
         },
       ],
@@ -793,11 +869,12 @@ categorys[]: 5
                 >
                   <RichEditor
                     ref={richText}
+                    onChange={handleContentChange}
                     placeholder="פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
                     // customCSS={`body { direction: ltr; text-align: left; color: ${selectedColor}; }`}
-                    editorInitializedCallback={() =>
-                      console.log("Editor is initialized")
-                    }
+                    // editorInitializedCallback={() =>
+                    //   // console.log("Editor is initialized")
+                    // }
                     shouldStartLoadWithRequest={(request) =>
                       request.url.startsWith("https://www.example.com")
                     }
@@ -838,8 +915,17 @@ categorys[]: 5
       toggleHandler={item.toggleHandler}
     />
   );
+
   // if (isLoading) {
-  //   return <Loader visible={isLoading} />;
+  //   return (
+  //     <ScreenWrapper
+  //       isConnectedUser
+  //       newReportBackGroundImg={true}
+  //       wrapperStyle={styles.container}
+  //     >
+  //       <Loader visible={isLoading} />
+  //     </ScreenWrapper>
+  //   );
   // }
 
   return (
@@ -877,13 +963,10 @@ categorys[]: 5
             alignItems: "center",
           }}
           onPress={() => {
-            // setIsLoading(true);
-            console.log("new report");
-            // Simulate a delay with setTimeout
-            // setTimeout(() => {
-            //   setIsLoading(false);
-            // }, 2000);
+            handleSubmit(onSubmitForm);
+            // console.log("new report");
           }}
+          // disabled={!isSchemaValid}
         >
           <Text
             style={{
