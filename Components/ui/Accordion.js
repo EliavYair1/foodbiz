@@ -12,6 +12,8 @@ import fonts from "../../styles/fonts";
 import { FlatList } from "react-native-gesture-handler";
 import { Divider } from "react-native-paper";
 import uuid from "uuid-random";
+import DraggableFlatList from "react-native-draggable-flatlist";
+
 const Accordion = ({
   headerText,
   contentText,
@@ -30,6 +32,8 @@ const Accordion = ({
   scrollEnabled = false,
   toggleHandler = false,
   iconText,
+  draggable = false,
+  // setAccordionContentData,
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -50,20 +54,23 @@ const Accordion = ({
     }).start();
   }, [open, heightAnim, contentHeight]);
 
-  const renderAccordionItem = ({ item }) => {
-    return (
-      <>
-        <View
-          style={[styles.contentBox, contentItemStyling ?? ""]}
-          key={item.id}
-        >
-          {item.text && <View>{item.text}</View>}
-          {item.boxItem}
-        </View>
-        {hasDivider && <Divider />}
-      </>
-    );
-  };
+  const renderAccordionItem = useCallback(
+    ({ item, index, drag, isActive }) => {
+      return (
+        <TouchableOpacity style={{}} onLongPress={drag}>
+          <View
+            style={[styles.contentBox, contentItemStyling ?? ""]}
+            key={item.id}
+          >
+            {item.text && <View>{item.text}</View>}
+            {item.boxItem}
+          </View>
+          {hasDivider && <Divider />}
+        </TouchableOpacity>
+      );
+    },
+    [contentItemStyling, hasDivider]
+  );
 
   return (
     <View>
@@ -114,12 +121,21 @@ const Accordion = ({
         ]}
       >
         <View style={[styles.contentWrapper]}>
-          <FlatList
-            scrollEnabled={scrollEnabled}
-            key={() => uuid()}
-            data={accordionContentData}
-            renderItem={renderAccordionItem}
-          />
+          {draggable ? (
+            <DraggableFlatList
+              data={accordionContentData}
+              renderItem={renderAccordionItem}
+              keyExtractor={(item, index) => `draggable-item-${item.id}`}
+              // onDragEnd={({ data }) => setAccordionContentData(data)}
+            />
+          ) : (
+            <FlatList
+              scrollEnabled={scrollEnabled}
+              key={() => uuid()}
+              data={accordionContentData}
+              renderItem={renderAccordionItem}
+            />
+          )}
         </View>
       </Animated.View>
     </View>

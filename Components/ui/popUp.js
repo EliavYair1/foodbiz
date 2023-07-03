@@ -343,6 +343,18 @@ const PopUp = ({
                     control={control}
                     selectWidth={selectWidth}
                     selectOptions={selectOptions}
+                    selectMenuStyling={{
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "flex-start",
+                      marginBottom: 0,
+                    }}
+                    optionsHeight={250}
+                    centeredViewStyling={{
+                      marginRight: 0,
+                      alignItems: "center",
+                      marginTop: -150,
+                    }}
                     name={"station"}
                     errorMessage={errors.station && errors.station.message}
                     onChange={(value) => {

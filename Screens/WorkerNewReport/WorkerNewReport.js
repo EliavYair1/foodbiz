@@ -77,30 +77,63 @@ const WorkerNewReport = () => {
   const [accompanySelected, setAccompanySelected] = useState(null);
   // console.log("accompanySelected:", accompanySelected);
   const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
+
   const [switchStates, setSwitchStates] = useState({
     haveFineSwitch: false,
-    haveAmountOfItemsSwitch: false,
-    haveSafetyGradeSwitch: false,
-    haveCulinaryGradeSwitch: false,
-    haveNutritionGradeSwitch: false,
-    haveCategoriesNameForCriticalItemsSwitch: false,
+    haveAmountOfItems: false,
+    haveSafetyGrade: false,
+    haveCulinaryGrade: false,
+    haveNutritionGrade: false,
+    haveCategoriesNameForCriticalItems: false,
   });
 
   const schema = yup.object().shape({
-    station: yup.string().required("station is required"),
-    previousReports: yup.string().required("previousReports is required"),
+    clientStationId: yup.string().required("station is required"),
+    previousReports: yup.string().required("previous report is required"),
     accompany: yup.string().required("accompany is required"),
-    date: yup.string().required("date is required"),
+    timeOfReport: yup.string().required("date is required"),
     reportTime: yup.string(),
     categories: yup
-      .string()
-      .required("please choose at least one of each category"),
-  });
+      .array()
+      .of(yup.number())
+      .test("please choose at least one category", (value) => {
+        const foodSafetyReviewSelected =
+          Array.isArray(value) &&
+          value.some(
+            (id) =>
+              Array.isArray(checkboxStatus.foodSafetyReviewCbStatus) &&
+              checkboxStatus.foodSafetyReviewCbStatus.includes(id)
+          );
 
+        const culinaryReviewSelected =
+          Array.isArray(value) &&
+          value.some(
+            (id) =>
+              Array.isArray(checkboxStatus.culinaryReviewCbStatus) &&
+              checkboxStatus.culinaryReviewCbStatus.includes(id)
+          );
+
+        const nutritionReviewSelected =
+          Array.isArray(value) &&
+          value.some(
+            (id) =>
+              Array.isArray(checkboxStatus.nutritionReviewCbStatus) &&
+              checkboxStatus.nutritionReviewCbStatus.includes(id)
+          );
+        return (
+          foodSafetyReviewSelected ||
+          culinaryReviewSelected ||
+          nutritionReviewSelected
+        );
+      }),
+  });
   const {
     control,
     handleSubmit,
     formState: { errors },
+    getValues,
+    setValue,
+    trigger,
   } = useForm({
     resolver: yupResolver(schema),
   });
@@ -108,9 +141,13 @@ const WorkerNewReport = () => {
     schema
       .validate(formData)
       .then(() => setIsSchemaValid(true))
-      .catch(() => setIsSchemaValid(false));
-    console.log("formData:", formData);
+      .catch((err) => {
+        console.log("err:", err);
+        setIsSchemaValid(false);
+      });
+    setValue("clientId", currentClient.id);
   }, [formData, schema]);
+
   // * categories fetching start
   useEffect(() => {
     dispatch(fetchCategories());
@@ -121,14 +158,15 @@ const WorkerNewReport = () => {
   // newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
     // console.log(content);
-
+    const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
+    richText.current?.setContentHTML(strippedContent);
+    setValue("newGeneralCommentTopText", strippedContent);
+    trigger("newGeneralCommentTopText");
     setFormData((prevFormData) => ({
       ...prevFormData,
-      newGeneralCommentTopText: content,
+      newGeneralCommentTopText: strippedContent,
     }));
   }, 300);
-
-  // todo 4 : save all the changes in one place.
 
   // * categories checkboxes Texts
   const foodSafetyReviewTexts =
@@ -145,7 +183,7 @@ const WorkerNewReport = () => {
       const updatedCategoryStatus = [...prevStatus[category]];
       // find && parsing the index of the array
       const index = updatedCategoryStatus.indexOf(parseInt(label));
-
+      // 07267
       //if checked and label is not found in the array add to the array
       if (checked && index === -1) {
         updatedCategoryStatus.push(parseInt(label));
@@ -156,6 +194,13 @@ const WorkerNewReport = () => {
       handleFormChange(category, updatedCategoryStatus);
       return { ...prevStatus, [category]: updatedCategoryStatus };
     });
+    const categories = [
+      ...checkboxStatus.foodSafetyReviewCbStatus,
+      ...checkboxStatus.culinaryReviewCbStatus,
+      ...checkboxStatus.nutritionReviewCbStatus,
+    ];
+    setValue("categories", categories);
+    trigger("categories");
   };
 
   // inner accordionCategoriesItem
@@ -230,6 +275,301 @@ const WorkerNewReport = () => {
   };
 
   // * report onchange handler function
+  // const handleFormChange = debounce((name, value) => {
+  //   setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
+  //   setIsSchemaValid(true);
+
+  //   if (name === "previousReports") {
+  //     let newCheckboxStatus = {
+  //       foodSafetyReviewCbStatus: [],
+  //       culinaryReviewCbStatus: [],
+  //       nutritionReviewCbStatus: [],
+  //     };
+
+  //     let newSwitchStates = {
+  //       haveFineSwitch: false,
+  //       haveAmountOfItems: false,
+  //       haveSafetyGrade: false,
+  //       haveCulinaryGrade: false,
+  //       haveNutritionGrade: false,
+  //       haveCategoriesNameForCriticalItems: false,
+  //     };
+
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       ...Object.fromEntries(
+  //         Object.entries(newSwitchStates).map(([key, value]) => [
+  //           key,
+  //           value ? 1 : 0,
+  //         ])
+  //       ),
+  //     }));
+  //     const categories = newCheckboxStatus.culinaryReviewCbStatus
+  //       .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
+  //       .concat(newCheckboxStatus.culinaryReviewCbStatus)
+  //       .concat(newCheckboxStatus.nutritionReviewCbStatus);
+  //     setFormData((prevFormData) => ({
+  //       ...prevFormData,
+  //       categories,
+  //     }));
+
+  //     setValue("categories", categories);
+  //     trigger("categories");
+
+  //     if (value === "דוח חדש") {
+  //       setCheckboxStatus(newCheckboxStatus);
+  //       setSwitchStates(newSwitchStates);
+  //       setFormData((prevFormData) => ({
+  //         ...prevFormData,
+  //         oldReportId: "0",
+  //       }));
+  //     } else {
+  //       // * selected report filtered to the chosen station
+  //       const selectedReport = filteredStationsResult.find(
+  //         (report) => report.getData("timeOfReport") === value
+  //       );
+  //       if (selectedReport) {
+  //         // * setting the oldReportId from selected report
+  //         setFormData((prevFormData) => ({
+  //           ...prevFormData,
+  //           oldReportId: selectedReport.getData("id"),
+  //           workerId: selectedReport.getData("workerId"),
+  //         }));
+
+  //         // * getting the report categories
+  //         const selectedReportCategory = selectedReport.getData("categorys");
+  //         // * parsing the string to array of numbers
+  //         const parsedSelectedReportCategory = new Set(
+  //           selectedReportCategory
+  //             .split("|")
+  //             .map((str) => str.replace(";", ""))
+  //             .filter(Boolean)
+  //             .map((numStr) => parseInt(numStr, 10))
+  //         );
+  //         // * getting the categories from the categories of the api
+  //         const memoRizedCats = memoizedCategories?.categories;
+  //         // * mapping the categories
+  //         const categoriesData = Object.values(memoRizedCats).flatMap(
+  //           (category) => category.categories
+  //         );
+  //         //  * checking if the ids of the categories match to the selected report and sorting them by type to their right location of the state
+  //         newCheckboxStatus = categoriesData.reduce(
+  //           (status, category) => {
+  //             const categoryId = parseInt(category.id, 10);
+  //             const categoryType = parseInt(category.type, 10);
+  //             if (parsedSelectedReportCategory.has(categoryId)) {
+  //               if (categoryType === 1) {
+  //                 status.foodSafetyReviewCbStatus.push(categoryId);
+  //               } else if (categoryType === 2) {
+  //                 status.culinaryReviewCbStatus.push(categoryId);
+  //               } else if (categoryType === 3) {
+  //                 status.nutritionReviewCbStatus.push(categoryId);
+  //               }
+  //             }
+  //             return status;
+  //           },
+  //           {
+  //             foodSafetyReviewCbStatus: [],
+  //             culinaryReviewCbStatus: [],
+  //             nutritionReviewCbStatus: [],
+  //           }
+  //         );
+  //         // * checking if the report parameters match to their state true / false
+  //         newSwitchStates = {
+  //           haveFineSwitch:
+  //             selectedReport.getData("haveFine") == 0 ? false : true,
+  //           haveAmountOfItems:
+  //             selectedReport.getData("haveAmountOfItems") == 0 ? false : true,
+  //           haveSafetyGrade:
+  //             selectedReport.getData("haveSafetyGrade") == 0 ? false : true,
+  //           haveCulinaryGrade:
+  //             selectedReport.getData("haveCulinaryGrade") == 0 ? false : true,
+  //           haveNutritionGrade:
+  //             selectedReport.getData("haveNutritionGrade") == 0 ? false : true,
+  //           haveCategoriesNameForCriticalItems:
+  //             selectedReport.getData("haveCategoriesNameForCriticalItems") == 0
+  //               ? false
+  //               : true,
+  //         };
+  //         // * saving their current status of the toggles based on the report selected
+  // setFormData((prevFormData) => ({
+  //   ...prevFormData,
+  //   ...Object.fromEntries(
+  //     Object.entries(newSwitchStates).map(([key, value]) => [
+  //       key,
+  //       value ? 1 : 0,
+  //     ])
+  //   ),
+  // }));
+  //         setSwitchStates(newSwitchStates);
+
+  // * saving the categories checkbox status
+  // const categories = newCheckboxStatus.culinaryReviewCbStatus
+  //   .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
+  //   .concat(newCheckboxStatus.culinaryReviewCbStatus)
+  //   .concat(newCheckboxStatus.nutritionReviewCbStatus);
+
+  // setFormData((prevFormData) => ({
+  //   ...prevFormData,
+  //   categories,
+  // }));
+  // setValue("categories", categories);
+  // trigger("categories");
+
+  //         setCheckboxStatus(newCheckboxStatus);
+
+  // * setting the accompany
+  //         const accompanyName = selectedReport.getData("accompany");
+  //         if (accompanyName == "ללא ליווי") {
+  //           setFormData((prevFormData) => ({
+  //             ...prevFormData,
+  //             accompany: "ללא ליווי",
+  //           }));
+  //           setValue("accompany", "ללא ליווי");
+  //           trigger("accompany");
+  //         } else {
+  //           setAccompanySelected(accompanyName);
+  //           setValue("accompany", accompanyName);
+  //           trigger("accompany");
+  //           setFormData((prevFormData) => ({
+  //             ...prevFormData,
+  //             accompany: accompanyName,
+  //           }));
+  //         }
+  //         const reportTimeDisplayed = selectedReport.getData("reportTime");
+  //         setValue("reportTime", reportTimeDisplayed);
+  //         trigger("reportTime");
+  //       } else {
+  //         // setIsSchemaValid(true);
+  //         setSwitchStates(newSwitchStates);
+  //       }
+  //     }
+  //   }
+  // }, 300);
+
+  // * setting the oldReportId from selected repor
+  const handleReportIdAndWorkerId = (selectedReport) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      oldReportId: selectedReport.getData("id"),
+      workerId: selectedReport.getData("workerId"),
+    }));
+    setValue("workerId", selectedReport.getData("workerId"));
+    setValue("oldReportId", selectedReport.getData("id"));
+    trigger("clientStationId");
+    trigger("oldReportId");
+  };
+
+  // * getting the report categories
+  const handleSelectedReportCategory = (selectedReport) => {
+    const selectedReportCategory = selectedReport.getData("categorys");
+    const parsedSelectedReportCategory = new Set(
+      selectedReportCategory
+        .split("|")
+        .map((str) => str.replace(";", ""))
+        .filter(Boolean)
+        .map((numStr) => parseInt(numStr, 10))
+    );
+    return parsedSelectedReportCategory;
+  };
+
+  //  * checking if the ids of the categories match to the selected report and sorting them by type to their right location of the state
+  const handleCheckboxStatusChange = (
+    parsedSelectedReportCategory,
+    categoriesData
+  ) => {
+    const newCheckboxStatus = categoriesData.reduce(
+      (status, category) => {
+        const categoryId = parseInt(category.id, 10);
+        const categoryType = parseInt(category.type, 10);
+        if (parsedSelectedReportCategory.has(categoryId)) {
+          if (categoryType === 1) {
+            status.foodSafetyReviewCbStatus.push(categoryId);
+          } else if (categoryType === 2) {
+            status.culinaryReviewCbStatus.push(categoryId);
+          } else if (categoryType === 3) {
+            status.nutritionReviewCbStatus.push(categoryId);
+          }
+        }
+        return status;
+      },
+      {
+        foodSafetyReviewCbStatus: [],
+        culinaryReviewCbStatus: [],
+        nutritionReviewCbStatus: [],
+      }
+    );
+    // * saving the categories checkbox status
+    const categories = newCheckboxStatus.culinaryReviewCbStatus
+      .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
+      .concat(newCheckboxStatus.culinaryReviewCbStatus)
+      .concat(newCheckboxStatus.nutritionReviewCbStatus);
+
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      categories,
+    }));
+    setValue("categories", categories);
+    trigger("categories");
+    setCheckboxStatus(newCheckboxStatus);
+  };
+
+  // * checking if the report parameters match to their state true / false
+  const handleSwitchStateChange = (selectedReport) => {
+    const newSwitchStates = {
+      haveFineSwitch: selectedReport.getData("haveFine") == 0 ? false : true,
+      haveAmountOfItems:
+        selectedReport.getData("haveAmountOfItems") == 0 ? false : true,
+      haveSafetyGrade:
+        selectedReport.getData("haveSafetyGrade") == 0 ? false : true,
+      haveCulinaryGrade:
+        selectedReport.getData("haveCulinaryGrade") == 0 ? false : true,
+      haveNutritionGrade:
+        selectedReport.getData("haveNutritionGrade") == 0 ? false : true,
+      haveCategoriesNameForCriticalItems:
+        selectedReport.getData("haveCategoriesNameForCriticalItems") == 0
+          ? false
+          : true,
+    };
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      ...Object.fromEntries(
+        Object.entries(newSwitchStates).map(([key, value]) => [
+          key,
+          value ? 1 : 0,
+        ])
+      ),
+    }));
+    setSwitchStates(newSwitchStates);
+  };
+  // * setting the accompany
+  const handleAccompanyChange = (selectedReport) => {
+    const accompanyName = selectedReport.getData("accompany");
+    if (accompanyName == "ללא ליווי") {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        accompany: "ללא ליווי",
+      }));
+      setValue("accompany", "ללא ליווי");
+      trigger("accompany");
+    } else {
+      setAccompanySelected(accompanyName);
+      setValue("accompany", accompanyName);
+      trigger("accompany");
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        accompany: accompanyName,
+      }));
+    }
+  };
+  //  * handling report time
+  const handleReportTime = (selectedReport) => {
+    const reportTimeDisplayed = selectedReport.getData("reportTime");
+    setValue("reportTime", reportTimeDisplayed);
+    trigger("reportTime");
+  };
+
+  // * general handle form change
   const handleFormChange = debounce((name, value) => {
     setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
     setIsSchemaValid(true);
@@ -243,30 +583,16 @@ const WorkerNewReport = () => {
 
       let newSwitchStates = {
         haveFineSwitch: false,
-        haveAmountOfItemsSwitch: false,
-        haveSafetyGradeSwitch: false,
-        haveCulinaryGradeSwitch: false,
-        haveNutritionGradeSwitch: false,
-        haveCategoriesNameForCriticalItemsSwitch: false,
+        haveAmountOfItems: false,
+        haveSafetyGrade: false,
+        haveCulinaryGrade: false,
+        haveNutritionGrade: false,
+        haveCategoriesNameForCriticalItems: false,
       };
-
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        ...Object.fromEntries(
-          Object.entries(newSwitchStates).map(([key, value]) => [
-            key,
-            value ? 1 : 0,
-          ])
-        ),
-      }));
-      const categorys = newCheckboxStatus.culinaryReviewCbStatus
-        .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
-        .concat(newCheckboxStatus.culinaryReviewCbStatus)
-        .concat(newCheckboxStatus.nutritionReviewCbStatus);
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        categorys,
-      }));
+      const memoRizedCats = memoizedCategories?.categories;
+      const categoriesData = Object.values(memoRizedCats).flatMap(
+        (category) => category.categories
+      );
 
       if (value === "דוח חדש") {
         setCheckboxStatus(newCheckboxStatus);
@@ -276,109 +602,22 @@ const WorkerNewReport = () => {
           oldReportId: "0",
         }));
       } else {
-        // * selected report filtered to the chosen station
         const selectedReport = filteredStationsResult.find(
           (report) => report.getData("timeOfReport") === value
         );
         if (selectedReport) {
-          // * setting the oldReportId from selected report
-          setFormData((prevFormData) => ({
-            ...prevFormData,
-            oldReportId: selectedReport.getData("id"),
-          }));
-          // * getting the report categories
-          const selectedReportCategory = selectedReport.getData("categorys");
-          // * parsing the string to array of numbers
-          const parsedSelectedReportCategory = new Set(
-            selectedReportCategory
-              .split("|")
-              .map((str) => str.replace(";", ""))
-              .filter(Boolean)
-              .map((numStr) => parseInt(numStr, 10))
+          handleReportIdAndWorkerId(selectedReport);
+          const parsedSelectedReportCategory =
+            handleSelectedReportCategory(selectedReport);
+          handleCheckboxStatusChange(
+            parsedSelectedReportCategory,
+            categoriesData
           );
-          // * getting the categories from the categories of the api
-          const memoRizedCats = memoizedCategories?.categories;
-          // * mapping the categories
-          const categoriesData = Object.values(memoRizedCats).flatMap(
-            (category) => category.categories
-          );
-          //  * checking if the ids of the categories match to the selected report and sorting them by type to their right location of the state
-          newCheckboxStatus = categoriesData.reduce(
-            (status, category) => {
-              const categoryId = parseInt(category.id, 10);
-              const categoryType = parseInt(category.type, 10);
-              if (parsedSelectedReportCategory.has(categoryId)) {
-                if (categoryType === 1) {
-                  status.foodSafetyReviewCbStatus.push(categoryId);
-                } else if (categoryType === 2) {
-                  status.culinaryReviewCbStatus.push(categoryId);
-                } else if (categoryType === 3) {
-                  status.nutritionReviewCbStatus.push(categoryId);
-                }
-              }
-              return status;
-            },
-            {
-              foodSafetyReviewCbStatus: [],
-              culinaryReviewCbStatus: [],
-              nutritionReviewCbStatus: [],
-            }
-          );
-          // * checking if the report parameters match to their state true / false
-          newSwitchStates = {
-            haveFineSwitch:
-              selectedReport.getData("haveFine") == 0 ? false : true,
-            haveAmountOfItemsSwitch:
-              selectedReport.getData("haveAmountOfItems") == 0 ? false : true,
-            haveSafetyGradeSwitch:
-              selectedReport.getData("haveSafetyGrade") == 0 ? false : true,
-            haveCulinaryGradeSwitch:
-              selectedReport.getData("haveCulinaryGrade") == 0 ? false : true,
-            haveNutritionGradeSwitch:
-              selectedReport.getData("haveNutritionGrade") == 0 ? false : true,
-            haveCategoriesNameForCriticalItemsSwitch:
-              selectedReport.getData("haveCategoriesNameForCriticalItems") == 0
-                ? false
-                : true,
-          };
-          // * saving their current status of the toggles based on the report selected
-          setFormData((prevFormData) => ({
-            ...prevFormData,
-            ...Object.fromEntries(
-              Object.entries(newSwitchStates).map(([key, value]) => [
-                key,
-                value ? 1 : 0,
-              ])
-            ),
-          }));
-          // * saving the categories checkbox status
-          const categorys = newCheckboxStatus.culinaryReviewCbStatus
-            .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
-            .concat(newCheckboxStatus.culinaryReviewCbStatus)
-            .concat(newCheckboxStatus.nutritionReviewCbStatus);
-
-          setFormData((prevFormData) => ({
-            ...prevFormData,
-            categorys,
-          }));
-
-          setCheckboxStatus(newCheckboxStatus);
-          setSwitchStates(newSwitchStates);
-          // * setting the accompany
-          const accompanyName = selectedReport.getData("accompany");
-          if (accompanyName == "ללא ליווי") {
-            setFormData((prevFormData) => ({
-              ...prevFormData,
-              accompany: "ללא ליווי",
-            }));
-          } else {
-            setAccompanySelected(accompanyName);
-            setFormData((prevFormData) => ({
-              ...prevFormData,
-              accompany: accompanyName,
-            }));
-          }
+          handleSwitchStateChange(selectedReport);
+          handleAccompanyChange(selectedReport);
+          handleReportTime(selectedReport);
         } else {
+          setIsSchemaValid(true);
           setSwitchStates(newSwitchStates);
         }
       }
@@ -387,19 +626,24 @@ const WorkerNewReport = () => {
 
   const onSubmitForm = () => {
     // checking if scheme is valid
-    console.log("formData:", formData);
-
+    console.log("on submit...");
+    const formValues = getValues();
+    console.log("formValues:", formValues);
     if (isSchemaValid) {
       console.log("scheme is valid");
     }
   };
+
+  // console.log("form data", formData);
+  // console.log(`isSchemaValid: ${isSchemaValid}`);
+  console.log(errors);
 
   /* {
 // oldReportId: 18503
 // clientId: 34
 // haveNewGeneralCommentsVersion: 1
 // clientStationId: 66
-workerId: 23
+// workerId: 23
 // accompany: ללא ליווי
 // haveFine: 0 
 // haveAmountOfItems: 0
@@ -430,6 +674,8 @@ workerId: 23
       iconDisplay: true,
       boxHeight: 80.5,
       hasDivider: true,
+      // defaultList: true,
+      draggable: false,
       accordionCloseIndicator: accordionCloseIcon,
       accordionOpenIndicator: accordionOpenIcon,
       contentItemStyling: styles.contentBoxSetting,
@@ -441,12 +687,27 @@ workerId: 23
             <SelectMenu
               control={control}
               selectWidth={240}
+              optionsHeight={200}
+              selectMenuStyling={{
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "flex-start",
+              }}
+              centeredViewStyling={{
+                marginRight: 12,
+                alignItems: "flex-end",
+                marginTop: -530,
+              }}
               selectOptions={currentClient.getStations()}
-              name={"station"}
-              errorMessage={errors.station && errors.station.message}
+              name={"clientStationId"}
+              errorMessage={
+                errors.clientStationId && errors.clientStationId.message
+              }
               onChange={(value) => {
                 handleFormChange("clientStationId", value.id);
                 setSelectedStation(value.id);
+                setValue("clientStationId", value.id);
+                trigger("clientStationId");
                 console.log("value-station:", value);
               }}
               propertyName="company"
@@ -461,6 +722,17 @@ workerId: 23
             <SelectMenu
               control={control}
               selectWidth={240}
+              optionsHeight={750}
+              selectMenuStyling={{
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "flex-start",
+              }}
+              centeredViewStyling={{
+                marginRight: 12,
+                alignItems: "flex-end",
+                marginTop: 180,
+              }}
               selectOptions={[
                 { timeOfReport: "דוח חדש", id: 0 },
                 ...filteredStationsResult, //clientStationId
@@ -470,9 +742,11 @@ workerId: 23
                 errors.previousReports && errors.previousReports.message
               }
               onChange={(value) => {
-                handleFormChange("timeOfReport", value);
+                handleFormChange("previousReports", value);
                 // setSelectedReport(value);
-                console.log("value-timeOfReport:", value);
+                setValue("previousReports", value);
+                trigger("previousReports");
+                console.log("value-previousReports:", value);
               }}
               propertyName="timeOfReport"
             />
@@ -496,7 +770,7 @@ workerId: 23
           text: <Text> להציג כמות סעיפים</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"haveAmountOfItemsSwitch"}
+              id={"haveAmountOfItems"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -509,7 +783,7 @@ workerId: 23
           text: <Text> "הצג ציון ביקורת בטיחות מזון"</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"haveSafetyGradeSwitch"}
+              id={"haveSafetyGrade"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -522,7 +796,7 @@ workerId: 23
           text: <Text> הצג ציון ביקורת קולינרית</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"haveCulinaryGradeSwitch"}
+              id={"haveCulinaryGrade"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -535,7 +809,7 @@ workerId: 23
           text: <Text> הצג ציון תזונה</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"haveNutritionGradeSwitch"}
+              id={"haveNutritionGrade"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -548,7 +822,7 @@ workerId: 23
           text: <Text> הצג שמות קטגוריות בתמצית עבור ליקויים קריטיים</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"haveCategoriesNameForCriticalItemsSwitch"}
+              id={"haveCategoriesNameForCriticalItems"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -586,10 +860,14 @@ workerId: 23
           boxItem: (
             <DatePicker
               control={control}
-              name={"date"}
+              name={"timeOfReport"}
               errorMessage={errors.date && errors.date.message}
               onchange={(value) => {
-                handleFormChange("timeOfReport", value);
+                const date = new Date(value);
+                const formattedDate = date.toLocaleDateString("en-GB");
+                handleFormChange("timeOfReport", formattedDate);
+                setValue("timeOfReport", formattedDate);
+                trigger("timeOfReport");
               }}
               dateInputWidth={240}
             />
@@ -602,16 +880,26 @@ workerId: 23
             <SelectMenu
               control={control}
               selectWidth={240}
+              optionsHeight={500}
+              selectMenuStyling={{
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "flex-start",
+              }}
+              centeredViewStyling={{
+                marginRight: 12,
+                alignItems: "flex-end",
+                marginTop: 300,
+              }}
               selectOptions={reportsTimes}
               name={"reportTime"}
-              errorMessage={errors.station && errors.station.message}
+              errorMessage={errors.reportTime && errors.reportTime.message}
               onChange={(value) => {
                 handleFormChange("reportTime", value.id);
                 console.log("reportTime:", value.id);
               }}
               propertyName={"name"}
               returnObject={true}
-              // selectMenuStyling={{ marginBottom: 16 }}
             />
           ),
         },
@@ -627,15 +915,27 @@ workerId: 23
       iconDisplay: true,
       boxHeight: 46,
       hasDivider: true,
+      draggable: true,
       // toggleHandler: () => resetCategoryAccordionHeight,
       accordionCloseIndicator: accordionCloseIcon,
       accordionOpenIndicator: accordionOpenIcon,
       contentItemStyling: styles.contentBoxCategories,
       scrollEnabled: true,
-
       accordionContentData: [
         {
           id: 0,
+          boxItem: (
+            <>
+              {errors.categories && errors.categories.message && (
+                <HelperText type="error" style={{ marginBottom: 10 }}>
+                  {errors.categories.message}
+                </HelperText>
+              )}
+            </>
+          ),
+        },
+        {
+          id: 1,
           boxItem: (
             <Accordion
               headerText={`${
@@ -653,6 +953,7 @@ workerId: 23
                 backgroundColor: "#D3E0FF",
               }}
               iconDisplay={true}
+              draggable={true}
               boxHeight={56}
               headerTextStyling={{
                 color: colors.black,
@@ -674,7 +975,7 @@ workerId: 23
           ),
         },
         {
-          id: 1,
+          id: 2,
           boxItem: (
             <Accordion
               headerText={`${
@@ -684,6 +985,7 @@ workerId: 23
               } (נבחרו  ${getCheckedCount("culinaryReviewCb")} דוחות)`}
               contentHeight={336}
               headerHeight={50}
+              draggable={true}
               accordionCloseIndicator={ClientItemArrow}
               accordionOpenIndicator={ClientItemArrowOpen}
               iconText={"בחר קטגוריות"}
@@ -703,6 +1005,8 @@ workerId: 23
                 culinaryReviewTexts,
                 "culinaryReviewCb"
               )}
+              // accordionContentData={accordionContentData}
+              // setAccordionContentData={setAccordionContentData}
               contentItemStyling={{
                 width: "100%",
                 height: 56,
@@ -714,7 +1018,7 @@ workerId: 23
           ),
         },
         {
-          id: 2,
+          id: 3,
           boxItem: (
             <>
               <Accordion
@@ -725,6 +1029,7 @@ workerId: 23
                 } (נבחרו  ${getCheckedCount("nutritionReviewCb")} דוחות)`}
                 contentHeight={336}
                 headerHeight={50}
+                draggable={true}
                 accordionCloseIndicator={ClientItemArrow}
                 accordionOpenIndicator={ClientItemArrowOpen}
                 iconText={"בחר קטגוריות"}
@@ -752,11 +1057,6 @@ workerId: 23
                 }}
                 hasDivider={true}
               />
-              {errors.categories && (
-                <HelperText type="error">
-                  {errors.categories.message}
-                </HelperText>
-              )}
             </>
           ),
         },
@@ -771,8 +1071,11 @@ workerId: 23
       headerTogglerStyling: styles.headerStyle,
       iconDisplay: true,
       boxHeight: 80.5,
+      // defaultList: true,
+      draggable: false,
       contentItemStyling: styles.contentBoxSetting,
       hasDivider: false,
+
       accordionCloseIndicator: accordionCloseIcon,
       accordionOpenIndicator: accordionOpenIcon,
       accordionContentData: [
@@ -870,14 +1173,11 @@ workerId: 23
                   <RichEditor
                     ref={richText}
                     onChange={handleContentChange}
+                    initialContentHTML="<div></div>"
                     placeholder="פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
-                    // customCSS={`body { direction: ltr; text-align: left; color: ${selectedColor}; }`}
-                    // editorInitializedCallback={() =>
-                    //   // console.log("Editor is initialized")
-                    // }
-                    shouldStartLoadWithRequest={(request) =>
-                      request.url.startsWith("https://www.example.com")
-                    }
+                    shouldStartLoadWithRequest={(request) => {
+                      return true;
+                    }}
                     style={{
                       minHeight: 123,
                       direction: "ltr",
@@ -913,20 +1213,10 @@ workerId: 23
       accordionOpenIndicator={item.accordionOpenIndicator}
       scrollEnabled={item.scrollEnabled}
       toggleHandler={item.toggleHandler}
+      draggable={item.draggable}
+      // defaultList={item.defaultList}
     />
   );
-
-  // if (isLoading) {
-  //   return (
-  //     <ScreenWrapper
-  //       isConnectedUser
-  //       newReportBackGroundImg={true}
-  //       wrapperStyle={styles.container}
-  //     >
-  //       <Loader visible={isLoading} />
-  //     </ScreenWrapper>
-  //   );
-  // }
 
   return (
     <ScreenWrapper
@@ -962,10 +1252,10 @@ workerId: 23
             justifyContent: "center",
             alignItems: "center",
           }}
-          onPress={() => {
-            handleSubmit(onSubmitForm);
+          onPress={
+            handleSubmit(onSubmitForm)
             // console.log("new report");
-          }}
+          }
           // disabled={!isSchemaValid}
         >
           <Text

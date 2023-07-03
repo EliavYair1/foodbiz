@@ -1,4 +1,12 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Image,
+  Modal,
+  TouchableWithoutFeedback,
+} from "react-native";
 import React, { useState } from "react";
 import {
   Button,
@@ -20,6 +28,10 @@ const SelectMenu = ({
   name,
   errorMessage,
   onChange,
+  optionsHeight,
+  optionsCenterView,
+  centeredViewStyling,
+  optionsLocation,
   propertyName = false,
   selectMenuStyling,
   returnObject = false,
@@ -77,6 +89,29 @@ const SelectMenu = ({
       backgroundColor: colors.white,
       paddingVertical: 12,
       zIndex: 20,
+    },
+    centeredView: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: optionsCenterView,
+      marginTop: optionsLocation,
+      marginRight: 0,
+    },
+    modalView: {
+      margin: 20,
+      backgroundColor: "white",
+      borderRadius: 20,
+      // padding: 35,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+      height: optionsHeight,
     },
   });
 
@@ -147,26 +182,42 @@ const SelectMenu = ({
                 </TouchableOpacity>
               }
             >
-              <FlatList
-                data={selectOptions}
-                keyExtractor={(option) => uuid()}
-                renderItem={renderMenuItem}
-                ItemSeparatorComponent={Divider}
-              />
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={visible}
+                onRequestClose={closeMenu}
+                style={{ alignItems: "flex-end", justifyContent: "flex-end" }}
+              >
+                <TouchableWithoutFeedback onPress={closeMenu}>
+                  <View
+                    style={[styles.centeredView, centeredViewStyling ?? ""]}
+                  >
+                    <View style={styles.modalView}>
+                      <FlatList
+                        data={selectOptions}
+                        keyExtractor={(option) => uuid()}
+                        renderItem={renderMenuItem}
+                        ItemSeparatorComponent={Divider}
+                      />
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
             </Menu>
+            {errorMessage && (
+              <HelperText
+                type="error"
+                style={{
+                  fontFamily: fonts.AMedium,
+                }}
+              >
+                {selectedItem ? null : errorMessage}
+              </HelperText>
+            )}
           </View>
         )}
       />
-      {errorMessage && (
-        <HelperText
-          type="error"
-          style={{
-            fontFamily: fonts.AMedium,
-          }}
-        >
-          {selectedItem ? null : errorMessage}
-        </HelperText>
-      )}
     </>
   );
 };
