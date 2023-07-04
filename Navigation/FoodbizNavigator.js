@@ -3,6 +3,7 @@ import Login from "../Screens/Login/login";
 import ClientsList from "../Screens/ClientsList/ClientsList";
 import Home from "../Screens/Home/Home";
 import WorkerNewReport from "../Screens/WorkerNewReport/WorkerNewReport";
+import EditExistingReport from "../Screens/ClientsList/ClientsItem/EditExistingReport/EditExistingReport";
 const Stack = createStackNavigator();
 const FoodbizNavigator = () => {
   return (
@@ -26,6 +27,11 @@ const FoodbizNavigator = () => {
         name="WorkerNewReport"
         options={{ headerShown: false }}
         component={WorkerNewReport}
+      />
+      <Stack.Screen
+        name="EditExistingReport"
+        options={{ headerShown: false }}
+        component={EditExistingReport}
       />
     </Stack.Navigator>
   );

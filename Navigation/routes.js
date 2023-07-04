@@ -4,6 +4,7 @@ const routes = Object.freeze({
     Login: "Login",
     ClientsList: "ClientsList",
     WorkerNewReport: "WorkerNewReport",
+    EditExistingReport: "EditExistingReport",
   },
 });
 export default routes;

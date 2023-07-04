@@ -22,7 +22,7 @@ const Accordion = ({
   headerTogglerStyling,
   iconDisplay,
   boxHeight = false,
-  accordionContentData,
+  accordionContent,
   boxItem,
   contentItemStyling,
   hasDivider,
@@ -33,7 +33,7 @@ const Accordion = ({
   toggleHandler = false,
   iconText,
   draggable = false,
-  // setAccordionContentData,
+  onDragEndCb,
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -123,16 +123,16 @@ const Accordion = ({
         <View style={[styles.contentWrapper]}>
           {draggable ? (
             <DraggableFlatList
-              data={accordionContentData}
+              data={accordionContent}
               renderItem={renderAccordionItem}
               keyExtractor={(item, index) => `draggable-item-${item.id}`}
-              // onDragEnd={({ data }) => setAccordionContentData(data)}
+              onDragEnd={onDragEndCb}
             />
           ) : (
             <FlatList
               scrollEnabled={scrollEnabled}
               key={() => uuid()}
-              data={accordionContentData}
+              data={accordionContent}
               renderItem={renderAccordionItem}
             />
           )}

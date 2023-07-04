@@ -171,6 +171,8 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           action: (report) => {
             // console.log(report.data.status);
             console.log("Edit_icon");
+            navigateToRoute(routes.ONBOARDING.EditExistingReport);
+            dispatch(getCurrentClient(client));
           },
         },
         {

@@ -46,8 +46,8 @@ import FetchDataService from "../../Services/FetchDataService";
 import "@env";
 import axios from "axios";
 import { fetchCategories } from "../../store/redux/reducers/categoriesSlice";
-import CheckboxItem from "./CheckboxItem/CheckboxItem";
 import { fetchReportsTimes } from "../../store/redux/reducers/reportsTimesSlice";
+import CheckboxItem from "./CheckboxItem/CheckboxItem";
 import Loader from "../../utiles/Loader";
 import { HelperText } from "react-native-paper";
 const WorkerNewReport = () => {
@@ -58,9 +58,7 @@ const WorkerNewReport = () => {
   const clients = useSelector((state) => state.clients);
   const categories = useSelector((state) => state.categories);
   const reportsTimes = useSelector((state) => state.reportsTimes);
-  // console.log("reportsTimes:", reportsTimes);
   const { navigateTogoBack } = useScreenNavigator();
-  // fetching the the current data from specific client
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
@@ -70,23 +68,23 @@ const WorkerNewReport = () => {
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
-
     nutritionReviewCbStatus: [],
   });
   const [selectedStation, setSelectedStation] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
-  // console.log("accompanySelected:", accompanySelected);
   const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
-
   const [switchStates, setSwitchStates] = useState({
-    haveFineSwitch: false,
+    haveFine: false,
     haveAmountOfItems: false,
     haveSafetyGrade: false,
     haveCulinaryGrade: false,
     haveNutritionGrade: false,
     haveCategoriesNameForCriticalItems: false,
   });
-
+  // * categories checkboxes Texts
+  const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState([]);
+  const [culinaryReviewTexts, setCulinaryReviewTexts] = useState([]);
+  const [nutritionReviewTexts, setNutritionReviewTexts] = useState([]);
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
     previousReports: yup.string().required("previous report is required"),
@@ -127,16 +125,19 @@ const WorkerNewReport = () => {
         );
       }),
   });
+
   const {
     control,
     handleSubmit,
     formState: { errors },
     getValues,
     setValue,
+    watch,
     trigger,
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   useEffect(() => {
     schema
       .validate(formData)
@@ -155,57 +156,21 @@ const WorkerNewReport = () => {
   }, [dispatch]);
 
   const memoizedCategories = useMemo(() => categories, [categories]);
-  // newGeneralCommentTopText change handler
-  const handleContentChange = debounce((content) => {
-    // console.log(content);
-    const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
-    richText.current?.setContentHTML(strippedContent);
-    setValue("newGeneralCommentTopText", strippedContent);
-    trigger("newGeneralCommentTopText");
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      newGeneralCommentTopText: strippedContent,
-    }));
-  }, 300);
 
-  // * categories checkboxes Texts
-  const foodSafetyReviewTexts =
-    memoizedCategories?.categories?.[1]?.categories ?? [];
-  const culinaryReviewTexts =
-    memoizedCategories?.categories?.[2]?.categories ?? [];
-  const nutritionReviewTexts =
-    memoizedCategories?.categories?.[3]?.categories ?? [];
+  useEffect(() => {
+    setFoodSafetyReviewTexts(
+      memoizedCategories?.categories?.[1]?.categories ?? []
+    );
+    setCulinaryReviewTexts(
+      memoizedCategories?.categories?.[2]?.categories ?? []
+    );
+    setNutritionReviewTexts(
+      memoizedCategories?.categories?.[3]?.categories ?? []
+    );
+  }, [memoizedCategories]);
 
-  // get the array of categories from the report and updates the state
-
-  const handleCategoriesCheckboxesToggle = (category, checked, label) => {
-    setCheckboxStatus((prevStatus) => {
-      const updatedCategoryStatus = [...prevStatus[category]];
-      // find && parsing the index of the array
-      const index = updatedCategoryStatus.indexOf(parseInt(label));
-      // 07267
-      //if checked and label is not found in the array add to the array
-      if (checked && index === -1) {
-        updatedCategoryStatus.push(parseInt(label));
-        // if unchecked and label is found in the array remove to the array
-      } else if (!checked && index !== -1) {
-        updatedCategoryStatus.splice(index, 1);
-      }
-      handleFormChange(category, updatedCategoryStatus);
-      return { ...prevStatus, [category]: updatedCategoryStatus };
-    });
-    const categories = [
-      ...checkboxStatus.foodSafetyReviewCbStatus,
-      ...checkboxStatus.culinaryReviewCbStatus,
-      ...checkboxStatus.nutritionReviewCbStatus,
-    ];
-    setValue("categories", categories);
-    trigger("categories");
-  };
-
-  // inner accordionCategoriesItem
+  // * inner accordionCategoriesItem
   function accordionCategoriesItem(names, categoryName) {
-    // console.log("names:", names);
     return names.map((item, index) => {
       // console.log("item id", item.id);
       const checkboxKey = `${categoryName}${index + 1}`;
@@ -241,7 +206,6 @@ const WorkerNewReport = () => {
   }
 
   // * checkbox counter
-
   const getCheckedCount = (category) => {
     const categoryStatus = checkboxStatus[`${category}Status`];
     return categoryStatus ? categoryStatus.length : 0;
@@ -261,191 +225,18 @@ const WorkerNewReport = () => {
     .getReports()
     .filter((report) => report.getData("clientStationId") === selectedStation);
 
-  // * toggle switch function
-  const toggleSwitch = (id) => {
-    setSwitchStates((prevState) => {
-      const newState = {
-        ...prevState,
-        [id]: !prevState[id],
-      };
-      const value = newState[id] ? 1 : 0;
-      handleFormChange(id, value); // Call handleFormChange with the new switch state
-      return newState;
-    });
-  };
-
-  // * report onchange handler function
-  // const handleFormChange = debounce((name, value) => {
-  //   setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-  //   setIsSchemaValid(true);
-
-  //   if (name === "previousReports") {
-  //     let newCheckboxStatus = {
-  //       foodSafetyReviewCbStatus: [],
-  //       culinaryReviewCbStatus: [],
-  //       nutritionReviewCbStatus: [],
-  //     };
-
-  //     let newSwitchStates = {
-  //       haveFineSwitch: false,
-  //       haveAmountOfItems: false,
-  //       haveSafetyGrade: false,
-  //       haveCulinaryGrade: false,
-  //       haveNutritionGrade: false,
-  //       haveCategoriesNameForCriticalItems: false,
-  //     };
-
-  //     setFormData((prevFormData) => ({
-  //       ...prevFormData,
-  //       ...Object.fromEntries(
-  //         Object.entries(newSwitchStates).map(([key, value]) => [
-  //           key,
-  //           value ? 1 : 0,
-  //         ])
-  //       ),
-  //     }));
-  //     const categories = newCheckboxStatus.culinaryReviewCbStatus
-  //       .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
-  //       .concat(newCheckboxStatus.culinaryReviewCbStatus)
-  //       .concat(newCheckboxStatus.nutritionReviewCbStatus);
-  //     setFormData((prevFormData) => ({
-  //       ...prevFormData,
-  //       categories,
-  //     }));
-
-  //     setValue("categories", categories);
-  //     trigger("categories");
-
-  //     if (value === "דוח חדש") {
-  //       setCheckboxStatus(newCheckboxStatus);
-  //       setSwitchStates(newSwitchStates);
-  //       setFormData((prevFormData) => ({
-  //         ...prevFormData,
-  //         oldReportId: "0",
-  //       }));
-  //     } else {
-  //       // * selected report filtered to the chosen station
-  //       const selectedReport = filteredStationsResult.find(
-  //         (report) => report.getData("timeOfReport") === value
-  //       );
-  //       if (selectedReport) {
-  //         // * setting the oldReportId from selected report
-  //         setFormData((prevFormData) => ({
-  //           ...prevFormData,
-  //           oldReportId: selectedReport.getData("id"),
-  //           workerId: selectedReport.getData("workerId"),
-  //         }));
-
-  //         // * getting the report categories
-  //         const selectedReportCategory = selectedReport.getData("categorys");
-  //         // * parsing the string to array of numbers
-  //         const parsedSelectedReportCategory = new Set(
-  //           selectedReportCategory
-  //             .split("|")
-  //             .map((str) => str.replace(";", ""))
-  //             .filter(Boolean)
-  //             .map((numStr) => parseInt(numStr, 10))
-  //         );
-  //         // * getting the categories from the categories of the api
-  //         const memoRizedCats = memoizedCategories?.categories;
-  //         // * mapping the categories
-  //         const categoriesData = Object.values(memoRizedCats).flatMap(
-  //           (category) => category.categories
-  //         );
-  //         //  * checking if the ids of the categories match to the selected report and sorting them by type to their right location of the state
-  //         newCheckboxStatus = categoriesData.reduce(
-  //           (status, category) => {
-  //             const categoryId = parseInt(category.id, 10);
-  //             const categoryType = parseInt(category.type, 10);
-  //             if (parsedSelectedReportCategory.has(categoryId)) {
-  //               if (categoryType === 1) {
-  //                 status.foodSafetyReviewCbStatus.push(categoryId);
-  //               } else if (categoryType === 2) {
-  //                 status.culinaryReviewCbStatus.push(categoryId);
-  //               } else if (categoryType === 3) {
-  //                 status.nutritionReviewCbStatus.push(categoryId);
-  //               }
-  //             }
-  //             return status;
-  //           },
-  //           {
-  //             foodSafetyReviewCbStatus: [],
-  //             culinaryReviewCbStatus: [],
-  //             nutritionReviewCbStatus: [],
-  //           }
-  //         );
-  //         // * checking if the report parameters match to their state true / false
-  //         newSwitchStates = {
-  //           haveFineSwitch:
-  //             selectedReport.getData("haveFine") == 0 ? false : true,
-  //           haveAmountOfItems:
-  //             selectedReport.getData("haveAmountOfItems") == 0 ? false : true,
-  //           haveSafetyGrade:
-  //             selectedReport.getData("haveSafetyGrade") == 0 ? false : true,
-  //           haveCulinaryGrade:
-  //             selectedReport.getData("haveCulinaryGrade") == 0 ? false : true,
-  //           haveNutritionGrade:
-  //             selectedReport.getData("haveNutritionGrade") == 0 ? false : true,
-  //           haveCategoriesNameForCriticalItems:
-  //             selectedReport.getData("haveCategoriesNameForCriticalItems") == 0
-  //               ? false
-  //               : true,
-  //         };
-  //         // * saving their current status of the toggles based on the report selected
-  // setFormData((prevFormData) => ({
-  //   ...prevFormData,
-  //   ...Object.fromEntries(
-  //     Object.entries(newSwitchStates).map(([key, value]) => [
-  //       key,
-  //       value ? 1 : 0,
-  //     ])
-  //   ),
-  // }));
-  //         setSwitchStates(newSwitchStates);
-
-  // * saving the categories checkbox status
-  // const categories = newCheckboxStatus.culinaryReviewCbStatus
-  //   .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
-  //   .concat(newCheckboxStatus.culinaryReviewCbStatus)
-  //   .concat(newCheckboxStatus.nutritionReviewCbStatus);
-
-  // setFormData((prevFormData) => ({
-  //   ...prevFormData,
-  //   categories,
-  // }));
-  // setValue("categories", categories);
-  // trigger("categories");
-
-  //         setCheckboxStatus(newCheckboxStatus);
-
-  // * setting the accompany
-  //         const accompanyName = selectedReport.getData("accompany");
-  //         if (accompanyName == "ללא ליווי") {
-  //           setFormData((prevFormData) => ({
-  //             ...prevFormData,
-  //             accompany: "ללא ליווי",
-  //           }));
-  //           setValue("accompany", "ללא ליווי");
-  //           trigger("accompany");
-  //         } else {
-  //           setAccompanySelected(accompanyName);
-  //           setValue("accompany", accompanyName);
-  //           trigger("accompany");
-  //           setFormData((prevFormData) => ({
-  //             ...prevFormData,
-  //             accompany: accompanyName,
-  //           }));
-  //         }
-  //         const reportTimeDisplayed = selectedReport.getData("reportTime");
-  //         setValue("reportTime", reportTimeDisplayed);
-  //         trigger("reportTime");
-  //       } else {
-  //         // setIsSchemaValid(true);
-  //         setSwitchStates(newSwitchStates);
-  //       }
-  //     }
-  //   }
-  // }, 300);
+  // * newGeneralCommentTopText change handler
+  const handleContentChange = debounce((content) => {
+    // console.log(content);
+    const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
+    richText.current?.setContentHTML(strippedContent);
+    setValue("newGeneralCommentTopText", strippedContent);
+    trigger("newGeneralCommentTopText");
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      newGeneralCommentTopText: strippedContent,
+    }));
+  }, 300);
 
   // * setting the oldReportId from selected repor
   const handleReportIdAndWorkerId = (selectedReport) => {
@@ -514,10 +305,40 @@ const WorkerNewReport = () => {
     setCheckboxStatus(newCheckboxStatus);
   };
 
+  // * get the array of categories from the report and updates the state
+  const handleCategoriesCheckboxesToggle = (category, checked, label) => {
+    setCheckboxStatus((prevStatus) => {
+      const updatedCategoryStatus = [...prevStatus[category]];
+      // find && parsing the index of the array
+      const index = updatedCategoryStatus.indexOf(parseInt(label));
+
+      //if checked and label is not found in the array add to the array
+      if (checked && index === -1) {
+        updatedCategoryStatus.push(parseInt(label));
+        // if unchecked and label is found in the array remove to the array
+      } else if (!checked && index !== -1) {
+        updatedCategoryStatus.splice(index, 1);
+      }
+      handleFormChange(category, updatedCategoryStatus);
+      return { ...prevStatus, [category]: updatedCategoryStatus };
+    });
+    const categories = [
+      ...checkboxStatus.foodSafetyReviewCbStatus,
+      ...checkboxStatus.culinaryReviewCbStatus,
+      ...checkboxStatus.nutritionReviewCbStatus,
+    ];
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      categories: categories,
+    }));
+    setValue("categories", categories);
+    trigger("categories");
+  };
+
   // * checking if the report parameters match to their state true / false
   const handleSwitchStateChange = (selectedReport) => {
     const newSwitchStates = {
-      haveFineSwitch: selectedReport.getData("haveFine") == 0 ? false : true,
+      haveFine: selectedReport.getData("haveFine") == 0 ? false : true,
       haveAmountOfItems:
         selectedReport.getData("haveAmountOfItems") == 0 ? false : true,
       haveSafetyGrade:
@@ -540,8 +361,14 @@ const WorkerNewReport = () => {
         ])
       ),
     }));
+
+    Object.entries(newSwitchStates).forEach(([key, value]) => {
+      setValue(key, value ? 1 : 0);
+    });
+
     setSwitchStates(newSwitchStates);
   };
+
   // * setting the accompany
   const handleAccompanyChange = (selectedReport) => {
     const accompanyName = selectedReport.getData("accompany");
@@ -582,7 +409,7 @@ const WorkerNewReport = () => {
       };
 
       let newSwitchStates = {
-        haveFineSwitch: false,
+        haveFine: false,
         haveAmountOfItems: false,
         haveSafetyGrade: false,
         haveCulinaryGrade: false,
@@ -601,6 +428,9 @@ const WorkerNewReport = () => {
           ...prevFormData,
           oldReportId: "0",
         }));
+        Object.entries(newSwitchStates).forEach(([key, value]) => {
+          setValue(key, value ? 1 : 0);
+        });
       } else {
         const selectedReport = filteredStationsResult.find(
           (report) => report.getData("timeOfReport") === value
@@ -624,11 +454,28 @@ const WorkerNewReport = () => {
     }
   }, 300);
 
+  // * toggle switch function
+  const toggleSwitch = (id) => {
+    setSwitchStates((prevState) => {
+      const newState = {
+        ...prevState,
+        [id]: !prevState[id],
+      };
+      const value = newState[id] ? 1 : 0;
+      handleFormChange(id, value); // Call handleFormChange with the new switch state
+      return newState;
+    });
+  };
+
+  // * submit the form
   const onSubmitForm = () => {
     // checking if scheme is valid
     console.log("on submit...");
-    const formValues = getValues();
-    console.log("formValues:", formValues);
+    // const formValues = getValues();
+
+    // const finalFormValues = { ...formValues, ...switchStates };
+    // console.log("formValues:", formValues);
+    console.log("formData:", formData);
     if (isSchemaValid) {
       console.log("scheme is valid");
     }
@@ -636,8 +483,9 @@ const WorkerNewReport = () => {
 
   // console.log("form data", formData);
   // console.log(`isSchemaValid: ${isSchemaValid}`);
-  console.log(errors);
-
+  // console.log("errors:", errors);
+  //  todo to check i have both function (handleCheckboxStatusChange , handleCategoriesCheckboxesToggle)
+  // todo to change the way i save the checkboxes statuses in the state after i pick a report and make another change in one of the checkboxes
   /* {
 // oldReportId: 18503
 // clientId: 34
@@ -659,7 +507,7 @@ const WorkerNewReport = () => {
 // קבלן ההסעדה לא מאשר למטבח מוצרים של IQF מה שיכול מאד לעזור לצוות לפי טענתו.
 
 // timeOfReport: 22/06/2023
-// categorys[]: 5
+categorys[]: 5
 } */
 
   // * accordion FlatList array of Content
@@ -679,7 +527,7 @@ const WorkerNewReport = () => {
       accordionCloseIndicator: accordionCloseIcon,
       accordionOpenIndicator: accordionOpenIcon,
       contentItemStyling: styles.contentBoxSetting,
-      accordionContentData: [
+      accordionContent: [
         {
           id: 0,
           text: <Text>תחנה</Text>,
@@ -757,7 +605,7 @@ const WorkerNewReport = () => {
           text: <Text> יש קנסות</Text>,
           boxItem: (
             <ToggleSwitch
-              id={"haveFineSwitch"}
+              id={"haveFine"}
               switchStates={switchStates}
               toggleSwitch={toggleSwitch}
               truthyText={"כן"}
@@ -861,7 +709,7 @@ const WorkerNewReport = () => {
             <DatePicker
               control={control}
               name={"timeOfReport"}
-              errorMessage={errors.date && errors.date.message}
+              errorMessage={errors.timeOfReport && errors.timeOfReport.message}
               onchange={(value) => {
                 const date = new Date(value);
                 const formattedDate = date.toLocaleDateString("en-GB");
@@ -921,7 +769,7 @@ const WorkerNewReport = () => {
       accordionOpenIndicator: accordionOpenIcon,
       contentItemStyling: styles.contentBoxCategories,
       scrollEnabled: true,
-      accordionContentData: [
+      accordionContent: [
         {
           id: 0,
           boxItem: (
@@ -960,10 +808,22 @@ const WorkerNewReport = () => {
                 fontFamily: fonts.ABold,
               }}
               scrollEnabled={true}
-              accordionContentData={accordionCategoriesItem(
+              accordionContent={accordionCategoriesItem(
                 foodSafetyReviewTexts,
                 "foodSafetyReviewCb"
               )}
+              // accordionContent={accordionContent}
+              onDragEndCb={(data) => {
+                let originalData = [...foodSafetyReviewTexts];
+                const movedData = originalData[data.from];
+                originalData.splice(data.from, 1);
+                const newData = [
+                  ...originalData.slice(0, data.to),
+                  movedData,
+                  ...originalData.slice(data.to),
+                ];
+                setFoodSafetyReviewTexts(newData);
+              }}
               contentItemStyling={{
                 width: "100%",
                 height: 56,
@@ -1001,12 +861,21 @@ const WorkerNewReport = () => {
                 color: colors.black,
                 fontFamily: fonts.ABold,
               }}
-              accordionContentData={accordionCategoriesItem(
+              accordionContent={accordionCategoriesItem(
                 culinaryReviewTexts,
                 "culinaryReviewCb"
               )}
-              // accordionContentData={accordionContentData}
-              // setAccordionContentData={setAccordionContentData}
+              onDragEndCb={(data) => {
+                let originalData = [...culinaryReviewTexts];
+                const movedData = originalData[data.from];
+                originalData.splice(data.from, 1);
+                const newData = [
+                  ...originalData.slice(0, data.to),
+                  movedData,
+                  ...originalData.slice(data.to),
+                ];
+                setCulinaryReviewTexts(newData);
+              }}
               contentItemStyling={{
                 width: "100%",
                 height: 56,
@@ -1045,10 +914,21 @@ const WorkerNewReport = () => {
                   color: colors.black,
                   fontFamily: fonts.ABold,
                 }}
-                accordionContentData={accordionCategoriesItem(
+                accordionContent={accordionCategoriesItem(
                   nutritionReviewTexts,
                   "nutritionReviewCb"
                 )}
+                onDragEndCb={(data) => {
+                  let originalData = [...nutritionReviewTexts];
+                  const movedData = originalData[data.from];
+                  originalData.splice(data.from, 1);
+                  const newData = [
+                    ...originalData.slice(0, data.to),
+                    movedData,
+                    ...originalData.slice(data.to),
+                  ];
+                  setNutritionReviewTexts(newData);
+                }}
                 contentItemStyling={{
                   width: "100%",
                   height: 56,
@@ -1078,7 +958,7 @@ const WorkerNewReport = () => {
 
       accordionCloseIndicator: accordionCloseIcon,
       accordionOpenIndicator: accordionOpenIcon,
-      accordionContentData: [
+      accordionContent: [
         {
           id: 0,
           boxItem: (
@@ -1205,7 +1085,7 @@ const WorkerNewReport = () => {
       headerTogglerStyling={styles.headerStyle}
       iconDisplay={true}
       boxHeight={item.boxHeight}
-      accordionContentData={item.accordionContentData}
+      accordionContent={item.accordionContent}
       contentItemStyling={item.contentItemStyling}
       hasDivider={item.hasDivider}
       headerTextStyling={item.headerTextStyling}
