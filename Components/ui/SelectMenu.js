@@ -35,6 +35,7 @@ const SelectMenu = ({
   propertyName = false,
   selectMenuStyling,
   returnObject = false,
+  selectedStation = false,
 }) => {
   const [visible, setVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -131,7 +132,9 @@ const SelectMenu = ({
         }
       >
         <Text style={styles.menuItemText}>
-          {item.getData ? item.getData(propertyName) : item[propertyName]}
+          {item.getData
+            ? item.getData(propertyName)
+            : item[propertyName] || item}
         </Text>
       </TouchableOpacity>
     );
@@ -142,6 +145,7 @@ const SelectMenu = ({
       <Controller
         name={name}
         control={control}
+        defaultValue={selectedStation && null}
         render={({ field: { value, onChange } }) => (
           <View
             style={[
@@ -170,12 +174,16 @@ const SelectMenu = ({
                       }}
                     />
                     <Text style={styles.menuItemText}>
-                      {selectedItem
-                        ? returnObject
-                          ? selectedItem.getData
-                            ? selectedItem.getData(propertyName)
-                            : selectedItem[propertyName]
-                          : selectedItem
+                      {selectedStation
+                        ? selectedStation
+                        : selectedItem
+                        ? `${
+                            returnObject
+                              ? selectedItem.getData
+                                ? selectedItem.getData(propertyName)
+                                : selectedItem[propertyName]
+                              : selectedItem
+                          } ${selectedStation ? "(נבחר)" : ""}`
                         : "בחירה"}
                     </Text>
                   </View>

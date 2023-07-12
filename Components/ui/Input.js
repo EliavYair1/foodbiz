@@ -22,6 +22,7 @@ const Input = ({
   inputIcon = false,
   outlineColor,
   activeOutlineColor,
+  placeholder = false,
 }) => {
   return (
     <>
@@ -36,6 +37,7 @@ const Input = ({
           <>
             <TextInput
               ref={proxyRef}
+              placeholder={placeholder}
               label={
                 <Text
                   style={{

@@ -31,6 +31,10 @@ import useScreenNavigator from "../../../Hooks/useScreenNavigator";
 import routes from "../../../Navigation/routes";
 import { useDispatch } from "react-redux";
 import { getCurrentClient } from "../../../store/redux/reducers/currentClientSlice";
+import { getCurrentStation } from "../../../store/redux/reducers/getCurrentStation";
+import { getCurrentReport } from "../../../store/redux/reducers/getCurrentReport";
+
+getCurrentStation;
 const ClientItem = ({ client, tablePadding, logo }) => {
   const contentRef = useRef();
   const [open, setOpen] = useState(false);
@@ -169,10 +173,12 @@ const ClientItem = ({ client, tablePadding, logo }) => {
             return report.data.status < 5;
           },
           action: (report) => {
-            // console.log(report.data.status);
+            // console.log(report.getSafetyGrade());
             console.log("Edit_icon");
-            navigateToRoute(routes.ONBOARDING.EditExistingReport);
+            dispatch(getCurrentStation(report.getReportStationName()));
+            navigateToRoute(routes.ONBOARDING.WorkerNewReport);
             dispatch(getCurrentClient(client));
+            dispatch(getCurrentReport(report));
           },
         },
         {
@@ -283,6 +289,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const memoizedUsers = useMemo(() => users, [users]);
 
   const handleNewReport = () => {
+    dispatch(getCurrentReport(null));
     dispatch(getCurrentClient(client));
     navigateToRoute(routes.ONBOARDING.WorkerNewReport);
   };

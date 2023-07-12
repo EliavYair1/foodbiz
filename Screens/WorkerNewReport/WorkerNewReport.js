@@ -50,27 +50,33 @@ import { fetchReportsTimes } from "../../store/redux/reducers/reportsTimesSlice"
 import CheckboxItem from "./CheckboxItem/CheckboxItem";
 import Loader from "../../utiles/Loader";
 import { HelperText } from "react-native-paper";
+import Drawer from "../../Components/ui/Drawer";
+import FileIcon from "../../assets/icons/iconImgs/FileIcon.png";
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [colorSelected, setColorSelected] = useState(false);
+  const { navigateTogoBack } = useScreenNavigator();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const clients = useSelector((state) => state.clients);
   const categories = useSelector((state) => state.categories);
   const reportsTimes = useSelector((state) => state.reportsTimes);
-  const { navigateTogoBack } = useScreenNavigator();
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
+  const currentReport = useSelector(
+    (state) => state.currentReport.currentReport
+  );
   const [isSchemaValid, setIsSchemaValid] = useState(false);
-  const [formData, setFormData] = useState({ clientId: currentClient.id });
-
+  const [formData, setFormData] = useState({ clientId: currentClient?.id });
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
     nutritionReviewCbStatus: [],
   });
   const [selectedStation, setSelectedStation] = useState(null);
+  const [currentReportTime, setCurrentReportTime] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
   const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
   const [switchStates, setSwitchStates] = useState({
@@ -81,6 +87,9 @@ const WorkerNewReport = () => {
     haveNutritionGrade: false,
     haveCategoriesNameForCriticalItems: false,
   });
+  const [currentReportDate, setCurrentReportDate] = useState(null);
+
+  // console.log("date:", currentReportDate);
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState([]);
   const [culinaryReviewTexts, setCulinaryReviewTexts] = useState([]);
@@ -125,7 +134,6 @@ const WorkerNewReport = () => {
         );
       }),
   });
-
   const {
     control,
     handleSubmit,
@@ -143,10 +151,10 @@ const WorkerNewReport = () => {
       .validate(formData)
       .then(() => setIsSchemaValid(true))
       .catch((err) => {
-        console.log("err:", err);
+        // console.log("err:", err);
         setIsSchemaValid(false);
       });
-    setValue("clientId", currentClient.id);
+    setValue("clientId", currentClient?.id);
   }, [formData, schema]);
 
   // * categories fetching start
@@ -156,6 +164,31 @@ const WorkerNewReport = () => {
   }, [dispatch]);
 
   const memoizedCategories = useMemo(() => categories, [categories]);
+
+  useEffect(() => {
+    if (currentReport && currentReport.data) {
+      const { data } = currentReport;
+
+      setSwitchStates({
+        haveFine: data.haveFine === "1",
+        haveAmountOfItems: data.haveAmountOfItems === "1",
+        haveSafetyGrade: data.haveSafetyGrade === "1",
+        haveCulinaryGrade: data.haveCulinaryGrade === "1",
+        haveNutritionGrade: data.haveNutritionGrade === "1",
+        haveCategoriesNameForCriticalItems:
+          data.haveCategoriesNameForCriticalItems === "1",
+      });
+      setSelectedStation(data.station_name);
+      setAccompanySelected(data.accompany);
+      setCurrentReportDate(data.timeOfReport);
+      setCurrentReportTime(data.reportTime);
+      // console.log(data);
+
+      handleCheckboxStatusChange(
+        parsedArrayOfStr(currentReport.getData("categorys"))
+      );
+    }
+  }, [currentReport]);
 
   useEffect(() => {
     setFoodSafetyReviewTexts(
@@ -250,12 +283,9 @@ const WorkerNewReport = () => {
     trigger("clientStationId");
     trigger("oldReportId");
   };
-
-  // * getting the report categories
-  const handleSelectedReportCategory = (selectedReport) => {
-    const selectedReportCategory = selectedReport.getData("categorys");
+  const parsedArrayOfStr = (arr) => {
     const parsedSelectedReportCategory = new Set(
-      selectedReportCategory
+      arr
         .split("|")
         .map((str) => str.replace(";", ""))
         .filter(Boolean)
@@ -263,13 +293,29 @@ const WorkerNewReport = () => {
     );
     return parsedSelectedReportCategory;
   };
+  // * parsing the report categories
+  const handleSelectedReportCategory = (selectedReport) => {
+    const selectedReportCategory = selectedReport.getData("categorys");
 
-  //  * checking if the ids of the categories match to the selected report and sorting them by type to their right location of the state
-  const handleCheckboxStatusChange = (
-    parsedSelectedReportCategory,
-    categoriesData
-  ) => {
-    const newCheckboxStatus = categoriesData.reduce(
+    const parsedSelectedReportCategory = parsedArrayOfStr(
+      selectedReportCategory
+    );
+    return parsedSelectedReportCategory;
+  };
+  // console.log("currentReport:", currentReport.getGrade());
+  // console.log(
+  //   "categorys parsed: ",
+  //   parsedArrayOfStr(currentReport.getData("categorys"))
+  // );
+
+  //  * 1. checking if the ids of the categories match to the selected report
+  // *  2.  sorting them by type to their right location of the state
+  const handleCheckboxStatusChange = (parsedSelectedReportCategory) => {
+    const memoRizedCats = memoizedCategories?.categories;
+    const globalStateCategories = memoRizedCats
+      ? Object.values(memoRizedCats).flatMap((category) => category.categories)
+      : null;
+    const newCheckboxStatus = globalStateCategories.reduce(
       (status, category) => {
         const categoryId = parseInt(category.id, 10);
         const categoryType = parseInt(category.type, 10);
@@ -290,11 +336,12 @@ const WorkerNewReport = () => {
         nutritionReviewCbStatus: [],
       }
     );
-    // * saving the categories checkbox status
-    const categories = newCheckboxStatus.culinaryReviewCbStatus
-      .concat(newCheckboxStatus.foodSafetyReviewCbStatus)
-      .concat(newCheckboxStatus.culinaryReviewCbStatus)
-      .concat(newCheckboxStatus.nutritionReviewCbStatus);
+    // Saving the categories checkbox status
+    const categories = [
+      ...newCheckboxStatus.foodSafetyReviewCbStatus,
+      ...newCheckboxStatus.culinaryReviewCbStatus,
+      ...newCheckboxStatus.nutritionReviewCbStatus,
+    ];
 
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -304,7 +351,6 @@ const WorkerNewReport = () => {
     trigger("categories");
     setCheckboxStatus(newCheckboxStatus);
   };
-
   // * get the array of categories from the report and updates the state
   const handleCategoriesCheckboxesToggle = (category, checked, label) => {
     setCheckboxStatus((prevStatus) => {
@@ -416,10 +462,6 @@ const WorkerNewReport = () => {
         haveNutritionGrade: false,
         haveCategoriesNameForCriticalItems: false,
       };
-      const memoRizedCats = memoizedCategories?.categories;
-      const categoriesData = Object.values(memoRizedCats).flatMap(
-        (category) => category.categories
-      );
 
       if (value === "דוח חדש") {
         setCheckboxStatus(newCheckboxStatus);
@@ -439,10 +481,9 @@ const WorkerNewReport = () => {
           handleReportIdAndWorkerId(selectedReport);
           const parsedSelectedReportCategory =
             handleSelectedReportCategory(selectedReport);
-          handleCheckboxStatusChange(
-            parsedSelectedReportCategory,
-            categoriesData
-          );
+
+          handleCheckboxStatusChange(parsedSelectedReportCategory);
+
           handleSwitchStateChange(selectedReport);
           handleAccompanyChange(selectedReport);
           handleReportTime(selectedReport);
@@ -472,41 +513,42 @@ const WorkerNewReport = () => {
     // checking if scheme is valid
     console.log("on submit...");
     // const formValues = getValues();
-
-    // const finalFormValues = { ...formValues, ...switchStates };
-    // console.log("formValues:", formValues);
     console.log("formData:", formData);
     if (isSchemaValid) {
       console.log("scheme is valid");
     }
   };
+  // * Drawer
 
-  // console.log("form data", formData);
-  // console.log(`isSchemaValid: ${isSchemaValid}`);
-  // console.log("errors:", errors);
+  const handleDrawerToggle = (isOpen) => {
+    setIsDrawerOpen(isOpen);
+  };
+
   //  todo to check i have both function (handleCheckboxStatusChange , handleCategoriesCheckboxesToggle)
   // todo to change the way i save the checkboxes statuses in the state after i pick a report and make another change in one of the checkboxes
-  /* {
-// oldReportId: 18503
-// clientId: 34
-// haveNewGeneralCommentsVersion: 1
-// clientStationId: 66
-// workerId: 23
-// accompany: ללא ליווי
-// haveFine: 0 
-// haveAmountOfItems: 0
-// haveSafetyGrade: 1
-// haveCulinaryGrade: 1
-// haveNutritionGrade: 1
-// haveCategoriesNameForCriticalItems: 0
-// reportTime: 2
-// newGeneralCommentTopText: ביקורת בתחנת פיליפס חיפה.
-// התנור בתחנה לא עבד עד השעה 10:30, דבר שיצר קצת לחץ בתחנה.
-// כמות סועדים קטנה ביחס לגודל של חדר האוכל, מה שנותן תחושה לא נעימה.
-// יש לחשוב על תחימת חלק מחדר האוכל לשיפור  ההרגשה.
-// קבלן ההסעדה לא מאשר למטבח מוצרים של IQF מה שיכול מאד לעזור לצוות לפי טענתו.
+  // todo to send post request to the api : /api/duplicateReport.php
 
-// timeOfReport: 22/06/2023
+  /* {
+oldReportId: 18503
+clientId: 34
+haveNewGeneralCommentsVersion: 1
+clientStationId: 66
+workerId: 23
+accompany: ללא ליווי
+haveFine: 0 
+haveAmountOfItems: 0
+haveSafetyGrade: 1
+haveCulinaryGrade: 1
+haveNutritionGrade: 1
+haveCategoriesNameForCriticalItems: 0
+reportTime: 2
+newGeneralCommentTopText: ביקורת בתחנת פיליפס חיפה.
+התנור בתחנה לא עבד עד השעה 10:30, דבר שיצר קצת לחץ בתחנה.
+כמות סועדים קטנה ביחס לגודל של חדר האוכל, מה שנותן תחושה לא נעימה.
+יש לחשוב על תחימת חלק מחדר האוכל לשיפור  ההרגשה.
+קבלן ההסעדה לא מאשר למטבח מוצרים של IQF מה שיכול מאד לעזור לצוות לפי טענתו.
+
+timeOfReport: 22/06/2023
 categorys[]: 5
 } */
 
@@ -522,7 +564,6 @@ categorys[]: 5
       iconDisplay: true,
       boxHeight: 80.5,
       hasDivider: true,
-      // defaultList: true,
       draggable: false,
       accordionCloseIndicator: accordionCloseIcon,
       accordionOpenIndicator: accordionOpenIcon,
@@ -536,6 +577,7 @@ categorys[]: 5
               control={control}
               selectWidth={240}
               optionsHeight={200}
+              selectedStation={selectedStation}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",
@@ -553,7 +595,7 @@ categorys[]: 5
               }
               onChange={(value) => {
                 handleFormChange("clientStationId", value.id);
-                setSelectedStation(value.id);
+                setSelectedStation(value.company);
                 setValue("clientStationId", value.id);
                 trigger("clientStationId");
                 console.log("value-station:", value);
@@ -563,6 +605,7 @@ categorys[]: 5
             />
           ),
         },
+
         {
           id: 1,
           text: <Text> התבסס על דוח קודם</Text>,
@@ -718,6 +761,7 @@ categorys[]: 5
                 trigger("timeOfReport");
               }}
               dateInputWidth={240}
+              defaultDate={currentReport.data.timeOfReport}
             />
           ),
         },
@@ -744,9 +788,11 @@ categorys[]: 5
               errorMessage={errors.reportTime && errors.reportTime.message}
               onChange={(value) => {
                 handleFormChange("reportTime", value.id);
+                setCurrentReportTime(value.reportTime);
                 console.log("reportTime:", value.id);
               }}
               propertyName={"name"}
+              defaultValue={currentReportTime}
               returnObject={true}
             />
           ),
@@ -812,7 +858,6 @@ categorys[]: 5
                 foodSafetyReviewTexts,
                 "foodSafetyReviewCb"
               )}
-              // accordionContent={accordionContent}
               onDragEndCb={(data) => {
                 let originalData = [...foodSafetyReviewTexts];
                 const movedData = originalData[data.from];
@@ -951,7 +996,6 @@ categorys[]: 5
       headerTogglerStyling: styles.headerStyle,
       iconDisplay: true,
       boxHeight: 80.5,
-      // defaultList: true,
       draggable: false,
       contentItemStyling: styles.contentBoxSetting,
       hasDivider: false,
@@ -1054,7 +1098,9 @@ categorys[]: 5
                     ref={richText}
                     onChange={handleContentChange}
                     initialContentHTML="<div></div>"
-                    placeholder="פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
+                    placeholder={
+                      "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
+                    }
                     shouldStartLoadWithRequest={(request) => {
                       return true;
                     }}
@@ -1094,9 +1140,20 @@ categorys[]: 5
       scrollEnabled={item.scrollEnabled}
       toggleHandler={item.toggleHandler}
       draggable={item.draggable}
-      // defaultList={item.defaultList}
     />
   );
+
+  const modifiedAccordionContent = currentReport
+    ? NewReportAccordionContent.map((section) => {
+        if (section.key === "settings") {
+          const modifiedAccordionContent = section.accordionContent.filter(
+            (item) => item.id !== 1
+          );
+          return { ...section, accordionContent: modifiedAccordionContent };
+        }
+        return section;
+      })
+    : NewReportAccordionContent;
 
   return (
     <ScreenWrapper
@@ -1113,44 +1170,91 @@ categorys[]: 5
           <Text style={styles.navigationText}>חזרה לרשימת הלקוחות</Text>
         </View>
         <Text style={styles.header}>
-          יצירת דוח חדש עבור {currentClient.getCompany()}
+          {currentReport
+            ? `עריכת דוח עבור ${currentReport.data.station_name}`
+            : `יצירת דוח חדש עבור ${currentClient.getCompany()}`}
         </Text>
         <FlatList
-          data={NewReportAccordionContent}
+          data={modifiedAccordionContent}
           renderItem={renderAccordion}
           keyExtractor={(item, index) => index.toString()}
         />
       </View>
-      <LinearGradient
-        colors={["#37549D", "#26489F"]}
-        start={[0, 0]}
-        end={[1, 0]}
-      >
+      {currentReport ? (
         <TouchableOpacity
           style={{
             width: "100%",
             justifyContent: "center",
             alignItems: "center",
+            marginBottom: 50,
           }}
-          onPress={
-            handleSubmit(onSubmitForm)
-            // console.log("new report");
-          }
-          // disabled={!isSchemaValid}
         >
-          <Text
-            style={{
-              alignSelf: "center",
-              paddingVertical: 12,
-              fontSize: 24,
-              fontFamily: fonts.ABold,
-              color: colors.white,
-            }}
-          >
-            יצירת הדוח
-          </Text>
+          <Drawer
+            content={
+              <LinearGradient
+                colors={["#37549D", "#26489F"]}
+                start={[0, 0]}
+                end={[1, 0]}
+                style={{ width: "100%", padding: 16, height: 76, zIndex: 1 }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: 12,
+                  }}
+                >
+                  <Image source={FileIcon} style={{ width: 24, height: 24 }} />
+                  <Text
+                    style={{
+                      justifyContent: "center",
+                      alignSelf: "center",
+                      color: colors.white,
+                      fontSize: 24,
+                      fontFamily: fonts.ABold,
+                    }}
+                  >
+                    תמצית והערות
+                  </Text>
+                </View>
+              </LinearGradient>
+            }
+            height={300}
+            onToggle={handleDrawerToggle}
+          />
         </TouchableOpacity>
-      </LinearGradient>
+      ) : (
+        <LinearGradient
+          colors={["#37549D", "#26489F"]}
+          start={[0, 0]}
+          end={[1, 0]}
+        >
+          <TouchableOpacity
+            style={{
+              width: "100%",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            onPress={
+              handleSubmit(onSubmitForm)
+              // console.log("new report");
+            }
+          >
+            <Text
+              style={{
+                alignSelf: "center",
+                paddingVertical: 12,
+                fontSize: 24,
+                fontFamily: fonts.ABold,
+                color: colors.white,
+              }}
+            >
+              יצירת הדוח
+            </Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      )}
     </ScreenWrapper>
   );
 };

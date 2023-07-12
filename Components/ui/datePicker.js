@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   View,
@@ -20,9 +20,11 @@ const DatePicker = ({
   name,
   onchange,
   dateInputWidth = false,
+  defaultDate = false,
 }) => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [datePicked, setDatePicked] = useState("");
+
   const showDatePicker = () => {
     setDatePickerVisibility(true);
   };
@@ -59,6 +61,7 @@ const DatePicker = ({
       <Controller
         control={control}
         name={name}
+        defaultValue={defaultDate ? new Date(defaultDate) : null}
         render={({ field: { onChange, value } }) => (
           <View>
             {/* <Text style={styles.label}>{label}</Text> */}
@@ -87,7 +90,11 @@ const DatePicker = ({
                   style={{ width: 20, height: 20 }}
                 />
                 <Text style={{}}>
-                  {datePicked ? datePicked.toDateString() : "Date Picker"}
+                  {defaultDate
+                    ? defaultDate
+                    : datePicked
+                    ? datePicked.toDateString()
+                    : "Date Picker"}
                 </Text>
               </View>
             </TouchableWithoutFeedback>
@@ -100,7 +107,6 @@ const DatePicker = ({
           </View>
         )}
         rules={{ required: true }}
-        defaultValue=""
       />
       <HelperText
         type="error"
