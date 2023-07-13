@@ -80,6 +80,7 @@ const CategoryAccordionItem = ({
             <Image source={ClientItemArrow} style={{ width: 20, height: 20 }} />
           )}
         </View>
+
         <Divider />
 
         <View style={styles.categoryRelevantCheckboxWrapper}>

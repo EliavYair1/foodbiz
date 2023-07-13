@@ -38,6 +38,7 @@ import Expander from "../../Components/ui/Expander";
 import accordionCloseIcon from "../../assets/imgs/accordionCloseIndicator.png";
 import accordionOpenIcon from "../../assets/imgs/accordionOpenIndicator.png";
 import ClientItemArrow from "../../assets/imgs/ClientItemArrow.png";
+import CategoryPrevIcon from "../../assets/imgs/rightDirIcon.png";
 import ClientItemArrowOpen from "../../assets/imgs/accodionOpenIndicatorBlack.png";
 import onDragIcon from "../../assets/imgs/onDragIcon.png";
 import Checkbox from "../../Components/ui/Checkbox";
@@ -52,22 +53,31 @@ import Loader from "../../utiles/Loader";
 import { HelperText } from "react-native-paper";
 import Drawer from "../../Components/ui/Drawer";
 import FileIcon from "../../assets/icons/iconImgs/FileIcon.png";
+import ImageText from "../ClientsList/ClientsItem/EditExistingReport/innerComponents/ImageText";
+import routes from "../../Navigation/routes";
+// import setCurrentCategoryItem from "../../store/redux/reducers/getCurrentCategory";
+// import getCurrentStation from "../../store/redux/reducers/getCurrentStation";
+import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
+
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [colorSelected, setColorSelected] = useState(false);
-  const { navigateTogoBack } = useScreenNavigator();
+  const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const clients = useSelector((state) => state.clients);
   const categories = useSelector((state) => state.categories);
   const reportsTimes = useSelector((state) => state.reportsTimes);
+  const [categoryPicked, setcategoryPicked] = useState(null);
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
+
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({ clientId: currentClient?.id });
   const [checkboxStatus, setCheckboxStatus] = useState({
@@ -164,8 +174,16 @@ const WorkerNewReport = () => {
   }, [dispatch]);
 
   const memoizedCategories = useMemo(() => categories, [categories]);
+  // console.log(memoizedCategories);
+  const findReportTimeName = (data) => {
+    const reportTimeId = currentReport?.getReportTime();
+    const reportTime = data.find((item) => item.id === reportTimeId);
+    return reportTime ? reportTime.name : "";
+  };
 
   useEffect(() => {
+    const reportTimeName = findReportTimeName(reportsTimes);
+
     if (currentReport && currentReport.data) {
       const { data } = currentReport;
 
@@ -181,15 +199,14 @@ const WorkerNewReport = () => {
       setSelectedStation(data.station_name);
       setAccompanySelected(data.accompany);
       setCurrentReportDate(data.timeOfReport);
-      setCurrentReportTime(data.reportTime);
-      // console.log(data);
-
+      setCurrentReportTime(reportTimeName);
+      handleContentChange(data.newGeneralCommentTopText);
       handleCheckboxStatusChange(
         parsedArrayOfStr(currentReport.getData("categorys"))
       );
     }
   }, [currentReport]);
-
+  // console.log(currentReport);
   useEffect(() => {
     setFoodSafetyReviewTexts(
       memoizedCategories?.categories?.[1]?.categories ?? []
@@ -200,7 +217,7 @@ const WorkerNewReport = () => {
     setNutritionReviewTexts(
       memoizedCategories?.categories?.[3]?.categories ?? []
     );
-  }, [memoizedCategories]);
+  }, [memoizedCategories, formData]);
 
   // * inner accordionCategoriesItem
   function accordionCategoriesItem(names, categoryName) {
@@ -302,11 +319,6 @@ const WorkerNewReport = () => {
     );
     return parsedSelectedReportCategory;
   };
-  // console.log("currentReport:", currentReport.getGrade());
-  // console.log(
-  //   "categorys parsed: ",
-  //   parsedArrayOfStr(currentReport.getData("categorys"))
-  // );
 
   //  * 1. checking if the ids of the categories match to the selected report
   // *  2.  sorting them by type to their right location of the state
@@ -315,8 +327,14 @@ const WorkerNewReport = () => {
     const globalStateCategories = memoRizedCats
       ? Object.values(memoRizedCats).flatMap((category) => category.categories)
       : null;
-    const newCheckboxStatus = globalStateCategories.reduce(
-      (status, category) => {
+    let newCheckboxStatus = {
+      foodSafetyReviewCbStatus: [],
+      culinaryReviewCbStatus: [],
+      nutritionReviewCbStatus: [],
+    };
+
+    if (globalStateCategories) {
+      newCheckboxStatus = globalStateCategories.reduce((status, category) => {
         const categoryId = parseInt(category.id, 10);
         const categoryType = parseInt(category.type, 10);
         if (parsedSelectedReportCategory.has(categoryId)) {
@@ -329,13 +347,9 @@ const WorkerNewReport = () => {
           }
         }
         return status;
-      },
-      {
-        foodSafetyReviewCbStatus: [],
-        culinaryReviewCbStatus: [],
-        nutritionReviewCbStatus: [],
-      }
-    );
+      }, newCheckboxStatus);
+    }
+
     // Saving the categories checkbox status
     const categories = [
       ...newCheckboxStatus.foodSafetyReviewCbStatus,
@@ -351,8 +365,11 @@ const WorkerNewReport = () => {
     trigger("categories");
     setCheckboxStatus(newCheckboxStatus);
   };
+
   // * get the array of categories from the report and updates the state
   const handleCategoriesCheckboxesToggle = (category, checked, label) => {
+    // console.log("handleCategoriesCheckboxesToggle:", category, checked);
+
     setCheckboxStatus((prevStatus) => {
       const updatedCategoryStatus = [...prevStatus[category]];
       // find && parsing the index of the array
@@ -368,18 +385,23 @@ const WorkerNewReport = () => {
       handleFormChange(category, updatedCategoryStatus);
       return { ...prevStatus, [category]: updatedCategoryStatus };
     });
+  };
+
+  useEffect(() => {
     const categories = [
       ...checkboxStatus.foodSafetyReviewCbStatus,
       ...checkboxStatus.culinaryReviewCbStatus,
       ...checkboxStatus.nutritionReviewCbStatus,
     ];
+
+    // console.log("categories:", categories);
     setFormData((prevFormData) => ({
       ...prevFormData,
       categories: categories,
     }));
     setValue("categories", categories);
     trigger("categories");
-  };
+  }, [checkboxStatus]);
 
   // * checking if the report parameters match to their state true / false
   const handleSwitchStateChange = (selectedReport) => {
@@ -524,6 +546,119 @@ const WorkerNewReport = () => {
     setIsDrawerOpen(isOpen);
   };
 
+  const memoRizedCats = memoizedCategories?.categories;
+  const globalCategories = memoRizedCats
+    ? Object.values(memoRizedCats).flatMap((category) => category.categories)
+    : null;
+
+  // * comparing between the categories names to the ids in the forms to display it in the drawer
+  const matchedItems =
+    globalCategories && formData.categories
+      ? globalCategories.reduce((result, item) => {
+          if (formData.categories.includes(parseInt(item.id, 10))) {
+            result.push(item);
+          }
+          return result;
+        }, [])
+      : [];
+
+  // const matchCategoryNameById = matchedItems.map((item) => item.name);
+  const imageTextsAndFunctionality = [
+    {
+      id: 0,
+      text: "קבצים",
+      source: require("../../assets/icons/iconImgs/folder.png"),
+      iconPress: () => {
+        console.log("folder");
+      },
+    },
+    {
+      id: 1,
+      text: "מפרט",
+      source: require("../../assets/icons/iconImgs/paperSheet.png"),
+      iconPress: () => {
+        console.log("paperSheet");
+      },
+    },
+    {
+      id: 2,
+      text: "הגדרות",
+      source: require("../../assets/icons/iconImgs/settings.png"),
+      iconPress: () => {
+        console.log("settings");
+      },
+    },
+    {
+      id: 3,
+      text: "קטגוריות",
+      source: require("../../assets/icons/iconImgs/categories.png"),
+      iconPress: () => {
+        console.log("categories");
+        navigateToRoute(routes.ONBOARDING.EditExistingReport);
+      },
+    },
+    {
+      id: 4,
+      text: "סיכום",
+
+      source: require("../../assets/icons/iconImgs/notebook.png"),
+      iconPress: () => {
+        console.log("notebook");
+      },
+    },
+    {
+      id: 5,
+      text: "צפייה",
+
+      source: require("../../assets/icons/iconImgs/eye.png"),
+      iconPress: () => {
+        console.log("eye");
+      },
+    },
+  ];
+  const renderImageTextItem = ({ item }) => {
+    return (
+      <View style={{ marginRight: 10 }}>
+        <ImageText
+          imageSource={item.source}
+          ImageText={item.text}
+          id={item.id}
+          onIconPress={item.iconPress}
+        />
+      </View>
+    );
+  };
+
+  // * paginations between categories names : Prev
+  const handlePrevCategory = () => {
+    setCurrentCategoryIndex((prevIndex) => {
+      const newIndex = prevIndex > 0 ? prevIndex - 1 : prevIndex;
+      const currentItem = matchedItems[newIndex];
+      // dispatch(setCurrentCategory(currentItem));
+      return newIndex;
+    });
+  };
+  // console.log(formData.categories[0]);
+
+  // * paginations between categories names : Next
+  const handleNextCategory = () => {
+    // setCurrentCategoryIndex((prevIndex) => {
+    //   const newIndex =
+    //     prevIndex < matchedItems.length - 1 ? prevIndex + 1 : prevIndex;
+    //   const currentItem = matchedItems[newIndex];
+    //   // dispatch(setCurrentCategory(currentItem));
+    //   console.log(currentItem);
+    //   return newIndex;
+    // });
+    // dispatch(getCurrentCategory("bkdsands"));
+    console.log("before");
+    dispatch(getCurrentCategory(formData.categories[0]));
+    console.log("after");
+    navigateToRoute(routes.ONBOARDING.EditExistingReport);
+  };
+
+  // console.log(matchedItems);
+
   //  todo to check i have both function (handleCheckboxStatusChange , handleCategoriesCheckboxesToggle)
   // todo to change the way i save the checkboxes statuses in the state after i pick a report and make another change in one of the checkboxes
   // todo to send post request to the api : /api/duplicateReport.php
@@ -577,7 +712,7 @@ categorys[]: 5
               control={control}
               selectWidth={240}
               optionsHeight={200}
-              selectedStation={selectedStation}
+              displayedValue={selectedStation}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",
@@ -761,7 +896,7 @@ categorys[]: 5
                 trigger("timeOfReport");
               }}
               dateInputWidth={240}
-              defaultDate={currentReport.data.timeOfReport}
+              defaultDate={currentReport?.getData("timeOfReport")}
             />
           ),
         },
@@ -788,11 +923,12 @@ categorys[]: 5
               errorMessage={errors.reportTime && errors.reportTime.message}
               onChange={(value) => {
                 handleFormChange("reportTime", value.id);
-                setCurrentReportTime(value.reportTime);
+                setCurrentReportTime(value.name);
                 console.log("reportTime:", value.id);
               }}
               propertyName={"name"}
               defaultValue={currentReportTime}
+              displayedValue={currentReportTime}
               returnObject={true}
             />
           ),
@@ -1012,6 +1148,7 @@ categorys[]: 5
                 width: "100%",
                 marginTop: 20,
                 height: "100%",
+                direction: "rtl",
               }}
             >
               <View
@@ -1084,7 +1221,8 @@ categorys[]: 5
                 style={{
                   // flex: Platform.OS === "ios" ? 1 : 0,
                   flex: 1,
-                  direction: "ltr",
+                  // direction: "ltr",
+                  // direction: "rtl",
                   overflow: "visible",
                   height: "100%",
                   minHeight: 250,
@@ -1106,7 +1244,8 @@ categorys[]: 5
                     }}
                     style={{
                       minHeight: 123,
-                      direction: "ltr",
+                      // direction: "ltr",
+                      // direction: "rtl",
                       borderWidth: 1,
                       borderColor: "#eee",
                       zIndex: 2,
@@ -1155,6 +1294,8 @@ categorys[]: 5
       })
     : NewReportAccordionContent;
 
+  // console.log(formData.categories);
+
   return (
     <ScreenWrapper
       newReportBackGroundImg={true}
@@ -1169,11 +1310,24 @@ categorys[]: 5
           </TouchableOpacity>
           <Text style={styles.navigationText}>חזרה לרשימת הלקוחות</Text>
         </View>
-        <Text style={styles.header}>
-          {currentReport
-            ? `עריכת דוח עבור ${currentReport.data.station_name}`
-            : `יצירת דוח חדש עבור ${currentClient.getCompany()}`}
-        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={styles.header}>
+            {currentReport
+              ? `עריכת דוח עבור ${currentReport.data.station_name}`
+              : `יצירת דוח חדש עבור ${currentClient.getCompany()}`}
+          </Text>
+          {currentReport && (
+            <View style={styles.imageTextList}>
+              <FlatList
+                data={imageTextsAndFunctionality}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderImageTextItem}
+                horizontal={true}
+              />
+            </View>
+          )}
+        </View>
+
         <FlatList
           data={modifiedAccordionContent}
           renderItem={renderAccordion}
@@ -1181,7 +1335,7 @@ categorys[]: 5
         />
       </View>
       {currentReport ? (
-        <TouchableOpacity
+        <View
           style={{
             width: "100%",
             justifyContent: "center",
@@ -1199,31 +1353,104 @@ categorys[]: 5
               >
                 <View
                   style={{
-                    flexDirection: "row",
                     justifyContent: "center",
                     alignItems: "center",
-                    gap: 12,
+                    flexDirection: "row",
                   }}
                 >
-                  <Image source={FileIcon} style={{ width: 24, height: 24 }} />
-                  <Text
+                  {/* <TouchableOpacity
+                    onPress={handlePrevCategory}
                     style={{
-                      justifyContent: "center",
                       alignSelf: "center",
-                      color: colors.white,
-                      fontSize: 24,
-                      fontFamily: fonts.ABold,
+                      // justifyContent: "flex-end",
+                      // marginLeft: "auto",
+                      flexDirection: "row",
+                      gap: 5,
+                      alignItems: "center",
                     }}
                   >
-                    תמצית והערות
-                  </Text>
+                    <Image
+                      source={accordionCloseIcon}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        transform: [{ rotate: "180deg" }],
+                      }}
+                    />
+                    <Text style={styles.categoryDirButton}>
+                      הקטגוריה הקודמת:{" "}
+                      {matchedItems[currentCategoryIndex - 1]?.name}
+                    </Text>
+                  </TouchableOpacity> */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      textAlign: "center",
+                      marginLeft:
+                        formData &&
+                        formData.categories &&
+                        formData.categories[0]
+                          ? "auto"
+                          : 0,
+                      marginRight:
+                        formData &&
+                        formData.categories &&
+                        formData.categories[0]
+                          ? -150
+                          : 0,
+                      gap: 12,
+                    }}
+                  >
+                    <Image
+                      source={FileIcon}
+                      style={{ width: 24, height: 24 }}
+                    />
+                    <Text
+                      style={{
+                        justifyContent: "center",
+                        alignSelf: "center",
+                        color: colors.white,
+                        fontSize: 24,
+                        fontFamily: fonts.ABold,
+                      }}
+                    >
+                      תמצית והערות
+                    </Text>
+                  </View>
+                  {formData &&
+                    formData.categories &&
+                    formData.categories[0] && (
+                      <TouchableOpacity
+                        onPress={handleNextCategory}
+                        style={{
+                          alignSelf: "center",
+                          // justifyContent: "flex-end",
+                          flexDirection: "row",
+                          gap: 5,
+                          alignItems: "center",
+                          marginLeft: "auto",
+                        }}
+                      >
+                        <Text style={styles.categoryDirButton}>
+                          הקטגוריה הבאה:{" "}
+                          {/* {matchedItems[currentCategoryIndex + 1]?.name} */}
+                          {formData.categories[0]}
+                        </Text>
+                        <Image
+                          source={accordionCloseIcon}
+                          style={{ width: 20, height: 20 }}
+                        />
+                      </TouchableOpacity>
+                    )}
                 </View>
               </LinearGradient>
             }
             height={300}
             onToggle={handleDrawerToggle}
           />
-        </TouchableOpacity>
+        </View>
       ) : (
         <LinearGradient
           colors={["#37549D", "#26489F"]}
@@ -1306,5 +1533,10 @@ const styles = StyleSheet.create({
   contentBoxCategories: {
     alignItems: "center",
     // height: 200.5,
+  },
+  categoryDirButton: {
+    color: colors.white,
+    fontFamily: fonts.ARegular,
+    fontSize: 16,
   },
 });

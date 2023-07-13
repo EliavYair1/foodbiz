@@ -35,7 +35,7 @@ const SelectMenu = ({
   propertyName = false,
   selectMenuStyling,
   returnObject = false,
-  selectedStation = false,
+  displayedValue = false,
 }) => {
   const [visible, setVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -145,7 +145,7 @@ const SelectMenu = ({
       <Controller
         name={name}
         control={control}
-        defaultValue={selectedStation && null}
+        defaultValue={displayedValue && null}
         render={({ field: { value, onChange } }) => (
           <View
             style={[
@@ -174,8 +174,8 @@ const SelectMenu = ({
                       }}
                     />
                     <Text style={styles.menuItemText}>
-                      {selectedStation
-                        ? selectedStation
+                      {displayedValue
+                        ? displayedValue
                         : selectedItem
                         ? `${
                             returnObject
@@ -183,7 +183,7 @@ const SelectMenu = ({
                                 ? selectedItem.getData(propertyName)
                                 : selectedItem[propertyName]
                               : selectedItem
-                          } ${selectedStation ? "(נבחר)" : ""}`
+                          } ${displayedValue ? "(נבחר)" : ""}`
                         : "בחירה"}
                     </Text>
                   </View>

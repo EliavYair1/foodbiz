@@ -21,6 +21,10 @@ export default class Report {
   getReportStatuses() {
     return this.data.reportStatuses;
   }
+
+  getReportTime() {
+    return this.data.reportTime;
+  }
   getStatus() {
     return this.data.status;
   }

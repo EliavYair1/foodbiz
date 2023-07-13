@@ -61,7 +61,7 @@ const DatePicker = ({
       <Controller
         control={control}
         name={name}
-        defaultValue={defaultDate ? new Date(defaultDate) : null}
+        defaultValue={defaultDate}
         render={({ field: { onChange, value } }) => (
           <View>
             {/* <Text style={styles.label}>{label}</Text> */}

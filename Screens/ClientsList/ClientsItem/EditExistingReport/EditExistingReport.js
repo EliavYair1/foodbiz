@@ -28,6 +28,11 @@ import SelectMenu from "../../../../Components/ui/SelectMenu";
 import DatePicker from "../../../../Components/ui/datePicker";
 import useMediaPicker from "../../../../Hooks/useMediaPicker";
 import CategoryAccordionItem from "./innerComponents/CategoryAccordionItem";
+import Drawer from "../../../../Components/ui/Drawer";
+import { LinearGradient } from "expo-linear-gradient";
+import accordionCloseIcon from "../../../../assets/imgs/accordionCloseIndicator.png";
+import FileIcon from "../../../../assets/icons/iconImgs/FileIcon.png";
+import { fetchCategories } from "../../../../store/redux/reducers/categoriesSlice";
 const EditExistingReport = () => {
   const dispatch = useDispatch();
   const currentClient = useSelector(
@@ -36,6 +41,9 @@ const EditExistingReport = () => {
   // console.log(currentClient.getReports().map((item) => item.getSafetyGrade()));
   const [isLoading, setIsLoading] = useState(false);
   const currentStation = useSelector((state) => state.currentStation);
+  const categories = useSelector((state) => state.categories);
+  const currentCategory = useSelector((state) => state.currentCategory);
+  console.log(currentCategory);
   const { navigateTogoBack } = useScreenNavigator();
   const [categoryGrade, setcategoryGrade] = useState(89);
   const [foodSafetyGrade, setFoodSafetyGrade] = useState(79);
@@ -44,6 +52,7 @@ const EditExistingReport = () => {
   const [ratingCheckboxItem, setRatingCheckboxItem] = useState([]);
   // const [media, pickMedia, error] = useMediaPicker(handleInputChange);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const schema = yup.object().shape({
     remarks: yup.string().required("remarks is required"),
     executioner: yup.string().required("executioner is required"),
@@ -63,7 +72,12 @@ const EditExistingReport = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+  const handleDrawerToggle = (isOpen) => {
+    setIsDrawerOpen(isOpen);
+  };
   const handleCheckboxChange = (isChecked, label) => {
     if (isChecked) {
       setreleventCheckboxItems((prevreleventCheckboxItems) => [
@@ -180,8 +194,7 @@ const EditExistingReport = () => {
       </View>
     );
   };
-
-  const AccordionCategoriesList = [
+  const AccordionCategoriesGeneralList = [
     {
       id: 1,
       component: (
@@ -300,12 +313,107 @@ const EditExistingReport = () => {
             }}
           >
             <FlatList
-              data={AccordionCategoriesList}
+              data={AccordionCategoriesGeneralList}
               renderItem={({ item }) => <CategoryAccordion item={item} />}
               keyExtractor={(item) => item.id.toString()}
             />
           </View>
         )}
+      </View>
+
+      <View
+        style={{
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+          marginBottom: 50,
+        }}
+      >
+        <Drawer
+          content={
+            <LinearGradient
+              colors={["#37549D", "#26489F"]}
+              start={[0, 0]}
+              end={[1, 0]}
+              style={{ width: "100%", padding: 16, height: 76, zIndex: 1 }}
+            >
+              <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row",
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => console.log("prev category")}
+                  style={{
+                    alignSelf: "center",
+                    // justifyContent: "flex-end",
+                    // marginLeft: "auto",
+                    flexDirection: "row",
+                    gap: 5,
+                    alignItems: "center",
+                  }}
+                >
+                  <Image
+                    source={accordionCloseIcon}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      transform: [{ rotate: "180deg" }],
+                    }}
+                  />
+                  <Text style={styles.categoryDirButton}>
+                    הקטגוריה הקודמת:{" "}
+                  </Text>
+                </TouchableOpacity>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                    marginLeft: "auto",
+                    // marginRight: -30,
+                    gap: 12,
+                  }}
+                >
+                  <Image source={FileIcon} style={{ width: 24, height: 24 }} />
+                  <Text
+                    style={{
+                      justifyContent: "center",
+                      alignSelf: "center",
+                      color: colors.white,
+                      fontSize: 24,
+                      fontFamily: fonts.ABold,
+                    }}
+                  >
+                    תמצית והערות
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => console.log("next category")}
+                  style={{
+                    alignSelf: "center",
+                    // justifyContent: "flex-end",
+                    flexDirection: "row",
+                    gap: 5,
+                    alignItems: "center",
+                    marginLeft: "auto",
+                  }}
+                >
+                  <Text style={styles.categoryDirButton}>הקטגוריה הבאה: </Text>
+                  <Image
+                    source={accordionCloseIcon}
+                    style={{ width: 20, height: 20 }}
+                  />
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          }
+          height={300}
+          onToggle={handleDrawerToggle}
+        />
       </View>
     </ScreenWrapper>
   );
@@ -368,5 +476,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accordionOpen,
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  categoryDirButton: {
+    color: colors.white,
+    fontFamily: fonts.ARegular,
+    fontSize: 16,
   },
 });

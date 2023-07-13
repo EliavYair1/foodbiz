@@ -34,7 +34,6 @@ import { getCurrentClient } from "../../../store/redux/reducers/currentClientSli
 import { getCurrentStation } from "../../../store/redux/reducers/getCurrentStation";
 import { getCurrentReport } from "../../../store/redux/reducers/getCurrentReport";
 
-getCurrentStation;
 const ClientItem = ({ client, tablePadding, logo }) => {
   const contentRef = useRef();
   const [open, setOpen] = useState(false);
