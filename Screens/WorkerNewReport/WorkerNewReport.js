@@ -58,7 +58,7 @@ import routes from "../../Navigation/routes";
 // import setCurrentCategoryItem from "../../store/redux/reducers/getCurrentCategory";
 // import getCurrentStation from "../../store/redux/reducers/getCurrentStation";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
-
+import { getCurrentReport } from "../../store/redux/reducers/getCurrentReport";
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
@@ -206,6 +206,7 @@ const WorkerNewReport = () => {
       );
     }
   }, [currentReport]);
+
   // console.log(currentReport);
   useEffect(() => {
     setFoodSafetyReviewTexts(
@@ -552,7 +553,7 @@ const WorkerNewReport = () => {
     : null;
 
   // * comparing between the categories names to the ids in the forms to display it in the drawer
-  const matchedItems =
+  const checkedCategoryNameById =
     globalCategories && formData.categories
       ? globalCategories.reduce((result, item) => {
           if (formData.categories.includes(parseInt(item.id, 10))) {
@@ -561,8 +562,9 @@ const WorkerNewReport = () => {
           return result;
         }, [])
       : [];
+  // console.log(checkedCategoryNameById[0].name);
 
-  // const matchCategoryNameById = matchedItems.map((item) => item.name);
+  // const matchCategoryNameById = checkedCategoryNameById.map((item) => item.name);
   const imageTextsAndFunctionality = [
     {
       id: 0,
@@ -633,7 +635,7 @@ const WorkerNewReport = () => {
   const handlePrevCategory = () => {
     setCurrentCategoryIndex((prevIndex) => {
       const newIndex = prevIndex > 0 ? prevIndex - 1 : prevIndex;
-      const currentItem = matchedItems[newIndex];
+      const currentItem = checkedCategoryNameById[newIndex];
       // dispatch(setCurrentCategory(currentItem));
       return newIndex;
     });
@@ -644,20 +646,20 @@ const WorkerNewReport = () => {
   const handleNextCategory = () => {
     // setCurrentCategoryIndex((prevIndex) => {
     //   const newIndex =
-    //     prevIndex < matchedItems.length - 1 ? prevIndex + 1 : prevIndex;
-    //   const currentItem = matchedItems[newIndex];
+    //     prevIndex < checkedCategoryNameById.length - 1
+    //       ? prevIndex + 1
+    //       : prevIndex;
+    //   const currentItem = checkedCategoryNameById[newIndex];
     //   // dispatch(setCurrentCategory(currentItem));
-    //   console.log(currentItem);
+    //   // console.log(currentItem);
     //   return newIndex;
     // });
-    // dispatch(getCurrentCategory("bkdsands"));
-    console.log("before");
+    dispatch(getCurrentReport(currentReport));
     dispatch(getCurrentCategory(formData.categories[0]));
-    console.log("after");
     navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
 
-  // console.log(matchedItems);
+  // console.log(checkedCategoryNameById);
 
   //  todo to check i have both function (handleCheckboxStatusChange , handleCategoriesCheckboxesToggle)
   // todo to change the way i save the checkboxes statuses in the state after i pick a report and make another change in one of the checkboxes
@@ -1379,7 +1381,7 @@ categorys[]: 5
                     />
                     <Text style={styles.categoryDirButton}>
                       הקטגוריה הקודמת:{" "}
-                      {matchedItems[currentCategoryIndex - 1]?.name}
+                      {checkedCategoryNameById[currentCategoryIndex - 1]?.name}
                     </Text>
                   </TouchableOpacity> */}
                   <View
@@ -1435,8 +1437,9 @@ categorys[]: 5
                       >
                         <Text style={styles.categoryDirButton}>
                           הקטגוריה הבאה:{" "}
-                          {/* {matchedItems[currentCategoryIndex + 1]?.name} */}
-                          {formData.categories[0]}
+                          {/* {checkedCategoryNameById[currentCategoryIndex + 1]?.name} */}
+                          {/* {formData.categories[0]} */}
+                          {checkedCategoryNameById[currentCategoryIndex].name}
                         </Text>
                         <Image
                           source={accordionCloseIcon}

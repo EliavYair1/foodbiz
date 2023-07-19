@@ -7,6 +7,7 @@ import {
   Animated,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  ScrollView,
 } from "react-native";
 import { Divider } from "react-native-paper";
 import CheckboxItem from "../../../../WorkerNewReport/CheckboxItem/CheckboxItem";
@@ -16,7 +17,10 @@ import Input from "../../../../../Components/ui/Input";
 import DatePicker from "../../../../../Components/ui/datePicker";
 import SelectMenu from "../../../../../Components/ui/SelectMenu";
 import ClientItemArrow from "../../../../../assets/imgs/ClientItemArrow.png";
-
+import useMediaPicker from "../../../../../Hooks/useMediaPicker";
+import * as ImagePicker from "expo-image-picker";
+import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
+import uuid from "uuid-random";
 const CategoryAccordionItem = ({
   handleCheckboxChange,
   handleRatingCheckboxChange,
@@ -27,11 +31,33 @@ const CategoryAccordionItem = ({
   trigger,
   errors,
   sectionText,
+  // imagesArray,
+  grade0,
+  grade1,
+  grade2,
+  grade3,
+  itemId,
+  critical,
+  noCalculate,
+  lastDate,
+  charge,
 }) => {
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
+  const [images, setImages] = useState([]);
 
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync();
+    if (!result.canceled) {
+      const selectedAssets = result.assets;
+      const selectedImage =
+        selectedAssets.length > 0 ? selectedAssets[0].uri : null;
+      if (selectedImage) {
+        setImages((prevImages) => [...prevImages, selectedImage]);
+      }
+    }
+  };
   const toggleAccordion = () => {
     setOpen(!open);
     if (!open) {
@@ -63,8 +89,11 @@ const CategoryAccordionItem = ({
           }}
         >
           <Text style={{ fontFamily: fonts.ABold }}>
-            סעיף :
-            <Text style={{ fontFamily: fonts.ARegular }}>{sectionText}</Text>
+            סעיף :{" "}
+            <Text style={{ fontFamily: fonts.ARegular }}>{sectionText} </Text>
+            {critical == 1 && (
+              <Image source={criticalIcon} style={{ width: 20, height: 20 }} />
+            )}
           </Text>
 
           {open ? (
@@ -91,7 +120,7 @@ const CategoryAccordionItem = ({
             checked={releventCheckboxItems.includes("Checkbox 1")}
           />
           <CheckboxItem
-            label="Checkbox 2"
+            label={noCalculate}
             checkboxItemText="לא לשיקלול"
             handleChange={handleCheckboxChange}
             checked={releventCheckboxItems.includes("Checkbox 2")}
@@ -113,28 +142,28 @@ const CategoryAccordionItem = ({
         <View style={styles.categoryRatingCheckboxWrapper}>
           <Text> דירוג:</Text>
           <CheckboxItem
-            label="Checkbox 1"
+            label={`${grade3}_${itemId}`}
             checkboxItemText="3"
             handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes("Checkbox 1")}
+            checked={ratingCheckboxItem.includes(`${grade3}_${itemId}`)}
           />
           <CheckboxItem
-            label="Checkbox 2"
+            label={`${grade2}_${itemId}`}
             checkboxItemText="2"
             handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes("Checkbox 2")}
+            checked={ratingCheckboxItem.includes(`${grade2}_${itemId}`)}
           />
           <CheckboxItem
-            label="Checkbox 3"
+            label={`${grade1}_${itemId}`}
             checkboxItemText="1"
             handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes("Checkbox 3")}
+            checked={ratingCheckboxItem.includes(`${grade1}_${itemId}`)}
           />
           <CheckboxItem
-            label="Checkbox 4"
+            label={`${grade0}_${itemId}`}
             checkboxItemText="0"
             handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes("Checkbox 4")}
+            checked={ratingCheckboxItem.includes(`${grade0}_${itemId}`)}
           />
         </View>
       </TouchableOpacity>
@@ -175,6 +204,7 @@ const CategoryAccordionItem = ({
               selectWidth={237}
               optionsCenterView={"flex-start"}
               optionsHeight={150}
+              displayedValue={charge}
               optionsLocation={100}
               centeredViewStyling={{ marginLeft: 120 }}
               onChange={(value) => {
@@ -196,18 +226,17 @@ const CategoryAccordionItem = ({
             <View style={{ marginTop: 20 }}>
               <DatePicker
                 control={control}
-                name={"executionDate"}
+                name={"lastDate"}
+                defaultDate={lastDate}
                 dateInputWidth={274}
                 onchange={(value) => {
-                  console.log(value, "is selected");
+                  // console.log(value, "is selected");
                   const date = new Date(value);
                   const formattedDate = date.toLocaleDateString("en-GB");
-                  setValue("executionDate", formattedDate);
-                  trigger("executionDate");
+                  setValue("lastDate", formattedDate);
+                  trigger("lastDate");
                 }}
-                errorMessage={
-                  errors.executionDate && errors.executionDate.message
-                }
+                errorMessage={errors.lastDate && errors.lastDate.message}
               />
             </View>
           </View>
@@ -253,7 +282,22 @@ const CategoryAccordionItem = ({
             />
           </View>
         </View>
-        <View style={styles.forthRowInputTextWrapper}></View>
+        <View style={styles.forthRowInputTextWrapper}>
+          <View style={styles.headerWrapper}>
+            <Text style={styles.header}>תמונות:</Text>
+
+            <TouchableOpacity onPress={pickImage}>
+              <Text style={styles.ImageUploadText}>הוספת תמונה</Text>
+            </TouchableOpacity>
+            <ScrollView horizontal>
+              {images.map((image, index) => (
+                <View key={uuid()}>
+                  <Image source={{ uri: image }} style={styles.uploadedPhoto} />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
       </Animated.View>
     </View>
   );
@@ -312,6 +356,29 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 4,
   },
-  forthRowInputTextWrapper: {},
+  forthRowInputTextWrapper: {
+    paddingVertical: 16,
+    justifyContent: "center",
+  },
+  ImageUploadText: {
+    textAlign: "left",
+    fontFamily: fonts.ABold,
+    marginLeft: 46,
+    marginRight: 26,
+  },
+  header: {
+    textAlign: "left",
+  },
+  headerWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  uploadedPhoto: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+    alignItems: "center",
+    alignSelf: "center",
+  },
 });
 export default CategoryAccordionItem;

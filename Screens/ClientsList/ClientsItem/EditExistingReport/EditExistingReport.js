@@ -4,9 +4,11 @@ import {
   View,
   Image,
   TouchableOpacity,
+  Button,
   Dimensions,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ScreenWrapper from "../../../../utiles/ScreenWrapper";
 import useScreenNavigator from "../../../../Hooks/useScreenNavigator";
@@ -33,31 +35,79 @@ import { LinearGradient } from "expo-linear-gradient";
 import accordionCloseIcon from "../../../../assets/imgs/accordionCloseIndicator.png";
 import FileIcon from "../../../../assets/icons/iconImgs/FileIcon.png";
 import { fetchCategories } from "../../../../store/redux/reducers/categoriesSlice";
+import Category from "../../../../Components/modals/category";
+import ModalUi from "../../../../Components/ui/ModalUi";
+import Radio from "../../../../Components/ui/radio";
+
 const EditExistingReport = () => {
   const dispatch = useDispatch();
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
-  // console.log(currentClient.getReports().map((item) => item.getSafetyGrade()));
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+  };
+  const currentReport = useSelector(
+    (state) => state.currentReport.currentReport
+  );
+
   const [isLoading, setIsLoading] = useState(false);
   const currentStation = useSelector((state) => state.currentStation);
   const categories = useSelector((state) => state.categories);
-  const currentCategory = useSelector((state) => state.currentCategory);
-  console.log(currentCategory);
+  const currentCategoryId = useSelector((state) => state.currentCategory);
   const { navigateTogoBack } = useScreenNavigator();
-  const [categoryGrade, setcategoryGrade] = useState(89);
+  const [categoryGrade, setCategoryGrade] = useState(89);
   const [foodSafetyGrade, setFoodSafetyGrade] = useState(79);
   const [reportGrade, setReportGrade] = useState(64);
-  const [releventCheckboxItems, setreleventCheckboxItems] = useState([]);
+  const [relevantCheckboxItems, setRelevantCheckboxItems] = useState([]);
   const [ratingCheckboxItem, setRatingCheckboxItem] = useState([]);
-  // const [media, pickMedia, error] = useMediaPicker(handleInputChange);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+  const [selectedModalCategory, setSelectedModalCategory] = useState([]);
+  const [categoryArray, setCategoryArray] = useState([]);
+  const memoizedCategories = useMemo(() => categories, [categories]);
+  const memoRizedCats = memoizedCategories?.categories;
+  const passedDownCategoryId = currentCategoryId.currentCategory;
+  const [categoryHeader, setCategoryHeader] = useState(false);
+  const [categorySubHeader, setCategorySubHeader] = useState(false);
+  const [CategoriesItems, setCategoriesItems] = useState([]);
+  const [currentReportItems, setCurrentReportItems] = useState([]);
+  // console.log(ratingCheckboxItem);
+  // todo: find the categoryid in the categories and display his name by the id by the currentCategoryId // done
+  // todo: find items from the current Report with the categories items
+  const desiredCategory = () => {
+    let parentCategory = false;
+    let indexSubcategory = false;
+
+    for (const [key, value] of Object.entries(categories.categories)) {
+      value.categories.find((subcategory, index) => {
+        if (subcategory.id == passedDownCategoryId) {
+          indexSubcategory = index;
+          parentCategory = key;
+          return subcategory;
+        }
+      });
+    }
+    setCategoriesItems(
+      categories.categories[parentCategory].categories[indexSubcategory].items
+    );
+    setCategorySubHeader(
+      categories.categories[parentCategory].categories[indexSubcategory].name
+    );
+    setCategoryHeader(categories.categories[parentCategory].name);
+  };
+
+  useEffect(() => {
+    desiredCategory();
+  }, [desiredCategory]);
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const schema = yup.object().shape({
     remarks: yup.string().required("remarks is required"),
     executioner: yup.string().required("executioner is required"),
     violationType: yup.string().required("type of violation is required"),
-    executionDate: yup.string().required("execution date is required"),
+    lastDate: yup.string().required("execution date is required"),
     fineNis: yup.string().required("defining a fine in NIS is required"),
     imagePick: yup.string().required("picking an image is required"),
   });
@@ -75,21 +125,32 @@ const EditExistingReport = () => {
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
+
+  // * modal pick handler
+  const handleOptionClick = (option) => {
+    setSelectedModalCategory((prevSelectedOptions) => [
+      ...prevSelectedOptions,
+      option,
+    ]);
+  };
+  // * drawer handler
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
   };
+  // * relevant checkbox handler (need to be change)
   const handleCheckboxChange = (isChecked, label) => {
     if (isChecked) {
-      setreleventCheckboxItems((prevreleventCheckboxItems) => [
+      setRelevantCheckboxItems((prevreleventCheckboxItems) => [
         ...prevreleventCheckboxItems,
         label,
       ]);
     } else {
-      setreleventCheckboxItems((prevreleventCheckboxItems) =>
+      setRelevantCheckboxItems((prevreleventCheckboxItems) =>
         prevreleventCheckboxItems.filter((item) => item !== label)
       );
     }
   };
+  // * rating checkbox handler (need to be change)
   const handleRatingCheckboxChange = (isChecked, label) => {
     if (isChecked) {
       setRatingCheckboxItem((prevreleventCheckboxItems) => [
@@ -102,13 +163,14 @@ const EditExistingReport = () => {
       );
     }
   };
+  // * form submit function
   const onSubmitForm = () => {
-    console.log("form values:", getValues());
+    // console.log("form values:", getValues());
     if (isFormSubmitted) {
       console.log("form submitted");
     }
   };
-  console.log("form values", getValues());
+  // console.log("form values", getValues());
   const imageTextsAndFunctionality = [
     {
       id: 0,
@@ -140,6 +202,7 @@ const EditExistingReport = () => {
       source: require("../../../../assets/icons/iconImgs/categories.png"),
       iconPress: () => {
         console.log("categories");
+        setModalVisible(true);
       },
     },
     {
@@ -194,20 +257,76 @@ const EditExistingReport = () => {
       </View>
     );
   };
-  const AccordionCategoriesGeneralList = [
+  // * finding the current report data based on the category id from the report edit mode.
+  const getRelevantData = (data) => {
+    // * parsing the data
+    const CategoriesArrayOfData = JSON.parse(data);
+
+    const relevantData = CategoriesArrayOfData.find(
+      (category) => category.id == passedDownCategoryId
+    );
+    if (relevantData) {
+      setCurrentReportItems(relevantData.items);
+      setCategoryGrade(relevantData.grade);
+    } else {
+      console.log("Failed to find Relevant Data");
+    }
+  };
+  useEffect(() => {
+    const categoriesDataReport = currentReport.getCategoriesData();
+    getRelevantData(categoriesDataReport);
+    // console.log("currentReportItems:", currentReportItems);
+    // console.log(CategoriesItems);
+    console.log(relevantCheckboxItems, ratingCheckboxItem);
+  }, [ratingCheckboxItem]);
+
+  const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
+    let reportItem = currentReportItems.find(
+      (element) => element.id == item.id
+    );
+    // console.log(reportItem);
+    return {
+      id: item.id,
+      component: (
+        <CategoryAccordionItem
+          handleCheckboxChange={handleCheckboxChange}
+          handleRatingCheckboxChange={handleRatingCheckboxChange}
+          releventCheckboxItems={relevantCheckboxItems}
+          ratingCheckboxItem={ratingCheckboxItem}
+          control={control}
+          setValue={setValue}
+          trigger={trigger}
+          errors={errors}
+          sectionText={item.name}
+          grade0={item.grade0}
+          grade1={item.grade1}
+          grade2={item.grade2}
+          grade3={item.grade3}
+          itemId={item.id}
+          critical={item.critical}
+          noCalculate={reportItem?.noCalculate ?? false}
+          lastDate={reportItem?.lastDate}
+          charge={reportItem?.charge}
+        />
+      ),
+    };
+  });
+
+  const AccordionCategoriesTemperatureList = [
     {
       id: 1,
       component: (
         <CategoryAccordionItem
           handleCheckboxChange={handleCheckboxChange}
           handleRatingCheckboxChange={handleRatingCheckboxChange}
-          releventCheckboxItems={releventCheckboxItems}
+          releventCheckboxItems={relevantCheckboxItems}
           ratingCheckboxItem={ratingCheckboxItem}
           control={control}
           setValue={setValue}
           trigger={trigger}
           errors={errors}
           sectionText="האם נצפה זיהום ויזאולי על ציוד וכלים, כולל ציוד שטיפה לכלים"
+          // imagesArray={images}
         />
       ),
     },
@@ -217,7 +336,7 @@ const EditExistingReport = () => {
         <CategoryAccordionItem
           handleCheckboxChange={handleCheckboxChange}
           handleRatingCheckboxChange={handleRatingCheckboxChange}
-          releventCheckboxItems={releventCheckboxItems}
+          releventCheckboxItems={relevantCheckboxItems}
           ratingCheckboxItem={ratingCheckboxItem}
           control={control}
           setValue={setValue}
@@ -233,7 +352,7 @@ const EditExistingReport = () => {
         <CategoryAccordionItem
           handleCheckboxChange={handleCheckboxChange}
           handleRatingCheckboxChange={handleRatingCheckboxChange}
-          releventCheckboxItems={releventCheckboxItems}
+          releventCheckboxItems={relevantCheckboxItems}
           ratingCheckboxItem={ratingCheckboxItem}
           control={control}
           setValue={setValue}
@@ -242,6 +361,27 @@ const EditExistingReport = () => {
           sectionText="האם נצפה זיהום ויזאולי על ציוד וכלים, כולל ציוד שטיפה לכלים"
         />
       ),
+    },
+  ];
+  const categoriesModal = [
+    {
+      subheader: "Section 1",
+      options: [
+        "Option 1",
+        "Option 2",
+        "Option 3",
+        "Option 3",
+        "Option 3",
+        "Option 3",
+      ],
+    },
+    {
+      subheader: "Section 2",
+      options: ["Option 4", "Option 5", "Option 6"],
+    },
+    {
+      subheader: "Section 3",
+      options: ["Option 7", "Option 8", "Option 9"],
     },
   ];
 
@@ -257,19 +397,20 @@ const EditExistingReport = () => {
             style={styles.goBackIcon}
           />
         </TouchableOpacity>
-
         <Text style={styles.goBackText}>חזרה לרשימת הלקוחות</Text>
       </View>
 
       <View style={styles.headerWrapper}>
-        <View style={styles.header}>
+        <View style={styles.headerContainer}>
           <Text style={styles.header}>
             עריכת דוח עבור {currentClient.getCompany()} - {currentStation}
           </Text>
 
-          {/* <Text style={styles.subheader}>
-        עריכת דוח עבור {currentClient.getCompany()} - {currentStation}
-      </Text> */}
+          <Text style={styles.subheader}>
+            {categoryHeader}
+            {" > "}
+            {categorySubHeader}
+          </Text>
         </View>
         <View style={styles.imageTextList}>
           <FlatList
@@ -321,12 +462,12 @@ const EditExistingReport = () => {
         )}
       </View>
 
-      <View
+      {/* <View
         style={{
           width: "100%",
           justifyContent: "center",
           alignItems: "center",
-          marginBottom: 50,
+          // marginBottom: 50,
         }}
       >
         <Drawer
@@ -414,7 +555,17 @@ const EditExistingReport = () => {
           height={300}
           onToggle={handleDrawerToggle}
         />
-      </View>
+      </View> */}
+      {modalVisible && (
+        <View>
+          <ModalUi
+            header="קטגוריות"
+            modalContent={categoriesModal}
+            onClose={handleModalClose}
+            handleOptionClick={handleOptionClick}
+          />
+        </View>
+      )}
     </ScreenWrapper>
   );
 };
@@ -440,6 +591,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 30,
   },
+  headerContainer: {},
   header: {
     alignItems: "center",
     justifyContent: "flex-start",

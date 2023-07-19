@@ -23,6 +23,7 @@ const Input = ({
   outlineColor,
   activeOutlineColor,
   placeholder = false,
+  disabled = false,
 }) => {
   return (
     <>
@@ -65,6 +66,7 @@ const Input = ({
               right={inputIcon}
               style={inputStyle}
               error={!!error}
+              disabled={disabled}
               returnKeyType={returnKeyType}
               textContentType={textContentType}
               onSubmitEditing={onSubmitEditing}

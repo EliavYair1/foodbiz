@@ -90,10 +90,10 @@ const DatePicker = ({
                   style={{ width: 20, height: 20 }}
                 />
                 <Text style={{}}>
-                  {defaultDate
-                    ? defaultDate
-                    : datePicked
+                  {datePicked
                     ? datePicked.toDateString()
+                    : defaultDate
+                    ? defaultDate
                     : "Date Picker"}
                 </Text>
               </View>
