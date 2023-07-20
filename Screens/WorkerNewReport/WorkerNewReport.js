@@ -99,7 +99,6 @@ const WorkerNewReport = () => {
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
 
-  // console.log("date:", currentReportDate);
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState([]);
   const [culinaryReviewTexts, setCulinaryReviewTexts] = useState([]);
@@ -144,6 +143,7 @@ const WorkerNewReport = () => {
         );
       }),
   });
+
   const {
     control,
     handleSubmit,
@@ -183,10 +183,9 @@ const WorkerNewReport = () => {
 
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
-
+    // todo to use getData class method
     if (currentReport && currentReport.data) {
       const { data } = currentReport;
-
       setSwitchStates({
         haveFine: data.haveFine === "1",
         haveAmountOfItems: data.haveAmountOfItems === "1",
@@ -276,6 +275,8 @@ const WorkerNewReport = () => {
     .getReports()
     .filter((report) => report.getData("clientStationId") === selectedStation);
 
+  // console.log("filteredStationsResult:", filteredStationsResult);
+  // console.log("selectedStation:", selectedStation);
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
     // console.log(content);
@@ -500,6 +501,7 @@ const WorkerNewReport = () => {
         const selectedReport = filteredStationsResult.find(
           (report) => report.getData("timeOfReport") === value
         );
+
         if (selectedReport) {
           handleReportIdAndWorkerId(selectedReport);
           const parsedSelectedReportCategory =
@@ -688,7 +690,7 @@ newGeneralCommentTopText: ביקורת בתחנת פיליפס חיפה.
 timeOfReport: 22/06/2023
 categorys[]: 5
 } */
-
+  // console.log(getValues().clientStationId);
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {
@@ -714,7 +716,7 @@ categorys[]: 5
               control={control}
               selectWidth={240}
               optionsHeight={200}
-              displayedValue={selectedStation}
+              displayedValue={getValues().clientStationId}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",
@@ -732,8 +734,8 @@ categorys[]: 5
               }
               onChange={(value) => {
                 handleFormChange("clientStationId", value.id);
-                setSelectedStation(value.company);
-                setValue("clientStationId", value.id);
+                setSelectedStation(value.id);
+                setValue("clientStationId", value.company);
                 trigger("clientStationId");
                 console.log("value-station:", value);
               }}
@@ -1263,6 +1265,7 @@ categorys[]: 5
     },
   ];
 
+  // * accordion item
   const renderAccordion = ({ item }) => (
     <Accordion
       headerText={item.headerText}
@@ -1284,6 +1287,7 @@ categorys[]: 5
     />
   );
 
+  // * filtering out timeofReport when on edit mode.
   const modifiedAccordionContent = currentReport
     ? NewReportAccordionContent.map((section) => {
         if (section.key === "settings") {
