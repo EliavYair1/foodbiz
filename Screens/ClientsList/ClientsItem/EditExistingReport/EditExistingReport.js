@@ -37,6 +37,7 @@ import FileIcon from "../../../../assets/icons/iconImgs/FileIcon.png";
 import { fetchCategories } from "../../../../store/redux/reducers/categoriesSlice";
 import Category from "../../../../Components/modals/category";
 import ModalUi from "../../../../Components/ui/ModalUi";
+import moment from "moment";
 // import Radio from "../../../../Components/ui/radio";
 
 const EditExistingReport = () => {
@@ -133,6 +134,7 @@ const EditExistingReport = () => {
       option,
     ]);
   };
+
   // * drawer handler
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
@@ -257,6 +259,7 @@ const EditExistingReport = () => {
       </View>
     );
   };
+
   // * finding the current report data based on the category id from the report edit mode.
   const getRelevantData = (data) => {
     // * parsing the data
@@ -272,19 +275,39 @@ const EditExistingReport = () => {
       console.log("Failed to find Relevant Data");
     }
   };
+
   useEffect(() => {
     const categoriesDataReport = currentReport.getCategoriesData();
     getRelevantData(categoriesDataReport);
     // console.log("currentReportItems:", currentReportItems);
     // console.log(CategoriesItems);
-    console.log(relevantCheckboxItems, ratingCheckboxItem);
+    // todo from timeOfReport
+    // console.log("sadssda:", currentReport.getData("timeOfReport"));
+    // console.log(relevantCheckboxItems, ratingCheckboxItem);
   }, [ratingCheckboxItem]);
 
+  // * adding days for the lastDate selectMenu
+  const addDaysToDate = (numberOfDays) => {
+    let timeOfReport = currentReport.getData("timeOfReport");
+    const dateObject = moment.utc(timeOfReport, "DD/MM/YYYY");
+    const formattedDate = dateObject.format("DD/MM/YYYY");
+    const date = moment(formattedDate, "DD/MM/YYYY");
+
+    const newDateObject = date.add(numberOfDays, "days");
+
+    const newFormattedDate = newDateObject.format("DD/MM/YYYY");
+
+    return newFormattedDate;
+  };
+  // * mapping over CategoriesItems and displaying the items
   const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
     let reportItem = currentReportItems.find(
       (element) => element.id == item.id
     );
-    // console.log(reportItem);
+    const timeOfReport = currentReport.getData("timeOfReport");
+    const haveFine = currentReport.getData("haveFine");
+    // console.log("reportItem:", reportItem?.charge ?? undefined);
+
     return {
       id: item.id,
       component: (
@@ -298,15 +321,40 @@ const EditExistingReport = () => {
           trigger={trigger}
           errors={errors}
           sectionText={item.name}
-          grade0={item.grade0}
-          grade1={item.grade1}
-          grade2={item.grade2}
-          grade3={item.grade3}
+          grade0={reportItem?.grade === "0" ? true : false}
+          grade1={reportItem?.grade === "1" ? true : false}
+          grade2={reportItem?.grade === "2" ? true : false}
+          grade3={reportItem?.grade === "3" ? true : false}
           itemId={item.id}
           critical={item.critical}
-          noCalculate={reportItem?.noCalculate ?? false}
+          noCalculate={reportItem?.noCalculate ? true : false}
           lastDate={reportItem?.lastDate}
           charge={reportItem?.charge}
+          noRelevant={reportItem?.noRelevant ? true : false}
+          showOnComment={reportItem?.showOnComment ? true : false}
+          categoryReset={reportItem?.categoryReset ? true : false}
+          dateSelected={timeOfReport}
+          selectedDates={[
+            addDaysToDate(3),
+            addDaysToDate(7),
+            addDaysToDate(14),
+            addDaysToDate(31),
+            "נא לשלוח תאריך מדויק",
+          ]}
+          chargeSelections={[
+            "קבלן ההסעדה",
+            "מנהל המשק",
+            "הלקוח",
+            "מנהל המטבח",
+            "בית החולים",
+            "שירותי בריאות כללית",
+            "צוות הקולנוע",
+          ]}
+          // selectedCharges={reportItem?.charge}
+          violationLabel={
+            haveFine == 1 ? reportItem?.violation ?? false : "סוג הפרה"
+          }
+          fineLabel={haveFine == 1 ? reportItem?.fine ?? false : "קנס בש״ח"}
         />
       ),
     };
@@ -462,100 +510,6 @@ const EditExistingReport = () => {
         )}
       </View>
 
-      {/* <View
-        style={{
-          width: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-          // marginBottom: 50,
-        }}
-      >
-        <Drawer
-          content={
-            <LinearGradient
-              colors={["#37549D", "#26489F"]}
-              start={[0, 0]}
-              end={[1, 0]}
-              style={{ width: "100%", padding: 16, height: 76, zIndex: 1 }}
-            >
-              <View
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flexDirection: "row",
-                }}
-              >
-                <TouchableOpacity
-                  onPress={() => console.log("prev category")}
-                  style={{
-                    alignSelf: "center",
-                    // justifyContent: "flex-end",
-                    // marginLeft: "auto",
-                    flexDirection: "row",
-                    gap: 5,
-                    alignItems: "center",
-                  }}
-                >
-                  <Image
-                    source={accordionCloseIcon}
-                    style={{
-                      width: 20,
-                      height: 20,
-                      transform: [{ rotate: "180deg" }],
-                    }}
-                  />
-                  <Text style={styles.categoryDirButton}>
-                    הקטגוריה הקודמת:{" "}
-                  </Text>
-                </TouchableOpacity>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    textAlign: "center",
-                    marginLeft: "auto",
-                    // marginRight: -30,
-                    gap: 12,
-                  }}
-                >
-                  <Image source={FileIcon} style={{ width: 24, height: 24 }} />
-                  <Text
-                    style={{
-                      justifyContent: "center",
-                      alignSelf: "center",
-                      color: colors.white,
-                      fontSize: 24,
-                      fontFamily: fonts.ABold,
-                    }}
-                  >
-                    תמצית והערות
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => console.log("next category")}
-                  style={{
-                    alignSelf: "center",
-                    // justifyContent: "flex-end",
-                    flexDirection: "row",
-                    gap: 5,
-                    alignItems: "center",
-                    marginLeft: "auto",
-                  }}
-                >
-                  <Text style={styles.categoryDirButton}>הקטגוריה הבאה: </Text>
-                  <Image
-                    source={accordionCloseIcon}
-                    style={{ width: 20, height: 20 }}
-                  />
-                </TouchableOpacity>
-              </View>
-            </LinearGradient>
-          }
-          height={300}
-          onToggle={handleDrawerToggle}
-        />
-      </View> */}
       {modalVisible && (
         <View>
           <ModalUi

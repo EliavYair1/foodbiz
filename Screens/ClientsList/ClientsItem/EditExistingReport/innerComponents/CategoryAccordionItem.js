@@ -41,6 +41,15 @@ const CategoryAccordionItem = ({
   noCalculate,
   lastDate,
   charge,
+  noRelevant,
+  showOnComment,
+  categoryReset,
+  dateSelected,
+  selectedDates,
+  fineLabel,
+  disabledViolation,
+  violationLabel,
+  chargeSelections,
 }) => {
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
@@ -114,28 +123,50 @@ const CategoryAccordionItem = ({
 
         <View style={styles.categoryRelevantCheckboxWrapper}>
           <CheckboxItem
-            label="Checkbox 1"
+            label={`${noRelevant}_${itemId}`}
             checkboxItemText="לא רלוונטי"
             handleChange={handleCheckboxChange}
-            checked={releventCheckboxItems.includes("Checkbox 1")}
+            checked={releventCheckboxItems.includes(`${noRelevant}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`noRelevant_${itemId}`) ||
+              noRelevant
+            }
           />
           <CheckboxItem
-            label={noCalculate}
+            label={`${noCalculate}_${itemId}`}
             checkboxItemText="לא לשיקלול"
             handleChange={handleCheckboxChange}
-            checked={releventCheckboxItems.includes("Checkbox 2")}
+            checked={releventCheckboxItems.includes(`${noCalculate}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`noCalculate_${itemId}`) ||
+              noCalculate
+            }
+
+            // isChecked={noCalculate}
           />
           <CheckboxItem
-            label="Checkbox 3"
+            label={`${showOnComment}_${itemId}`}
             checkboxItemText="הצג בתמצית"
             handleChange={handleCheckboxChange}
-            checked={releventCheckboxItems.includes("Checkbox 3")}
+            checked={releventCheckboxItems.includes(
+              `${showOnComment}_${itemId}`
+            )}
+            isChecked={
+              releventCheckboxItems.includes(`showOnComment_${itemId}`) ||
+              showOnComment
+            }
           />
           <CheckboxItem
-            label="Checkbox 4"
+            label={`${categoryReset}_${itemId}`}
             checkboxItemText="מאפס קטגוריה"
             handleChange={handleCheckboxChange}
-            checked={releventCheckboxItems.includes("Checkbox 4")}
+            checked={releventCheckboxItems.includes(
+              `${categoryReset}_${itemId}`
+            )}
+            isChecked={
+              releventCheckboxItems.includes(`categoryReset_${itemId}`) ||
+              categoryReset
+            }
           />
         </View>
         <Divider />
@@ -146,24 +177,36 @@ const CategoryAccordionItem = ({
             checkboxItemText="3"
             handleChange={handleRatingCheckboxChange}
             checked={ratingCheckboxItem.includes(`${grade3}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`grade3_${itemId}`) || grade3
+            }
           />
           <CheckboxItem
             label={`${grade2}_${itemId}`}
             checkboxItemText="2"
             handleChange={handleRatingCheckboxChange}
             checked={ratingCheckboxItem.includes(`${grade2}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`grade2_${itemId}`) || grade2
+            }
           />
           <CheckboxItem
             label={`${grade1}_${itemId}`}
             checkboxItemText="1"
             handleChange={handleRatingCheckboxChange}
             checked={ratingCheckboxItem.includes(`${grade1}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`grade1_${itemId}`) || grade1
+            }
           />
           <CheckboxItem
             label={`${grade0}_${itemId}`}
             checkboxItemText="0"
             handleChange={handleRatingCheckboxChange}
             checked={ratingCheckboxItem.includes(`${grade0}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`grade0_${itemId}`) || grade0
+            }
           />
         </View>
       </TouchableOpacity>
@@ -199,7 +242,7 @@ const CategoryAccordionItem = ({
             <SelectMenu
               control={control}
               name={"executioner"}
-              selectOptions={[1, 2, 3, 4, 5]}
+              selectOptions={chargeSelections}
               propertyName={null}
               selectWidth={237}
               optionsCenterView={"flex-start"}
@@ -224,18 +267,23 @@ const CategoryAccordionItem = ({
           >
             <Text style={styles.inputLabel}>תאריך לביצוע:</Text>
             <View style={{ marginTop: 20 }}>
-              <DatePicker
+              <SelectMenu
                 control={control}
                 name={"lastDate"}
-                defaultDate={lastDate}
-                dateInputWidth={274}
-                onchange={(value) => {
-                  // console.log(value, "is selected");
-                  const date = new Date(value);
-                  const formattedDate = date.toLocaleDateString("en-GB");
-                  setValue("lastDate", formattedDate);
+                selectOptions={selectedDates}
+                propertyName={null}
+                selectWidth={237}
+                optionsCenterView={"flex-start"}
+                optionsHeight={150}
+                displayedValue={dateSelected}
+                optionsLocation={100}
+                centeredViewStyling={{ marginLeft: 480 }}
+                onChange={(value) => {
+                  console.log(value, "is selected");
+                  setValue("lastDate", value);
                   trigger("lastDate");
                 }}
+                returnObject={true}
                 errorMessage={errors.lastDate && errors.lastDate.message}
               />
             </View>
@@ -248,6 +296,8 @@ const CategoryAccordionItem = ({
               control={control}
               name={"violationType"}
               placeholder={""}
+              label={violationLabel}
+              disabled={disabledViolation}
               contentStyle={styles.inputContentThirdRow}
               inputStyle={styles.inputThirdRowStyling}
               onChangeFunction={(value) => {
@@ -271,6 +321,7 @@ const CategoryAccordionItem = ({
               control={control}
               name={"fineNis"}
               placeholder={""}
+              label={fineLabel}
               contentStyle={styles.inputContentThirdRow}
               inputStyle={styles.inputThirdRowStyling}
               onChangeFunction={(value) => {

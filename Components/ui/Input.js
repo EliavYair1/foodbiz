@@ -46,7 +46,7 @@ const Input = ({
                     fontSize: 20,
                   }}
                 >
-                  {label}
+                  {value ? value : label}
                 </Text>
               }
               onChangeText={(value) => {

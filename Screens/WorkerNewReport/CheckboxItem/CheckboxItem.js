@@ -9,9 +9,11 @@ const CheckboxItem = ({
   handleChange,
   checked,
   identifier = false,
+  isChecked = false,
 }) => {
   const handleCheckboxToggle = (checked, label) => {
     handleChange(checked, label);
+    console.log(`${label} is ${checked}`);
   };
   // const checkboxIdentifier = identifier ? `${label}_identifier` : label;
   return (
@@ -21,7 +23,7 @@ const CheckboxItem = ({
         label={label}
         checkedColor={colors.black}
         unCheckedColor={colors.black}
-        checked={checked}
+        checked={isChecked ? isChecked : checked}
         // identifier={checkboxIdentifier}
       />
       <Text>{checkboxItemText}</Text>

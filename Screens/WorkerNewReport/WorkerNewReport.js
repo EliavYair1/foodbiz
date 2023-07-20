@@ -8,6 +8,7 @@ import {
   ScrollView,
   Switch,
   KeyboardAvoidingView,
+  Alert,
 } from "react-native";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
@@ -59,6 +60,7 @@ import routes from "../../Navigation/routes";
 // import getCurrentStation from "../../store/redux/reducers/getCurrentStation";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
 import { getCurrentReport } from "../../store/redux/reducers/getCurrentReport";
+import "@env";
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
@@ -69,7 +71,6 @@ const WorkerNewReport = () => {
   const clients = useSelector((state) => state.clients);
   const categories = useSelector((state) => state.categories);
   const reportsTimes = useSelector((state) => state.reportsTimes);
-  const [categoryPicked, setcategoryPicked] = useState(null);
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
@@ -275,8 +276,6 @@ const WorkerNewReport = () => {
     .getReports()
     .filter((report) => report.getData("clientStationId") === selectedStation);
 
-  // console.log("filteredStationsResult:", filteredStationsResult);
-  // console.log("selectedStation:", selectedStation);
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
     // console.log(content);
@@ -532,15 +531,55 @@ const WorkerNewReport = () => {
       return newState;
     });
   };
-
+  // console.log(currentReport);
+  const postNewReport = async (formData) => {
+    try {
+      const response = await axios.post(
+        process.env.API_BASE_URL + "api/duplicateReport.php",
+        formData
+      );
+      console.log("(postNewReport)response:", response.status);
+      if (response.status === 200) {
+        Alert.alert(
+          "Success",
+          "Data posted successfully!",
+          [
+            {
+              text: "ok",
+              onPress: () => {
+                navigateToRoute(routes.ONBOARDING.ClientsList);
+              },
+            },
+            {
+              text: "Cancel",
+              onPress: () => {},
+              style: "cancel",
+            },
+          ],
+          { cancelable: false }
+        );
+      }
+      return response.data;
+    } catch (error) {
+      console.error("(postNewReport)Error posting data:", error);
+      throw error; // You can handle the error or throw it to be caught elsewhere
+    }
+  };
   // * submit the form
-  const onSubmitForm = () => {
+  const onSubmitForm = async () => {
     // checking if scheme is valid
     console.log("on submit...");
     // const formValues = getValues();
+
     console.log("formData:", formData);
     if (isSchemaValid) {
       console.log("scheme is valid");
+
+      try {
+        const response = await postNewReport(formData);
+      } catch (error) {
+        console.error("Error posting data:", error);
+      }
     }
   };
   // * Drawer
