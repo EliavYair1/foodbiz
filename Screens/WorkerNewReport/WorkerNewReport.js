@@ -761,11 +761,13 @@ categorys[]: 5
                 justifyContent: "center",
                 alignItems: "flex-start",
               }}
-              centeredViewStyling={{
-                marginRight: 12,
-                alignItems: "flex-end",
-                marginTop: -530,
-              }}
+              centeredViewStyling={
+                {
+                  // marginRight: 12,
+                  // alignItems: "flex-end",
+                  // marginTop: -530,
+                }
+              }
               selectOptions={currentClient.getStations()}
               name={"clientStationId"}
               errorMessage={
@@ -797,11 +799,13 @@ categorys[]: 5
                 justifyContent: "center",
                 alignItems: "flex-start",
               }}
-              centeredViewStyling={{
-                marginRight: 12,
-                alignItems: "flex-end",
-                marginTop: 180,
-              }}
+              centeredViewStyling={
+                {
+                  // marginRight: 12,
+                  // alignItems: "flex-end",
+                  // marginTop: 180,
+                }
+              }
               selectOptions={[
                 { timeOfReport: "דוח חדש", id: 0 },
                 ...filteredStationsResult, //clientStationId
@@ -950,17 +954,19 @@ categorys[]: 5
             <SelectMenu
               control={control}
               selectWidth={240}
-              optionsHeight={500}
+              optionsHeight={200}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "flex-start",
               }}
-              centeredViewStyling={{
-                marginRight: 12,
-                alignItems: "flex-end",
-                marginTop: 300,
-              }}
+              centeredViewStyling={
+                {
+                  // marginRight: 12,
+                  // alignItems: "flex-end",
+                  // marginTop: 300,
+                }
+              }
               selectOptions={reportsTimes}
               name={"reportTime"}
               errorMessage={errors.reportTime && errors.reportTime.message}

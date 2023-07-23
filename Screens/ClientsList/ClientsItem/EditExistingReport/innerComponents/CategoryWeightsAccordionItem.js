@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,6 @@ import ClientItemArrow from "../../../../../assets/imgs/ClientItemArrow.png";
 import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
-import { FlatList } from "react-native-gesture-handler";
 import uuid from "uuid-random";
 const CategoryAccordionItem = ({
   handleCheckboxChange,
@@ -51,28 +50,12 @@ const CategoryAccordionItem = ({
   disabledViolation,
   violationLabel,
   chargeSelections,
-  reportItem,
 }) => {
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
 
-  const [checkedGrade3, setCheckedGrade3] = useState(reportItem.grade == "3");
-  const [checkedGrade2, setCheckedGrade2] = useState(reportItem.grade == "2");
-  const [checkedGrade1, setCheckedGrade1] = useState(reportItem.grade == "1");
-  const [checkedGrade0, setCheckedGrade0] = useState(reportItem.grade == "0");
-  const isGradeTruthy = () => {
-    if (reportItem.grade === "3") {
-      setCheckedGrade3(!checkedGrade3);
-    } else if (reportItem.grade === "2") {
-      setCheckedGrade2(!checkedGrade2);
-    } else if (reportItem.grade === "1") {
-      setCheckedGrade1(!checkedGrade1);
-    } else if (reportItem.grade === "0") {
-      setCheckedGrade0(!checkedGrade0);
-    }
-  };
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync();
     if (!result.canceled) {
@@ -92,12 +75,11 @@ const CategoryAccordionItem = ({
       setAccordionBg(colors.white);
     }
     Animated.timing(heightAnim, {
-      toValue: open ? 0 : 350,
-      duration: 250,
+      toValue: open ? 0 : 350, // Adjust the expanded height as desired
+      duration: 250, // Adjust the duration as desired
       useNativeDriver: false,
     }).start();
   };
-  // console.log("reportItem:", reportItem.grade);
 
   return (
     <View
@@ -115,13 +97,52 @@ const CategoryAccordionItem = ({
             marginBottom: 16,
           }}
         >
-          <Text style={{ fontFamily: fonts.ABold }}>
-            סעיף :{" "}
-            <Text style={{ fontFamily: fonts.ARegular }}>{sectionText} </Text>
-            {critical == 1 && (
-              <Image source={criticalIcon} style={{ width: 20, height: 20 }} />
-            )}
-          </Text>
+          <View
+            style={{
+              fontFamily: fonts.ABold,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <Text style={{ fontFamily: fonts.ABold }}>
+              סוג המזון שנבדק:{" "}
+              <Text style={{ fontFamily: fonts.ARegular }}>{sectionText}</Text>:
+            </Text>
+            <SelectMenu
+              control={control}
+              name={"lastDate"}
+              selectOptions={selectedDates}
+              propertyName={null}
+              selectWidth={188}
+              optionsCenterView={"flex-start"}
+              optionsHeight={150}
+              displayedValue={dateSelected}
+              optionsLocation={100}
+              // centeredViewStyling={{ marginLeft: 480 }}
+              onChange={(value) => {
+                setValue("lastDate", value);
+                trigger("lastDate");
+              }}
+              returnObject={true}
+              errorMessage={errors.lastDate && errors.lastDate.message}
+            />
+            <Text style={{ fontFamily: fonts.ABold }}>שם המנה: :</Text>
+            <Input
+              control={control}
+              name={"remarks"}
+              mode={"flat"}
+              placeholder={"יש לנקות *ממטרות* מדיח כלים"}
+              contentStyle={styles.inputContentStyling}
+              inputStyle={[styles.inputStyling, { width: 150 }]}
+              activeUnderlineColor={colors.black}
+              onChangeFunction={(value) => {
+                console.log(value, "is selected");
+                setValue("remarks", value);
+                trigger("remarks");
+              }}
+            />
+          </View>
 
           {open ? (
             <Image
@@ -139,71 +160,79 @@ const CategoryAccordionItem = ({
 
         <Divider />
 
-        <View style={styles.categoryRelevantCheckboxWrapper}>
-          <CheckboxItem
-            label={`${noRelevant}_${itemId}`}
-            checkboxItemText="לא רלוונטי"
-            handleChange={handleCheckboxChange}
-            checked={
-              releventCheckboxItems.includes(`noRelevant_${itemId}`) ||
-              noRelevant
-            }
-          />
-          <CheckboxItem
-            label={`${noCalculate}_${itemId}`}
-            checkboxItemText="לא לשיקלול"
-            handleChange={handleCheckboxChange}
-            checked={
-              releventCheckboxItems.includes(`noCalculate_${itemId}`) ||
-              noCalculate
-            }
-          />
-          <CheckboxItem
-            label={`${showOnComment}_${itemId}`}
-            checkboxItemText="הצג בתמצית"
-            handleChange={handleCheckboxChange}
-            checked={
-              releventCheckboxItems.includes(`showOnComment_${itemId}`) ||
-              showOnComment
-            }
-          />
-          <CheckboxItem
-            label={`${categoryReset}_${itemId}`}
-            checkboxItemText="מאפס קטגוריה"
-            handleChange={handleCheckboxChange}
-            checked={
-              releventCheckboxItems.includes(`categoryReset_${itemId}`) ||
-              categoryReset
-            }
-          />
-        </View>
-        <Divider />
         <View style={styles.categoryRatingCheckboxWrapper}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Text style={{ fontFamily: fonts.ABold }}>טמפ׳:</Text>
+            <SelectMenu
+              control={control}
+              name={"lastDate"}
+              selectOptions={selectedDates}
+              propertyName={null}
+              selectWidth={188}
+              optionsCenterView={"flex-start"}
+              optionsHeight={150}
+              displayedValue={dateSelected}
+              optionsLocation={100}
+              // centeredViewStyling={{ marginLeft: 480 }}
+              onChange={(value) => {
+                setValue("lastDate", value);
+                trigger("lastDate");
+              }}
+              returnObject={true}
+              errorMessage={errors.lastDate && errors.lastDate.message}
+            />
+            <Text style={{ fontFamily: fonts.ABold }}> טמפ׳ יעד:</Text>
+            <Input
+              control={control}
+              name={"remarks"}
+              mode={"flat"}
+              placeholder={"יש לנקות *ממטרות* מדיח כלים"}
+              contentStyle={styles.inputContentStyling}
+              inputStyle={[styles.inputStyling, { width: 50 }]}
+              activeUnderlineColor={colors.black}
+              onChangeFunction={(value) => {
+                console.log(value, "is selected");
+                setValue("remarks", value);
+                trigger("remarks");
+              }}
+            />
+          </View>
           <Text> דירוג:</Text>
-
           <CheckboxItem
             label={`${grade3}_${itemId}`}
             checkboxItemText="3"
-            handleChange={isGradeTruthy}
-            checked={checkedGrade3}
+            handleChange={handleRatingCheckboxChange}
+            checked={ratingCheckboxItem.includes(`${grade3}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`grade3_${itemId}`) || grade3
+            }
           />
           <CheckboxItem
             label={`${grade2}_${itemId}`}
             checkboxItemText="2"
             handleChange={handleRatingCheckboxChange}
-            checked={checkedGrade2}
+            checked={ratingCheckboxItem.includes(`${grade2}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`grade2_${itemId}`) || grade2
+            }
           />
           <CheckboxItem
             label={`${grade1}_${itemId}`}
             checkboxItemText="1"
             handleChange={handleRatingCheckboxChange}
-            checked={checkedGrade1}
+            checked={ratingCheckboxItem.includes(`${grade1}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`grade1_${itemId}`) || grade1
+            }
           />
           <CheckboxItem
             label={`${grade0}_${itemId}`}
             checkboxItemText="0"
-            handleChange={isGradeTruthy}
-            checked={checkedGrade0}
+            handleChange={handleRatingCheckboxChange}
+            checked={ratingCheckboxItem.includes(`${grade0}_${itemId}`)}
+            isChecked={
+              releventCheckboxItems.includes(`grade0_${itemId}`) || grade0
+            }
           />
         </View>
       </TouchableOpacity>
@@ -224,7 +253,7 @@ const CategoryAccordionItem = ({
             mode={"flat"}
             placeholder={"יש לנקות *ממטרות* מדיח כלים"}
             contentStyle={styles.inputContentStyling}
-            inputStyle={styles.inputStyling}
+            inputStyle={[styles.inputStyling, { minWidth: "100%" }]}
             activeUnderlineColor={colors.black}
             onChangeFunction={(value) => {
               console.log(value, "is selected");
@@ -233,7 +262,7 @@ const CategoryAccordionItem = ({
             }}
           />
         </View>
-        <View style={styles.secondRowInputTextWrapper}>
+        {/* <View style={styles.secondRowInputTextWrapper}>
           <View style={{ flexDirection: "row", gap: 12 }}>
             <Text style={styles.inputLabel}>אחראי לביצוע:</Text>
             <SelectMenu
@@ -246,7 +275,7 @@ const CategoryAccordionItem = ({
               optionsHeight={150}
               displayedValue={charge}
               optionsLocation={100}
-              centeredViewStyling={{ marginLeft: 120 }}
+              //   centeredViewStyling={{ marginLeft: 120 }}
               onChange={(value) => {
                 console.log(value, "is selected");
                 setValue("executioner", value);
@@ -274,7 +303,7 @@ const CategoryAccordionItem = ({
                 optionsHeight={150}
                 displayedValue={dateSelected}
                 optionsLocation={100}
-                centeredViewStyling={{ marginLeft: 480 }}
+                // centeredViewStyling={{ marginLeft: 480 }}
                 onChange={(value) => {
                   console.log(value, "is selected");
                   setValue("lastDate", value);
@@ -329,7 +358,7 @@ const CategoryAccordionItem = ({
               errorMessage={errors.fineNis && errors.fineNis.message}
             />
           </View>
-        </View>
+        </View> */}
         <View style={styles.forthRowInputTextWrapper}>
           <View style={styles.headerWrapper}>
             <Text style={styles.header}>תמונות:</Text>
@@ -369,7 +398,7 @@ const styles = StyleSheet.create({
   },
   categoryRatingCheckboxWrapper: {
     flexDirection: "row",
-    gap: 75,
+    gap: 28,
     alignItems: "center",
     marginTop: 16,
     marginBottom: 16,
@@ -393,9 +422,10 @@ const styles = StyleSheet.create({
   inputLabel: {
     alignSelf: "center",
   },
+
   inputContentStyling: { backgroundColor: "white" },
   inputStyling: {
-    minWidth: "100%",
+    // minWidth: "100%",
     backgroundColor: "white",
     borderRadius: 4,
   },

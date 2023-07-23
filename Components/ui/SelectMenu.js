@@ -7,7 +7,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Button,
   Menu,
@@ -21,6 +21,8 @@ import fonts from "../../styles/fonts";
 import colors from "../../styles/colors";
 import { useForm, Controller } from "react-hook-form";
 import uuid from "uuid-random";
+import { findNodeHandle } from "react-native";
+
 const SelectMenu = ({
   selectOptions,
   selectWidth,
@@ -29,7 +31,7 @@ const SelectMenu = ({
   errorMessage,
   onChange,
   optionsHeight,
-  optionsCenterView,
+
   centeredViewStyling,
   optionsLocation,
   propertyName = false,
@@ -39,12 +41,25 @@ const SelectMenu = ({
 }) => {
   const [visible, setVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const openMenu = () => setVisible(true);
+  const elementRef = useRef(null);
+  const [positionHorizontal, setPositionHorizontal] = useState(0);
+  const [PositionVertical, setPositionVertical] = useState(0);
+  const openMenu = () => {
+    if (elementRef.current) {
+      elementRef.current.measure((x, y, width, height, pageX, pageY) => {
+        setPositionHorizontal(pageX);
+        setPositionVertical(pageY);
+      });
+    }
+    setVisible(true);
+  };
   const closeMenu = () => setVisible(false);
+
   const handleItemPick = (item) => {
     setSelectedItem(item);
     console.log("item selected:", item);
     onChange(item);
+
     closeMenu();
   };
 
@@ -93,10 +108,12 @@ const SelectMenu = ({
     },
     centeredView: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: optionsCenterView,
-      marginTop: optionsLocation,
-      marginRight: 0,
+      // justifyContent: "center",
+      // marginTop: optionsLocation,
+      // marginRight: 0,
+      position: "absolute",
+      top: PositionVertical + 25 ?? 0,
+      right: positionHorizontal - 20 ?? 0,
     },
     modalView: {
       margin: 20,
@@ -145,9 +162,10 @@ const SelectMenu = ({
       <Controller
         name={name}
         control={control}
-        defaultValue={displayedValue && null}
+        defaultValue={displayedValue}
         render={({ field: { value, onChange } }) => (
           <View
+            ref={elementRef}
             style={[
               {
                 flexDirection: "row",
@@ -174,8 +192,8 @@ const SelectMenu = ({
                       }}
                     />
                     <Text style={styles.menuItemText}>
-                      {displayedValue
-                        ? displayedValue
+                      {value
+                        ? value
                         : selectedItem
                         ? `${
                             returnObject
@@ -183,7 +201,7 @@ const SelectMenu = ({
                                 ? selectedItem.getData(propertyName)
                                 : selectedItem[propertyName]
                               : selectedItem
-                          } ${displayedValue ? "(נבחר)" : ""}`
+                          } ${value ? "(נבחר)" : ""}`
                         : "בחירה"}
                     </Text>
                   </View>

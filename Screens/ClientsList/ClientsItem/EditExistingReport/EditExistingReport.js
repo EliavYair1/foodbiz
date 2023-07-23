@@ -30,6 +30,7 @@ import SelectMenu from "../../../../Components/ui/SelectMenu";
 import DatePicker from "../../../../Components/ui/datePicker";
 import useMediaPicker from "../../../../Hooks/useMediaPicker";
 import CategoryAccordionItem from "./innerComponents/CategoryAccordionItem";
+import CategoryWeightsAccordionItem from "./innerComponents/CategoryWeightsAccordionItem";
 import Drawer from "../../../../Components/ui/Drawer";
 import { LinearGradient } from "expo-linear-gradient";
 import accordionCloseIcon from "../../../../assets/imgs/accordionCloseIndicator.png";
@@ -139,6 +140,7 @@ const EditExistingReport = () => {
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
   };
+
   // * relevant checkbox handler (need to be change)
   const handleCheckboxChange = (isChecked, label) => {
     if (isChecked) {
@@ -152,19 +154,21 @@ const EditExistingReport = () => {
       );
     }
   };
+
   // * rating checkbox handler (need to be change)
   const handleRatingCheckboxChange = (isChecked, label) => {
     if (isChecked) {
-      setRatingCheckboxItem((prevreleventCheckboxItems) => [
-        ...prevreleventCheckboxItems,
+      setRatingCheckboxItem((prevRatingCheckboxItems) => [
+        ...prevRatingCheckboxItems,
         label,
       ]);
     } else {
-      setRatingCheckboxItem((prevreleventCheckboxItems) =>
-        prevreleventCheckboxItems.filter((item) => item !== label)
+      setRatingCheckboxItem((prevRatingCheckboxItems) =>
+        prevRatingCheckboxItems.filter((item) => item !== label)
       );
     }
   };
+
   // * form submit function
   const onSubmitForm = () => {
     // console.log("form values:", getValues());
@@ -299,6 +303,8 @@ const EditExistingReport = () => {
 
     return newFormattedDate;
   };
+  // todo to pass down the reportItem to narrow down the CategoryAccordionItem component
+
   // * mapping over CategoriesItems and displaying the items
   const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
     let reportItem = currentReportItems.find(
@@ -306,7 +312,7 @@ const EditExistingReport = () => {
     );
     const timeOfReport = currentReport.getData("timeOfReport");
     const haveFine = currentReport.getData("haveFine");
-    // console.log("reportItem:", reportItem?.charge ?? undefined);
+    // console.log("reportItem:", reportItem?.grade ?? undefined);
 
     return {
       id: item.id,
@@ -320,19 +326,20 @@ const EditExistingReport = () => {
           setValue={setValue}
           trigger={trigger}
           errors={errors}
+          reportItem={reportItem ?? ""}
           sectionText={item.name}
-          grade0={reportItem?.grade === "0" ? true : false}
-          grade1={reportItem?.grade === "1" ? true : false}
-          grade2={reportItem?.grade === "2" ? true : false}
-          grade3={reportItem?.grade === "3" ? true : false}
+          grade0={reportItem?.grade === "0"}
+          grade1={reportItem?.grade === "1"}
+          grade2={reportItem?.grade === "2"}
+          grade3={reportItem?.grade === "3"}
           itemId={item.id}
           critical={item.critical}
-          noCalculate={reportItem?.noCalculate ? true : false}
-          lastDate={reportItem?.lastDate}
-          charge={reportItem?.charge}
           noRelevant={reportItem?.noRelevant ? true : false}
+          noCalculate={reportItem?.noCalculate ? true : false}
           showOnComment={reportItem?.showOnComment ? true : false}
           categoryReset={reportItem?.categoryReset ? true : false}
+          lastDate={reportItem?.lastDate}
+          charge={reportItem?.charge}
           dateSelected={timeOfReport}
           selectedDates={[
             addDaysToDate(3),
@@ -350,7 +357,6 @@ const EditExistingReport = () => {
             "שירותי בריאות כללית",
             "צוות הקולנוע",
           ]}
-          // selectedCharges={reportItem?.charge}
           violationLabel={
             haveFine == 1 ? reportItem?.violation ?? false : "סוג הפרה"
           }
@@ -364,16 +370,18 @@ const EditExistingReport = () => {
     {
       id: 1,
       component: (
-        <CategoryAccordionItem
+        <CategoryWeightsAccordionItem
           handleCheckboxChange={handleCheckboxChange}
           handleRatingCheckboxChange={handleRatingCheckboxChange}
           releventCheckboxItems={relevantCheckboxItems}
           ratingCheckboxItem={ratingCheckboxItem}
           control={control}
           setValue={setValue}
+          dateSelected={"dsadsa"}
           trigger={trigger}
           errors={errors}
-          sectionText="האם נצפה זיהום ויזאולי על ציוד וכלים, כולל ציוד שטיפה לכלים"
+          selectedDates={[1, 2, 3, 4, 5, 6]}
+          sectionText="טמפרטורת מזון חם בהגשה"
           // imagesArray={images}
         />
       ),
@@ -381,7 +389,7 @@ const EditExistingReport = () => {
     {
       id: 2,
       component: (
-        <CategoryAccordionItem
+        <CategoryWeightsAccordionItem
           handleCheckboxChange={handleCheckboxChange}
           handleRatingCheckboxChange={handleRatingCheckboxChange}
           releventCheckboxItems={relevantCheckboxItems}
@@ -390,14 +398,15 @@ const EditExistingReport = () => {
           setValue={setValue}
           trigger={trigger}
           errors={errors}
-          sectionText="האם נצפה זיהום ויזאולי על ציוד וכלים, כולל ציוד שטיפה לכלים"
+          selectedDates={[1, 2, 3, 4, 5, 6]}
+          sectionText="טמפרטורת מזון חם בהגשה"
         />
       ),
     },
     {
       id: 3,
       component: (
-        <CategoryAccordionItem
+        <CategoryWeightsAccordionItem
           handleCheckboxChange={handleCheckboxChange}
           handleRatingCheckboxChange={handleRatingCheckboxChange}
           releventCheckboxItems={relevantCheckboxItems}
@@ -405,8 +414,9 @@ const EditExistingReport = () => {
           control={control}
           setValue={setValue}
           trigger={trigger}
+          selectedDates={[1, 2, 3, 4, 5, 6]}
           errors={errors}
-          sectionText="האם נצפה זיהום ויזאולי על ציוד וכלים, כולל ציוד שטיפה לכלים"
+          sectionText="טמפרטורת מזון חם בהגשה"
         />
       ),
     },
@@ -501,8 +511,13 @@ const EditExistingReport = () => {
               borderColor: "rgba(83, 104, 180, 0.30)",
             }}
           >
-            <FlatList
+            {/* <FlatList
               data={AccordionCategoriesGeneralList}
+              renderItem={({ item }) => <CategoryAccordion item={item} />}
+              keyExtractor={(item) => item.id.toString()}
+            /> */}
+            <FlatList
+              data={AccordionCategoriesTemperatureList}
               renderItem={({ item }) => <CategoryAccordion item={item} />}
               keyExtractor={(item) => item.id.toString()}
             />

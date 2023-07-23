@@ -8,14 +8,12 @@ const CheckboxItem = ({
   checkboxItemText,
   handleChange,
   checked,
-  identifier = false,
   isChecked = false,
 }) => {
   const handleCheckboxToggle = (checked, label) => {
     handleChange(checked, label);
     console.log(`${label} is ${checked}`);
   };
-  // const checkboxIdentifier = identifier ? `${label}_identifier` : label;
   return (
     <View style={{ flexDirection: "row", alignItems: "center" }}>
       <Checkbox
@@ -23,8 +21,8 @@ const CheckboxItem = ({
         label={label}
         checkedColor={colors.black}
         unCheckedColor={colors.black}
-        checked={isChecked ? isChecked : checked}
-        // identifier={checkboxIdentifier}
+        // checked={isChecked ? isChecked : checked}
+        checked={checked}
       />
       <Text>{checkboxItemText}</Text>
     </View>

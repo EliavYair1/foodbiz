@@ -26,8 +26,8 @@ const CategoryAccordion = ({ item }) => {
 
   useEffect(() => {
     Animated.timing(heightAnim, {
-      toValue: open ? 350 : 0, // Adjust the expanded height as desired
-      duration: 250, // Adjust the duration as desired
+      toValue: open ? 350 : 0,
+      duration: 250,
       useNativeDriver: false,
     }).start();
   }, [open, heightAnim]);
@@ -58,14 +58,7 @@ const CategoryAccordion = ({ item }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    // width: 762,
-    // padding: 16,
-    // borderWidth: 1,
-    // borderRadius: 4,
-    // borderColor: "rgba(83, 104, 180, 0.30)",
-    // backgroundColor: accordionBg,
-  },
+  container: {},
 });
 
 export default CategoryAccordion;
