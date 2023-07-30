@@ -7,7 +7,7 @@ import reportsTimesSlice from "./reportsTimesSlice";
 import getCurrentStation from "./getCurrentStation";
 import currentReportSlice from "./getCurrentReport";
 import currentCategorySlice from "./getCurrentCategory";
-
+import currentCategoriesSlice from "./getCurrentCategories";
 const rootReducer = combineReducers({
   user: userReducer,
   clients: ClientSlice,
@@ -17,6 +17,7 @@ const rootReducer = combineReducers({
   reportsTimes: reportsTimesSlice,
   currentStation: getCurrentStation,
   currentCategory: currentCategorySlice,
+  currentCategories: currentCategoriesSlice,
 });
 
 export default rootReducer;

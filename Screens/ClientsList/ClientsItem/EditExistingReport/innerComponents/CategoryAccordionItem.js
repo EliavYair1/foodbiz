@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
+  Modal,
+  Dimensions,
 } from "react-native";
 import { Divider } from "react-native-paper";
 import CheckboxItem from "../../../../WorkerNewReport/CheckboxItem/CheckboxItem";
@@ -22,58 +24,47 @@ import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import { FlatList } from "react-native-gesture-handler";
 import uuid from "uuid-random";
+import Radio from "../../../../../Components/ui/Radio";
+import moment from "moment";
+const windowWidth = Dimensions.get("window").width;
+const windowHeight = Dimensions.get("window").height;
+// * memorizing memoizing the result to prevents unnecessary re-renders
+const areEqual = (prevProps, nextProps) => {
+  return (
+    prevProps.itemId === nextProps.itemId &&
+    prevProps.noCalculate === nextProps.noCalculate &&
+    prevProps.lastDate === nextProps.lastDate
+  );
+};
+
 const CategoryAccordionItem = ({
-  handleCheckboxChange,
-  handleRatingCheckboxChange,
-  releventCheckboxItems,
-  ratingCheckboxItem,
   control,
   setValue,
   trigger,
   errors,
-  sectionText,
-  // imagesArray,
-  grade0,
-  grade1,
-  grade2,
-  grade3,
-  itemId,
-  critical,
-  noCalculate,
-  lastDate,
-  charge,
-  noRelevant,
-  showOnComment,
-  categoryReset,
   dateSelected,
-  selectedDates,
-  fineLabel,
-  disabledViolation,
-  violationLabel,
-  chargeSelections,
   reportItem,
+  item,
+  haveFine,
+  onReportChange,
 }) => {
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
-
-  const [checkedGrade3, setCheckedGrade3] = useState(reportItem.grade == "3");
-  const [checkedGrade2, setCheckedGrade2] = useState(reportItem.grade == "2");
-  const [checkedGrade1, setCheckedGrade1] = useState(reportItem.grade == "1");
-  const [checkedGrade0, setCheckedGrade0] = useState(reportItem.grade == "0");
-  const isGradeTruthy = () => {
-    if (reportItem.grade === "3") {
-      setCheckedGrade3(!checkedGrade3);
-    } else if (reportItem.grade === "2") {
-      setCheckedGrade2(!checkedGrade2);
-    } else if (reportItem.grade === "1") {
-      setCheckedGrade1(!checkedGrade1);
-    } else if (reportItem.grade === "0") {
-      setCheckedGrade0(!checkedGrade0);
-    }
+  const [reportItemState, setReportItemState] = useState(reportItem);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const openModal = (index) => {
+    setSelectedImageIndex(index);
+    setModalVisible(true);
   };
+  // * image picker
   const pickImage = async () => {
+    if (images.length >= 3) {
+      alert("You can only select up to 3 images.");
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync();
     if (!result.canceled) {
       const selectedAssets = result.assets;
@@ -84,6 +75,25 @@ const CategoryAccordionItem = ({
       }
     }
   };
+
+  const takePhoto = async () => {
+    if (images.length >= 3) {
+      alert("You can only select up to 3 images.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync();
+
+    if (!result.cancelled) {
+      const selectedImage = result.uri;
+      if (selectedImage) {
+        setImages((prevImages) => [...prevImages, selectedImage]);
+      }
+    }
+  };
+
+  /*  */
+  // * accordion toggler
   const toggleAccordion = () => {
     setOpen(!open);
     if (!open) {
@@ -97,7 +107,85 @@ const CategoryAccordionItem = ({
       useNativeDriver: false,
     }).start();
   };
-  // console.log("reportItem:", reportItem.grade);
+
+  // * change handler
+  const handleReportChange = useCallback(
+    (value, label) => {
+      setReportItemState((prev) => {
+        const temp = { ...prev };
+        temp[label] = value;
+
+        // * Update comment and showOnComment based on the grade number value
+        if (label === "grade") {
+          temp["comment"] = item["grade" + value];
+          temp["showOnComment"] = value === 0 || value === 1;
+        }
+
+        // * Set grade and comment for noRelevant case
+        if (label === "noRelevant" && value) {
+          temp["grade"] = "3";
+          temp["comment"] = item["grade3"];
+        }
+
+        return temp;
+      });
+    },
+    [item]
+  );
+
+  useEffect(() => {
+    onReportChange({ ...reportItemState });
+  }, [reportItemState]);
+
+  // * adding days for the lastDate selectMenu
+  const addDaysToDate = (numberOfDays) => {
+    let timeOfReport = dateSelected;
+    const dateObject = moment.utc(timeOfReport, "DD/MM/YYYY");
+    const formattedDate = dateObject.format("DD/MM/YYYY");
+    const date = moment(formattedDate, "DD/MM/YYYY");
+    const newDateObject = date.add(numberOfDays, "days");
+    const newFormattedDate = newDateObject.format("DD/MM/YYYY");
+    return newFormattedDate;
+  };
+
+  const releventOptions = [
+    { id: 0, label: "לא רלוונטי", value: "noRelevant" },
+    { id: 1, label: "לא לשקלול", value: "noCalculate" },
+    { id: 2, label: "הצג בתמצית", value: "showOnComment" },
+    { id: 3, label: "אפס קטגוריה", value: "categoryReset" },
+  ];
+  const ratingsOptions = [
+    { label: "0", value: "0" },
+    { label: "1", value: "1" },
+    { label: "2", value: "2" },
+    { label: "3", value: "3" },
+  ];
+  const selectedDates = [
+    `${addDaysToDate(0)}`,
+    `עד ה-${addDaysToDate(3)} `,
+    `עד ה-${addDaysToDate(7)} `,
+    `עד ה-${addDaysToDate(14)} `,
+    `עד ה-${addDaysToDate(31)} `,
+    " נא לשלוח תאריך מדויק לביצוע",
+  ];
+  const chargeSelections = [
+    "קבלן ההסעדה",
+    "מנהל המשק",
+    "הלקוח",
+    "מנהל המטבח",
+    "בית החולים",
+    "שירותי בריאות כללית",
+    "צוות הקולנוע",
+  ];
+
+  // ! console log section
+  // console.log("haveFine:", haveFine);
+  // console.log("item", item.name);
+  // console.log(releventOptions);
+  // console.log("reportItemState", reportItemState);
+  // ! console log section end
+
+  // ? todo list
 
   return (
     <View
@@ -117,8 +205,21 @@ const CategoryAccordionItem = ({
         >
           <Text style={{ fontFamily: fonts.ABold }}>
             סעיף :{" "}
-            <Text style={{ fontFamily: fonts.ARegular }}>{sectionText} </Text>
-            {critical == 1 && (
+            <Text
+              style={{
+                fontFamily:
+                  item.critical == 1 && reportItemState.grade == 0
+                    ? fonts.ABold
+                    : fonts.ARegular,
+                color:
+                  item.critical == 1 && reportItemState.grade == 0
+                    ? "red"
+                    : "black",
+              }}
+            >
+              {item.name}{" "}
+            </Text>
+            {item.critical == 1 && (
               <Image source={criticalIcon} style={{ width: 20, height: 20 }} />
             )}
           </Text>
@@ -138,72 +239,30 @@ const CategoryAccordionItem = ({
         </View>
 
         <Divider />
-
         <View style={styles.categoryRelevantCheckboxWrapper}>
-          <CheckboxItem
-            label={`${noRelevant}_${itemId}`}
-            checkboxItemText="לא רלוונטי"
-            handleChange={handleCheckboxChange}
-            checked={
-              releventCheckboxItems.includes(`noRelevant_${itemId}`) ||
-              noRelevant
-            }
-          />
-          <CheckboxItem
-            label={`${noCalculate}_${itemId}`}
-            checkboxItemText="לא לשיקלול"
-            handleChange={handleCheckboxChange}
-            checked={
-              releventCheckboxItems.includes(`noCalculate_${itemId}`) ||
-              noCalculate
-            }
-          />
-          <CheckboxItem
-            label={`${showOnComment}_${itemId}`}
-            checkboxItemText="הצג בתמצית"
-            handleChange={handleCheckboxChange}
-            checked={
-              releventCheckboxItems.includes(`showOnComment_${itemId}`) ||
-              showOnComment
-            }
-          />
-          <CheckboxItem
-            label={`${categoryReset}_${itemId}`}
-            checkboxItemText="מאפס קטגוריה"
-            handleChange={handleCheckboxChange}
-            checked={
-              releventCheckboxItems.includes(`categoryReset_${itemId}`) ||
-              categoryReset
-            }
-          />
+          {releventOptions.map((option) => (
+            <CheckboxItem
+              key={option.id}
+              label={option.value}
+              checkboxItemText={option.label}
+              handleChange={handleReportChange}
+              checked={
+                reportItemState[option.value] ||
+                reportItemState[option.value] == 1
+              }
+            />
+          ))}
         </View>
         <Divider />
         <View style={styles.categoryRatingCheckboxWrapper}>
-          <Text> דירוג:</Text>
-
-          <CheckboxItem
-            label={`${grade3}_${itemId}`}
-            checkboxItemText="3"
-            handleChange={isGradeTruthy}
-            checked={checkedGrade3}
-          />
-          <CheckboxItem
-            label={`${grade2}_${itemId}`}
-            checkboxItemText="2"
-            handleChange={handleRatingCheckboxChange}
-            checked={checkedGrade2}
-          />
-          <CheckboxItem
-            label={`${grade1}_${itemId}`}
-            checkboxItemText="1"
-            handleChange={handleRatingCheckboxChange}
-            checked={checkedGrade1}
-          />
-          <CheckboxItem
-            label={`${grade0}_${itemId}`}
-            checkboxItemText="0"
-            handleChange={isGradeTruthy}
-            checked={checkedGrade0}
+          {/* add disabled prop */}
+          <Radio
+            options={ratingsOptions}
+            optionGap={75}
+            optionText="דירוג:"
+            selectedOption={reportItemState.grade}
+            onChange={(option) => handleReportChange(option, "grade")}
+            disabled={reportItemState.noRelevant}
           />
         </View>
       </TouchableOpacity>
@@ -221,13 +280,17 @@ const CategoryAccordionItem = ({
           <Input
             control={control}
             name={"remarks"}
-            mode={"flat"}
-            placeholder={"יש לנקות *ממטרות* מדיח כלים"}
-            contentStyle={styles.inputContentStyling}
+            mode={"outlined"}
+            defaultValue={reportItemState.comment}
+            label={""}
+            placeholder={""}
+            // contentStyle={styles.inputContentStyling}
             inputStyle={styles.inputStyling}
+            disabled={reportItemState.grade == 3}
             activeUnderlineColor={colors.black}
             onChangeFunction={(value) => {
               console.log(value, "is selected");
+              handleReportChange(value, "comment");
               setValue("remarks", value);
               trigger("remarks");
             }}
@@ -239,16 +302,20 @@ const CategoryAccordionItem = ({
             <SelectMenu
               control={control}
               name={"executioner"}
-              selectOptions={chargeSelections}
+              selectOptions={
+                reportItemState.grade == 3 ? null : chargeSelections
+              }
               propertyName={null}
               selectWidth={237}
               optionsCenterView={"flex-start"}
               optionsHeight={150}
-              displayedValue={charge}
+              disabled={reportItemState.grade == 3}
+              displayedValue={reportItemState.charge}
               optionsLocation={100}
               centeredViewStyling={{ marginLeft: 120 }}
               onChange={(value) => {
                 console.log(value, "is selected");
+                handleReportChange(value, "charge");
                 setValue("executioner", value);
                 trigger("executioner");
               }}
@@ -272,11 +339,13 @@ const CategoryAccordionItem = ({
                 selectWidth={237}
                 optionsCenterView={"flex-start"}
                 optionsHeight={150}
+                disabled={reportItemState.grade == 3}
                 displayedValue={dateSelected}
                 optionsLocation={100}
                 centeredViewStyling={{ marginLeft: 480 }}
                 onChange={(value) => {
                   console.log(value, "is selected");
+                  handleReportChange(value, "lastDate");
                   setValue("lastDate", value);
                   trigger("lastDate");
                 }}
@@ -286,50 +355,61 @@ const CategoryAccordionItem = ({
             </View>
           </View>
         </View>
-        <View style={styles.thirdRowInputTextWrapper}>
-          <View style={{ flexDirection: "row", gap: 32 }}>
-            <Text style={styles.inputLabel}>סוג הפרה:</Text>
-            <Input
-              control={control}
-              name={"violationType"}
-              placeholder={""}
-              label={violationLabel}
-              disabled={disabledViolation}
-              contentStyle={styles.inputContentThirdRow}
-              inputStyle={styles.inputThirdRowStyling}
-              onChangeFunction={(value) => {
-                console.log(value, "is selected");
-                setValue("violationType", value);
-                trigger("violationType");
+        {haveFine == 1 && (
+          <View style={styles.thirdRowInputTextWrapper}>
+            <View style={{ flexDirection: "row", gap: 32 }}>
+              <Text style={styles.inputLabel}>סוג הפרה:</Text>
+              <Input
+                control={control}
+                name={"violationType"}
+                placeholder={""}
+                mode={"outlined"}
+                label={""}
+                defaultValue={reportItemState.violation}
+                disabled={reportItemState.grade == 3}
+                // contentStyle={styles.inputContentThirdRow}
+                inputStyle={styles.inputThirdRowStyling}
+                onChangeFunction={(value) => {
+                  console.log(value, "is selected");
+                  handleReportChange(value, "violation");
+                  setValue("violationType", value);
+                  trigger("violationType");
+                }}
+                errorMessage={
+                  errors.violationType && errors.violationType.message
+                }
+              />
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 12,
               }}
-              errorMessage={
-                errors.violationType && errors.violationType.message
-              }
-            />
+            >
+              <Text style={styles.inputLabel}>קנס בש״ח:</Text>
+              <Input
+                control={control}
+                name={"fineNis"}
+                placeholder={""}
+                mode={"outlined"}
+                numeric={true}
+                label={""}
+                defaultValue={reportItemState.fine}
+                disabled={reportItemState.grade == 3}
+                // contentStyle={styles.inputContentThirdRow}
+                inputStyle={styles.inputThirdRowStyling}
+                onChangeFunction={(value) => {
+                  console.log(value, "is selected");
+                  handleReportChange(value, "fine");
+                  setValue("fineNis", value);
+                  trigger("fineNis");
+                }}
+                errorMessage={errors.fineNis && errors.fineNis.message}
+              />
+            </View>
           </View>
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 12,
-            }}
-          >
-            <Text style={styles.inputLabel}>קנס בש״ח:</Text>
-            <Input
-              control={control}
-              name={"fineNis"}
-              placeholder={""}
-              label={fineLabel}
-              contentStyle={styles.inputContentThirdRow}
-              inputStyle={styles.inputThirdRowStyling}
-              onChangeFunction={(value) => {
-                console.log(value, "is selected");
-                setValue("fineNis", value);
-                trigger("fineNis");
-              }}
-              errorMessage={errors.fineNis && errors.fineNis.message}
-            />
-          </View>
-        </View>
+        )}
+
         <View style={styles.forthRowInputTextWrapper}>
           <View style={styles.headerWrapper}>
             <Text style={styles.header}>תמונות:</Text>
@@ -339,11 +419,69 @@ const CategoryAccordionItem = ({
             </TouchableOpacity>
             <ScrollView horizontal>
               {images.map((image, index) => (
-                <View key={uuid()}>
+                <TouchableOpacity key={uuid()} onPress={() => openModal(index)}>
                   <Image source={{ uri: image }} style={styles.uploadedPhoto} />
-                </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
+            {modalVisible && (
+              <Modal
+                animationType="slide"
+                transparent={false}
+                visible={modalVisible}
+                // style={{ width: 380, height: 346 }}
+                onRequestClose={() => {
+                  setModalVisible(!modalVisible);
+                }}
+              >
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 380,
+                      height: 346,
+                      backgroundColor: "white",
+                    }}
+                  >
+                    <FlatList
+                      data={images}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity
+                          style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: 30,
+
+                            // width: "100%",
+                          }}
+                          onPress={() => {
+                            setModalVisible(false);
+                          }}
+                        >
+                          <Image
+                            source={{ uri: item }}
+                            style={{
+                              width: 300,
+                              height: 300,
+                              resizeMode: "contain",
+                            }}
+                          />
+                        </TouchableOpacity>
+                      )}
+                      horizontal
+                      pagingEnabled
+                      initialScrollIndex={selectedImageIndex}
+                    />
+                  </View>
+                </View>
+              </Modal>
+            )}
           </View>
         </View>
       </Animated.View>
@@ -395,7 +533,7 @@ const styles = StyleSheet.create({
   },
   inputContentStyling: { backgroundColor: "white" },
   inputStyling: {
-    minWidth: "100%",
+    minWidth: "80%",
     backgroundColor: "white",
     borderRadius: 4,
   },
@@ -420,7 +558,7 @@ const styles = StyleSheet.create({
   },
   headerWrapper: {
     flexDirection: "row",
-    alignItems: "center",
+    height: 50,
   },
   uploadedPhoto: {
     width: 40,
@@ -430,4 +568,4 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 });
-export default CategoryAccordionItem;
+export default React.memo(CategoryAccordionItem, areEqual);

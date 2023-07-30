@@ -24,13 +24,22 @@ const Input = ({
   activeOutlineColor,
   placeholder = false,
   disabled = false,
+  defaultValue = "",
+  numeric = false,
 }) => {
   return (
     <>
       <Controller
         control={control}
         name={name}
-        rules={rules}
+        // rules={rules}
+        rules={{
+          ...rules,
+          validate: {
+            ...(rules?.validate ?? {}),
+            isNumeric: (value) => (numeric ? !isNaN(parseFloat(value)) : true),
+          },
+        }}
         render={({
           field: { onChange, onBlur, value },
           fieldState: { error },
@@ -46,7 +55,7 @@ const Input = ({
                     fontSize: 20,
                   }}
                 >
-                  {value ? value : label}
+                  {label}
                 </Text>
               }
               onChangeText={(value) => {
@@ -55,7 +64,7 @@ const Input = ({
                 console.log(`field ${name} : ${value}`);
               }}
               onBlur={onBlur}
-              value={value}
+              value={defaultValue ?? value}
               mode={mode}
               activeOutlineColor={activeOutlineColor}
               outlineColor={outlineColor}
@@ -63,12 +72,15 @@ const Input = ({
               activeUnderlineColor={activeUnderlineColor}
               contentStyle={contentStyle}
               secureTextEntry={secureTextEntry}
+              // defaultValue={defaultValue}
               right={inputIcon}
               style={inputStyle}
               error={!!error}
               disabled={disabled}
               returnKeyType={returnKeyType}
-              textContentType={textContentType}
+              // textContentType={textContentType}
+              keyboardType={numeric ? "numeric" : "default"}
+              textContentType={numeric ? "none" : textContentType}
               onSubmitEditing={onSubmitEditing}
             />
             <HelperText type="error">{error?.message}</HelperText>

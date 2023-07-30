@@ -38,6 +38,7 @@ const SelectMenu = ({
   selectMenuStyling,
   returnObject = false,
   displayedValue = false,
+  disabled = false,
 }) => {
   const [visible, setVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -45,6 +46,7 @@ const SelectMenu = ({
   const [positionHorizontal, setPositionHorizontal] = useState(0);
   const [PositionVertical, setPositionVertical] = useState(0);
   const openMenu = () => {
+    if (disabled) return;
     if (elementRef.current) {
       elementRef.current.measure((x, y, width, height, pageX, pageY) => {
         setPositionHorizontal(pageX);
@@ -182,7 +184,7 @@ const SelectMenu = ({
                 backgroundColor: "white",
               }}
               anchor={
-                <TouchableOpacity onPress={openMenu}>
+                <TouchableOpacity onPress={openMenu} disabled={disabled}>
                   <View style={styles.button}>
                     <Image
                       source={selectorIcon}

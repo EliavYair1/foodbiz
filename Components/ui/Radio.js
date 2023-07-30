@@ -1,50 +1,82 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-
-const Radio = ({ options }) => {
-  //   const options = ["Option 1", "Option 2", "Option 3", "Option 4"];
-  const [selectedOption, setSelectedOption] = useState("");
-
-  const handleOptionChange = (option) => {
-    setSelectedOption(option);
-  };
-
+import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import cbIcon from "../../assets/imgs/checkboxIcon.png";
+import colors from "../../styles/colors";
+const Radio = ({
+  options,
+  optionGap = 0,
+  optionText = false,
+  onChange,
+  selectedOption,
+  disabled = false,
+}) => {
   return (
-    <View>
+    <View
+      style={{
+        flexDirection: "row-reverse",
+        gap: optionGap,
+        justifyContent: "flex-end",
+      }}
+    >
       {options.map((option) => (
         <TouchableOpacity
-          key={option}
-          onPress={() => handleOptionChange(option)}
-          style={{ flexDirection: "row", alignItems: "center" }}
+          key={option.value}
+          // onPress={() => onChange(option.value)}
+          onPress={() => !disabled && onChange(option.value)}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            opacity: disabled ? 0.5 : 1,
+          }}
+          disabled={disabled}
         >
           <View
             style={{
-              height: 20,
-              width: 20,
+              height: 25,
+              width: 25,
               borderRadius: 5,
               borderWidth: 2,
-              borderColor: selectedOption === option ? "#007AFF" : "#000",
+              borderColor: disabled
+                ? "grey"
+                : selectedOption == option.value
+                ? colors.black
+                : colors.black,
               alignItems: "center",
               justifyContent: "center",
+              backgroundColor: disabled ? "#ECECEC" : "transparent",
             }}
           >
-            {selectedOption === option && (
+            {selectedOption == option.value && (
               <View
                 style={{
-                  height: 10,
-                  width: 10,
-                  borderRadius: 3,
-                  backgroundColor: "#007AFF",
+                  width: 20,
+                  height: 20,
+                  borderRadius: 4,
+                  backgroundColor: disabled ? "#ECECEC" : "#D3E0FF",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
-              />
+              >
+                <Image
+                  source={cbIcon}
+                  style={{
+                    ...styles.checkbox,
+                    tintColor: disabled ? "grey" : colors.black,
+                  }}
+                />
+              </View>
             )}
           </View>
-          <Text style={{ marginLeft: 8 }}>{option}</Text>
+          <Text style={{ marginLeft: 8 }}>{option.label}</Text>
         </TouchableOpacity>
       ))}
-      <Text>Selected Option: {selectedOption}</Text>
+      {optionText && (
+        <Text style={{ alignItems: "center", alignSelf: "center" }}>
+          {optionText}
+        </Text>
+      )}
     </View>
   );
 };
-
+const styles = StyleSheet.create({ checkbox: { width: 9, height: 9 } });
 export default Radio;

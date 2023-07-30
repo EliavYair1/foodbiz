@@ -16,7 +16,7 @@ import Animated, {
 import FileIcon from "../../assets/icons/iconImgs/FileIcon.png";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
-const Drawer = ({ content, height, onToggle }) => {
+const Drawer = ({ content, height, onToggle, onClose = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const animatedHeight = useSharedValue(0);
 
@@ -36,6 +36,7 @@ const Drawer = ({ content, height, onToggle }) => {
       stiffness: 150,
     });
     onToggle(false);
+    // onClose();
   };
 
   const drawerStyle = useAnimatedStyle(() => {
@@ -60,7 +61,7 @@ const Drawer = ({ content, height, onToggle }) => {
       //   marginTop: 350,
     },
     drawer: {
-      //   backgroundColor: "white",
+      backgroundColor: "white",
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
       //   padding: 16,

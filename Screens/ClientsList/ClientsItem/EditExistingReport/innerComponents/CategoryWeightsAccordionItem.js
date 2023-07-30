@@ -203,36 +203,24 @@ const CategoryAccordionItem = ({
             checkboxItemText="3"
             handleChange={handleRatingCheckboxChange}
             checked={ratingCheckboxItem.includes(`${grade3}_${itemId}`)}
-            isChecked={
-              releventCheckboxItems.includes(`grade3_${itemId}`) || grade3
-            }
           />
           <CheckboxItem
             label={`${grade2}_${itemId}`}
             checkboxItemText="2"
             handleChange={handleRatingCheckboxChange}
             checked={ratingCheckboxItem.includes(`${grade2}_${itemId}`)}
-            isChecked={
-              releventCheckboxItems.includes(`grade2_${itemId}`) || grade2
-            }
           />
           <CheckboxItem
             label={`${grade1}_${itemId}`}
             checkboxItemText="1"
             handleChange={handleRatingCheckboxChange}
             checked={ratingCheckboxItem.includes(`${grade1}_${itemId}`)}
-            isChecked={
-              releventCheckboxItems.includes(`grade1_${itemId}`) || grade1
-            }
           />
           <CheckboxItem
             label={`${grade0}_${itemId}`}
             checkboxItemText="0"
             handleChange={handleRatingCheckboxChange}
             checked={ratingCheckboxItem.includes(`${grade0}_${itemId}`)}
-            isChecked={
-              releventCheckboxItems.includes(`grade0_${itemId}`) || grade0
-            }
           />
         </View>
       </TouchableOpacity>
@@ -251,7 +239,8 @@ const CategoryAccordionItem = ({
             control={control}
             name={"remarks"}
             mode={"flat"}
-            placeholder={"יש לנקות *ממטרות* מדיח כלים"}
+            label={'"יש לנקות *ממטרות* מדיח כלים"'}
+            // placeholder={"יש לנקות *ממטרות* מדיח כלים"}
             contentStyle={styles.inputContentStyling}
             inputStyle={[styles.inputStyling, { minWidth: "100%" }]}
             activeUnderlineColor={colors.black}
@@ -262,103 +251,7 @@ const CategoryAccordionItem = ({
             }}
           />
         </View>
-        {/* <View style={styles.secondRowInputTextWrapper}>
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <Text style={styles.inputLabel}>אחראי לביצוע:</Text>
-            <SelectMenu
-              control={control}
-              name={"executioner"}
-              selectOptions={chargeSelections}
-              propertyName={null}
-              selectWidth={237}
-              optionsCenterView={"flex-start"}
-              optionsHeight={150}
-              displayedValue={charge}
-              optionsLocation={100}
-              //   centeredViewStyling={{ marginLeft: 120 }}
-              onChange={(value) => {
-                console.log(value, "is selected");
-                setValue("executioner", value);
-                trigger("executioner");
-              }}
-              returnObject={true}
-              errorMessage={errors.executioner && errors.executioner.message}
-            />
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 12,
-            }}
-          >
-            <Text style={styles.inputLabel}>תאריך לביצוע:</Text>
-            <View style={{ marginBottom: 0 }}>
-              <SelectMenu
-                control={control}
-                name={"lastDate"}
-                selectOptions={selectedDates}
-                propertyName={null}
-                selectWidth={237}
-                optionsCenterView={"flex-start"}
-                optionsHeight={150}
-                displayedValue={dateSelected}
-                optionsLocation={100}
-                // centeredViewStyling={{ marginLeft: 480 }}
-                onChange={(value) => {
-                  console.log(value, "is selected");
-                  setValue("lastDate", value);
-                  trigger("lastDate");
-                }}
-                returnObject={true}
-                errorMessage={errors.lastDate && errors.lastDate.message}
-              />
-            </View>
-          </View>
-        </View>
-        <View style={styles.thirdRowInputTextWrapper}>
-          <View style={{ flexDirection: "row", gap: 32 }}>
-            <Text style={styles.inputLabel}>סוג הפרה:</Text>
-            <Input
-              control={control}
-              name={"violationType"}
-              placeholder={""}
-              label={violationLabel}
-              disabled={disabledViolation}
-              contentStyle={styles.inputContentThirdRow}
-              inputStyle={styles.inputThirdRowStyling}
-              onChangeFunction={(value) => {
-                console.log(value, "is selected");
-                setValue("violationType", value);
-                trigger("violationType");
-              }}
-              errorMessage={
-                errors.violationType && errors.violationType.message
-              }
-            />
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 12,
-            }}
-          >
-            <Text style={styles.inputLabel}>קנס בש״ח:</Text>
-            <Input
-              control={control}
-              name={"fineNis"}
-              placeholder={""}
-              label={fineLabel}
-              contentStyle={styles.inputContentThirdRow}
-              inputStyle={styles.inputThirdRowStyling}
-              onChangeFunction={(value) => {
-                console.log(value, "is selected");
-                setValue("fineNis", value);
-                trigger("fineNis");
-              }}
-              errorMessage={errors.fineNis && errors.fineNis.message}
-            />
-          </View>
-        </View> */}
+
         <View style={styles.forthRowInputTextWrapper}>
           <View style={styles.headerWrapper}>
             <Text style={styles.header}>תמונות:</Text>

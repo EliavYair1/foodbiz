@@ -59,6 +59,7 @@ import routes from "../../Navigation/routes";
 // import setCurrentCategoryItem from "../../store/redux/reducers/getCurrentCategory";
 // import getCurrentStation from "../../store/redux/reducers/getCurrentStation";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
+import { getCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
 import { getCurrentReport } from "../../store/redux/reducers/getCurrentReport";
 import "@env";
 const WorkerNewReport = () => {
@@ -77,7 +78,6 @@ const WorkerNewReport = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
-
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({ clientId: currentClient?.id });
@@ -206,7 +206,6 @@ const WorkerNewReport = () => {
       );
     }
   }, [currentReport]);
-
   // console.log(currentReport);
   useEffect(() => {
     setFoodSafetyReviewTexts(
@@ -603,9 +602,7 @@ const WorkerNewReport = () => {
           return result;
         }, [])
       : [];
-  // console.log(checkedCategoryNameById[0].name);
 
-  // const matchCategoryNameById = checkedCategoryNameById.map((item) => item.name);
   const imageTextsAndFunctionality = [
     {
       id: 0,
@@ -681,7 +678,6 @@ const WorkerNewReport = () => {
       return newIndex;
     });
   };
-  // console.log(formData.categories[0]);
 
   // * paginations between categories names : Next
   const handleNextCategory = () => {
@@ -695,15 +691,17 @@ const WorkerNewReport = () => {
     //   // console.log(currentItem);
     //   return newIndex;
     // });
+    dispatch(getCurrentCategories(formData.categories));
     dispatch(getCurrentReport(currentReport));
     dispatch(getCurrentCategory(formData.categories[0]));
     navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
 
-  // console.log(checkedCategoryNameById);
+  // console.log(formData.categories);
 
   //  todo to check i have both function (handleCheckboxStatusChange , handleCategoriesCheckboxesToggle)
   // todo to change the way i save the checkboxes statuses in the state after i pick a report and make another change in one of the checkboxes
+  // todo to update the global state of the chosen categories.
   // todo to send post request to the api : /api/duplicateReport.php
 
   /* {
@@ -918,7 +916,10 @@ categorys[]: 5
                   alignSelf: "center",
                 }}
                 activeOutlineColor={colors.blue}
-                label={accompanySelected ? accompanySelected : "ללא  מלווה"}
+                // label={accompanySelected ? accompanySelected : "ללא  מלווה"}
+                // label={null}
+                defaultValue={""}
+                // placeholder={" "}
                 outlineColor={"rgba(12, 20, 48, 0.2)"}
                 onChangeFunction={(value) => {
                   handleFormChange("accompany", value);

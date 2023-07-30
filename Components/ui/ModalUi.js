@@ -15,7 +15,7 @@ const ModalUi = ({ header, onClose, handleOptionClick, modalContent }) => {
             <TouchableOpacity
               key={index}
               style={styles.button}
-              onPress={() => handleOptionClick(item)}
+              onPress={() => handleOptionClick(option)}
             >
               <Text style={styles.optionText}>{option}</Text>
             </TouchableOpacity>

@@ -8,7 +8,13 @@ import {
   Dimensions,
 } from "react-native";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ScreenWrapper from "../../../../utiles/ScreenWrapper";
 import useScreenNavigator from "../../../../Hooks/useScreenNavigator";
@@ -38,46 +44,58 @@ import FileIcon from "../../../../assets/icons/iconImgs/FileIcon.png";
 import { fetchCategories } from "../../../../store/redux/reducers/categoriesSlice";
 import Category from "../../../../Components/modals/category";
 import ModalUi from "../../../../Components/ui/ModalUi";
-import moment from "moment";
-// import Radio from "../../../../Components/ui/radio";
-
+import CloseDrawerIcon from "../../../../assets/imgs/oncloseDrawerIcon.png";
 const EditExistingReport = () => {
+  // ! redux stpre fetching
   const dispatch = useDispatch();
-  const currentClient = useSelector(
-    (state) => state.currentClient.currentClient
-  );
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const handleModalClose = () => {
-    setModalVisible(false);
-  };
-  const currentReport = useSelector(
-    (state) => state.currentReport.currentReport
-  );
-
-  const [isLoading, setIsLoading] = useState(false);
   const currentStation = useSelector((state) => state.currentStation);
   const categories = useSelector((state) => state.categories);
   const currentCategoryId = useSelector((state) => state.currentCategory);
+  const currentCategories = useSelector((state) => state.currentCategories);
+  const currentClient = useSelector(
+    (state) => state.currentClient.currentClient
+  );
+  const currentReport = useSelector(
+    (state) => state.currentReport.currentReport
+  );
+  const memoizedCategories = useMemo(() => categories, [categories]);
+  const memoRizedCats = memoizedCategories?.categories;
+  const passedDownCategoryId = currentCategoryId.currentCategory;
+  // ! redux stpre fetching end
+  const drawerRef = useRef(null);
   const { navigateTogoBack } = useScreenNavigator();
-  const [categoryGrade, setCategoryGrade] = useState(89);
-  const [foodSafetyGrade, setFoodSafetyGrade] = useState(79);
-  const [reportGrade, setReportGrade] = useState(64);
+  const [categoryGrade, setCategoryGrade] = useState(0);
+  const [majorCategoryGrade, setMajorCategoryGrade] = useState(0);
+  const [reportGrade, setReportGrade] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [relevantCheckboxItems, setRelevantCheckboxItems] = useState([]);
   const [ratingCheckboxItem, setRatingCheckboxItem] = useState([]);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [selectedModalCategory, setSelectedModalCategory] = useState([]);
-  const [categoryArray, setCategoryArray] = useState([]);
-  const memoizedCategories = useMemo(() => categories, [categories]);
-  const memoRizedCats = memoizedCategories?.categories;
-  const passedDownCategoryId = currentCategoryId.currentCategory;
+
+  const [categoryNames, setCategoryNames] = useState({
+    foodSafetyReviewNames: [],
+    culinaryReviewNames: [],
+    nutritionReviewNames: [],
+  });
+  const [checkboxStatus, setCheckboxStatus] = useState({
+    foodSafetyReviewCbStatus: [],
+    culinaryReviewCbStatus: [],
+    nutritionReviewCbStatus: [],
+  });
+  // * category header
   const [categoryHeader, setCategoryHeader] = useState(false);
+  // * category subheader
   const [categorySubHeader, setCategorySubHeader] = useState(false);
+  // * categories items
   const [CategoriesItems, setCategoriesItems] = useState([]);
   const [currentReportItems, setCurrentReportItems] = useState([]);
-  // console.log(ratingCheckboxItem);
-  // todo: find the categoryid in the categories and display his name by the id by the currentCategoryId // done
-  // todo: find items from the current Report with the categories items
+  const [currentReportItemsForGrade, setCurrentReportItemsForGrade] = useState(
+    []
+  );
+  const [categoryType, setCategoryType] = useState(null);
+
   const desiredCategory = () => {
     let parentCategory = false;
     let indexSubcategory = false;
@@ -98,6 +116,9 @@ const EditExistingReport = () => {
       categories.categories[parentCategory].categories[indexSubcategory].name
     );
     setCategoryHeader(categories.categories[parentCategory].name);
+    setCategoryType(
+      categories.categories[parentCategory].categories[indexSubcategory].type
+    );
   };
 
   useEffect(() => {
@@ -113,6 +134,7 @@ const EditExistingReport = () => {
     fineNis: yup.string().required("defining a fine in NIS is required"),
     imagePick: yup.string().required("picking an image is required"),
   });
+
   const {
     control,
     handleSubmit,
@@ -124,9 +146,65 @@ const EditExistingReport = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
+
+  //  * 1. checking if the ids of the categories match to the selected report
+  // *  2.  sorting them by type to their right location of the state
+  const handleCheckboxStatusChange = (passedCategories) => {
+    const globalStateCategories = memoRizedCats
+      ? Object.values(memoRizedCats).flatMap((category) => category.categories)
+      : null;
+    let newCheckboxStatus = {
+      foodSafetyReviewCbStatus: [],
+      culinaryReviewCbStatus: [],
+      nutritionReviewCbStatus: [],
+    };
+    let newCategoryNames = {
+      foodSafetyReviewNames: [],
+      culinaryReviewNames: [],
+      nutritionReviewNames: [],
+    };
+    if (globalStateCategories) {
+      globalStateCategories.forEach((category) => {
+        const categoryId = parseInt(category.id, 10);
+        const categoryName = category.name;
+        const categoryType = parseInt(category.type, 10);
+
+        if (passedCategories.has(categoryId)) {
+          if (categoryType === 1) {
+            newCheckboxStatus.foodSafetyReviewCbStatus.push(categoryId);
+            newCategoryNames.foodSafetyReviewNames.push(categoryName);
+          } else if (categoryType === 2) {
+            newCheckboxStatus.culinaryReviewCbStatus.push(categoryId);
+            newCategoryNames.culinaryReviewNames.push(categoryName);
+          } else if (categoryType === 3) {
+            newCheckboxStatus.nutritionReviewCbStatus.push(categoryId);
+            newCategoryNames.nutritionReviewNames.push(categoryName);
+          }
+        }
+      });
+    }
+    setCategoryNames(newCategoryNames);
+    setCheckboxStatus(newCheckboxStatus);
+  };
+
+  useEffect(() => {
+    if (currentCategories) {
+      const categoryIds = currentCategories.currentCategories;
+      const categorySet = new Set(categoryIds);
+      handleCheckboxStatusChange(categorySet);
+    } else {
+      console.log("currentCategories is not a valid Set or is empty.");
+    }
+  }, [currentCategories]);
+
+  // * categories picker close function
+  const handleModalClose = () => {
+    setModalVisible(false);
+  };
 
   // * modal pick handler
   const handleOptionClick = (option) => {
@@ -134,38 +212,9 @@ const EditExistingReport = () => {
       ...prevSelectedOptions,
       option,
     ]);
-  };
-
-  // * drawer handler
-  const handleDrawerToggle = (isOpen) => {
-    setIsDrawerOpen(isOpen);
-  };
-
-  // * relevant checkbox handler (need to be change)
-  const handleCheckboxChange = (isChecked, label) => {
-    if (isChecked) {
-      setRelevantCheckboxItems((prevreleventCheckboxItems) => [
-        ...prevreleventCheckboxItems,
-        label,
-      ]);
-    } else {
-      setRelevantCheckboxItems((prevreleventCheckboxItems) =>
-        prevreleventCheckboxItems.filter((item) => item !== label)
-      );
-    }
-  };
-
-  // * rating checkbox handler (need to be change)
-  const handleRatingCheckboxChange = (isChecked, label) => {
-    if (isChecked) {
-      setRatingCheckboxItem((prevRatingCheckboxItems) => [
-        ...prevRatingCheckboxItems,
-        label,
-      ]);
-    } else {
-      setRatingCheckboxItem((prevRatingCheckboxItems) =>
-        prevRatingCheckboxItems.filter((item) => item !== label)
-      );
+    if (selectedModalCategory) {
+      console.log("modal option choice:", option);
+      handleModalClose();
     }
   };
 
@@ -176,7 +225,6 @@ const EditExistingReport = () => {
       console.log("form submitted");
     }
   };
-  // console.log("form values", getValues());
   const imageTextsAndFunctionality = [
     {
       id: 0,
@@ -230,12 +278,12 @@ const EditExistingReport = () => {
       },
     },
   ];
-  useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-  }, []);
+  // useEffect(() => {
+  //   setIsLoading(true);
+  //   setTimeout(() => {
+  //     setIsLoading(false);
+  //   }, 0);
+  // }, []);
 
   // * determain the color of the gradewrapper based on the grade value
   const gradeBackgroundColor = (grade) => {
@@ -273,37 +321,178 @@ const EditExistingReport = () => {
       (category) => category.id == passedDownCategoryId
     );
     if (relevantData) {
+      setCurrentReportItemsForGrade(relevantData.items);
       setCurrentReportItems(relevantData.items);
-      setCategoryGrade(relevantData.grade);
+      // ! setCategoryGrade(relevantData.grade);
     } else {
       console.log("Failed to find Relevant Data");
     }
   };
-
+  //  * fetching the data from the current report
+  const categoriesDataReport = currentReport.getCategoriesData();
   useEffect(() => {
-    const categoriesDataReport = currentReport.getCategoriesData();
     getRelevantData(categoriesDataReport);
-    // console.log("currentReportItems:", currentReportItems);
-    // console.log(CategoriesItems);
-    // todo from timeOfReport
-    // console.log("sadssda:", currentReport.getData("timeOfReport"));
-    // console.log(relevantCheckboxItems, ratingCheckboxItem);
   }, [ratingCheckboxItem]);
 
-  // * adding days for the lastDate selectMenu
-  const addDaysToDate = (numberOfDays) => {
-    let timeOfReport = currentReport.getData("timeOfReport");
-    const dateObject = moment.utc(timeOfReport, "DD/MM/YYYY");
-    const formattedDate = dateObject.format("DD/MM/YYYY");
-    const date = moment(formattedDate, "DD/MM/YYYY");
+  // * handling changes in the report finding and replacing and returning the new report item
+  const handleReportItemChange = useCallback((newReportItem) => {
+    setCurrentReportItemsForGrade((prev) => {
+      let temp = [...prev];
+      temp.splice(
+        temp.findIndex((element) => {
+          return element.id == newReportItem.id;
+        }),
+        1
+      );
+      temp.push(newReportItem);
+      return temp;
+    });
+  }, []);
 
-    const newDateObject = date.add(numberOfDays, "days");
+  // * Major category grade calculation
+  const calculateMajorCategoryGrade = () => {
+    const parsedCategories = JSON.parse(categoriesDataReport);
 
-    const newFormattedDate = newDateObject.format("DD/MM/YYYY");
+    let currentSubcategories = false;
+    // * chosing to calculate which current subcategories based on the type.
+    if (categoryType == 1) {
+      currentSubcategories = checkboxStatus.foodSafetyReviewCbStatus;
+    } else if (categoryType == 2) {
+      currentSubcategories = checkboxStatus.culinaryReviewCbStatus;
+    } else {
+      currentSubcategories = checkboxStatus.nutritionReviewCbStatus;
+    }
+    // * counting the amount of the currentSubcategories for calculation.
+    let numberOfCurrentSubcategories = currentSubcategories.length;
 
-    return newFormattedDate;
+    if (currentSubcategories) {
+      // * matching the ids of the current categories to the ids of the categories report data.
+      let currentPickedCategoriesElementsId = parsedCategories.filter(
+        (element) => currentSubcategories.includes(parseInt(element.id, 10))
+      );
+      let totalGrade = 0;
+      // * extracting the grades of the currentPickedCategoriesElementsId and sum the amount of the total grades
+      currentPickedCategoriesElementsId.forEach((element) => {
+        const grade = parseInt(element.grade, 10);
+        totalGrade += grade;
+      });
+
+      // * calculating the avg of the totalGrade devided by numberOfCurrentSubcategories
+      let avgValOfCurrentSubcategories = Math.round(
+        totalGrade / numberOfCurrentSubcategories
+      );
+
+      setMajorCategoryGrade(avgValOfCurrentSubcategories);
+    }
   };
-  // todo to pass down the reportItem to narrow down the CategoryAccordionItem component
+  // console.log("before", categoryGrade);
+  // * category grade calculation
+  const calculateCategoryGrade = () => {
+    let itemsTotal = 0;
+    let itemsTotal1 = 0;
+    let itemsTotal2 = 0;
+    let itemsTotal3 = 0;
+    // console.log("inside", categoryGrade);
+
+    for (const item of currentReportItemsForGrade) {
+      if (item.noRelevant == 1 || item.noCalculate == 1) {
+        continue;
+      }
+      if (item.categoryReset == 1) {
+        setCategoryGrade(0);
+        break;
+      }
+      let categoryItem = CategoriesItems.find((el) => el.id == item.id);
+      if (item.grade == 0 && categoryItem?.critical == 1) {
+        setCategoryGrade(0);
+        break;
+      }
+      itemsTotal++;
+      if (item.grade == 1) {
+        itemsTotal1++;
+      } else if (item.grade == 2) {
+        itemsTotal2++;
+      } else if (item.grade == 3) {
+        itemsTotal3++;
+      }
+    }
+    if (itemsTotal == 0) {
+      setCategoryGrade(100);
+    } else {
+      setCategoryGrade(
+        parseInt(
+          ((itemsTotal1 + itemsTotal2 * 2 + itemsTotal3 * 3) /
+            (itemsTotal * 3)) *
+            100
+        )
+      );
+    }
+  };
+  // console.log("after", categoryGrade);
+  /* todo list */
+  /* end todo list */
+
+  // * drawer handler
+  const handleDrawerToggle = (isOpen) => {
+    setIsDrawerOpen(isOpen);
+  };
+  // const onCloseDrawer = () => {
+  //   setIsDrawerOpen(false);
+  // };
+  const closeDrawer = () => {
+    if (drawerRef.current) {
+      drawerRef.current.closeDrawer();
+      setIsDrawerOpen(false);
+    }
+  };
+  // * paginations between categories names : Prev
+  const handlePrevCategory = () => {
+    // setCurrentCategoryIndex((prevIndex) => {
+    //   const newIndex = prevIndex > 0 ? prevIndex - 1 : prevIndex;
+    //   const currentItem = checkedCategoryNameById[newIndex];
+    //   // dispatch(setCurrentCategory(currentItem));
+    //   return newIndex;
+    // });
+    console.log("prev");
+  };
+
+  // * paginations between categories names : Next
+  const handleNextCategory = () => {
+    // setCurrentCategoryIndex((prevIndex) => {
+    //   const newIndex =
+    //     prevIndex < checkedCategoryNameById.length - 1
+    //       ? prevIndex + 1
+    //       : prevIndex;
+    //   const currentItem = checkedCategoryNameById[newIndex];
+    //   // dispatch(setCurrentCategory(currentItem));
+    //   // console.log(currentItem);
+    //   return newIndex;
+    // });
+    console.log("next");
+  };
+
+  // * calculating the report Grade
+  const calculateReportGrade = (value) => {
+    let culinaryGrade = currentReport.getData("culinaryGrade");
+    let nutritionGrade = currentReport.getData("nutritionGrade");
+    let safetyGrade = currentReport.getData("safetyGrade");
+    let reportGradeCalc = 0;
+    if (categoryType == 1) {
+      reportGradeCalc =
+        value * 0.5 + culinaryGrade * 0.4 + nutritionGrade * 0.1;
+    } else if (categoryType == 2) {
+      reportGradeCalc = safetyGrade * 0.5 + value * 0.4 + nutritionGrade * 0.1;
+    } else {
+      reportGradeCalc = safetyGrade * 0.5 + culinaryGrade * 0.4 + value * 0.1;
+    }
+    setReportGrade(Math.round(reportGradeCalc));
+  };
+
+  useEffect(() => {
+    calculateCategoryGrade();
+    calculateMajorCategoryGrade();
+    calculateReportGrade(majorCategoryGrade);
+  }, [currentReportItemsForGrade]);
 
   // * mapping over CategoriesItems and displaying the items
   const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
@@ -312,55 +501,20 @@ const EditExistingReport = () => {
     );
     const timeOfReport = currentReport.getData("timeOfReport");
     const haveFine = currentReport.getData("haveFine");
-    // console.log("reportItem:", reportItem?.grade ?? undefined);
 
     return {
       id: item.id,
       component: (
         <CategoryAccordionItem
-          handleCheckboxChange={handleCheckboxChange}
-          handleRatingCheckboxChange={handleRatingCheckboxChange}
-          releventCheckboxItems={relevantCheckboxItems}
-          ratingCheckboxItem={ratingCheckboxItem}
+          reportItem={reportItem ?? false}
+          item={item}
+          haveFine={haveFine}
           control={control}
           setValue={setValue}
           trigger={trigger}
           errors={errors}
-          reportItem={reportItem ?? ""}
-          sectionText={item.name}
-          grade0={reportItem?.grade === "0"}
-          grade1={reportItem?.grade === "1"}
-          grade2={reportItem?.grade === "2"}
-          grade3={reportItem?.grade === "3"}
-          itemId={item.id}
-          critical={item.critical}
-          noRelevant={reportItem?.noRelevant ? true : false}
-          noCalculate={reportItem?.noCalculate ? true : false}
-          showOnComment={reportItem?.showOnComment ? true : false}
-          categoryReset={reportItem?.categoryReset ? true : false}
-          lastDate={reportItem?.lastDate}
-          charge={reportItem?.charge}
           dateSelected={timeOfReport}
-          selectedDates={[
-            addDaysToDate(3),
-            addDaysToDate(7),
-            addDaysToDate(14),
-            addDaysToDate(31),
-            "נא לשלוח תאריך מדויק",
-          ]}
-          chargeSelections={[
-            "קבלן ההסעדה",
-            "מנהל המשק",
-            "הלקוח",
-            "מנהל המטבח",
-            "בית החולים",
-            "שירותי בריאות כללית",
-            "צוות הקולנוע",
-          ]}
-          violationLabel={
-            haveFine == 1 ? reportItem?.violation ?? false : "סוג הפרה"
-          }
-          fineLabel={haveFine == 1 ? reportItem?.fine ?? false : "קנס בש״ח"}
+          onReportChange={handleReportItemChange}
         />
       ),
     };
@@ -371,8 +525,8 @@ const EditExistingReport = () => {
       id: 1,
       component: (
         <CategoryWeightsAccordionItem
-          handleCheckboxChange={handleCheckboxChange}
-          handleRatingCheckboxChange={handleRatingCheckboxChange}
+          // handleCheckboxChange={handleCheckboxChange}
+          // handleRatingCheckboxChange={handleRatingCheckboxChange}
           releventCheckboxItems={relevantCheckboxItems}
           ratingCheckboxItem={ratingCheckboxItem}
           control={control}
@@ -390,8 +544,8 @@ const EditExistingReport = () => {
       id: 2,
       component: (
         <CategoryWeightsAccordionItem
-          handleCheckboxChange={handleCheckboxChange}
-          handleRatingCheckboxChange={handleRatingCheckboxChange}
+          // handleCheckboxChange={handleCheckboxChange}
+          // handleRatingCheckboxChange={handleRatingCheckboxChange}
           releventCheckboxItems={relevantCheckboxItems}
           ratingCheckboxItem={ratingCheckboxItem}
           control={control}
@@ -407,8 +561,8 @@ const EditExistingReport = () => {
       id: 3,
       component: (
         <CategoryWeightsAccordionItem
-          handleCheckboxChange={handleCheckboxChange}
-          handleRatingCheckboxChange={handleRatingCheckboxChange}
+          // handleCheckboxChange={handleCheckboxChange}
+          // handleRatingCheckboxChange={handleRatingCheckboxChange}
           releventCheckboxItems={relevantCheckboxItems}
           ratingCheckboxItem={ratingCheckboxItem}
           control={control}
@@ -423,119 +577,233 @@ const EditExistingReport = () => {
   ];
   const categoriesModal = [
     {
-      subheader: "Section 1",
-      options: [
-        "Option 1",
-        "Option 2",
-        "Option 3",
-        "Option 3",
-        "Option 3",
-        "Option 3",
-      ],
+      subheader: "ביקורת בטיחות מזון",
+      options: categoryNames.foodSafetyReviewNames,
     },
     {
-      subheader: "Section 2",
-      options: ["Option 4", "Option 5", "Option 6"],
+      subheader: "ביקורת קולנירית",
+      options: categoryNames.culinaryReviewNames,
     },
     {
-      subheader: "Section 3",
-      options: ["Option 7", "Option 8", "Option 9"],
+      subheader: "ביקורת תזונה",
+      options: categoryNames.nutritionReviewNames,
     },
   ];
 
   return (
-    <ScreenWrapper
-      isConnectedUser
-      wrapperStyle={{ backgroundColor: colors.white }}
-    >
-      <View style={styles.goBackWrapper}>
-        <TouchableOpacity onPress={navigateTogoBack}>
-          <Image
-            source={require("../../../../assets/imgs/rightDirIcon.png")}
-            style={styles.goBackIcon}
-          />
-        </TouchableOpacity>
-        <Text style={styles.goBackText}>חזרה לרשימת הלקוחות</Text>
-      </View>
-
-      <View style={styles.headerWrapper}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.header}>
-            עריכת דוח עבור {currentClient.getCompany()} - {currentStation}
-          </Text>
-
-          <Text style={styles.subheader}>
-            {categoryHeader}
-            {" > "}
-            {categorySubHeader}
-          </Text>
+    <>
+      <ScreenWrapper
+        isConnectedUser
+        wrapperStyle={{ backgroundColor: colors.white }}
+      >
+        <View style={styles.goBackWrapper}>
+          <TouchableOpacity onPress={navigateTogoBack}>
+            <Image
+              source={require("../../../../assets/imgs/rightDirIcon.png")}
+              style={styles.goBackIcon}
+            />
+          </TouchableOpacity>
+          <Text style={styles.goBackText}>חזרה לרשימת הלקוחות</Text>
         </View>
-        <View style={styles.imageTextList}>
-          <FlatList
-            data={imageTextsAndFunctionality}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderImageTextItem}
-            horizontal={true}
-          />
-        </View>
-      </View>
 
-      <View style={styles.categoryContainer}>
-        <View style={styles.gradesContainer}>
-          <ReportGrade
-            reportGradeBoxColor={gradeBackgroundColor(categoryGrade)}
-            reportGradeNumber={categoryGrade}
-            reportGradeText={"ציון קטגוריה"}
-          />
-          <ReportGrade
-            reportGradeBoxColor={gradeBackgroundColor(foodSafetyGrade)}
-            reportGradeNumber={foodSafetyGrade}
-            reportGradeText={"ציון ביקורת בטיחות מזון"}
-          />
-          <ReportGrade
-            reportGradeBoxColor={gradeBackgroundColor(reportGrade)}
-            reportGradeNumber={reportGrade}
-            reportGradeText={"ציון לדוח"}
-          />
-        </View>
-        {isLoading ? (
-          <Loader visible={isLoading} />
-        ) : (
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-              padding: 16,
-              borderWidth: 1,
-              borderColor: "rgba(83, 104, 180, 0.30)",
-            }}
-          >
-            {/* <FlatList
-              data={AccordionCategoriesGeneralList}
-              renderItem={({ item }) => <CategoryAccordion item={item} />}
-              keyExtractor={(item) => item.id.toString()}
-            /> */}
+        <View style={styles.headerWrapper}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.header}>
+              עריכת דוח עבור {currentClient.getCompany()} - {currentStation}
+            </Text>
+
+            <Text style={styles.subheader}>
+              {categoryHeader}
+              {" > "}
+              {categorySubHeader}
+            </Text>
+          </View>
+          <View style={styles.imageTextList}>
             <FlatList
+              data={imageTextsAndFunctionality}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderImageTextItem}
+              horizontal={true}
+            />
+          </View>
+        </View>
+        <View style={styles.categoryContainer}>
+          <View style={styles.gradesContainer}>
+            <ReportGrade
+              reportGradeBoxColor={gradeBackgroundColor(categoryGrade)}
+              reportGradeNumber={categoryGrade}
+              reportGradeText={"ציון קטגוריה"}
+            />
+            <ReportGrade
+              reportGradeBoxColor={gradeBackgroundColor(majorCategoryGrade)}
+              reportGradeNumber={majorCategoryGrade}
+              reportGradeText={"ציון ביקורת בטיחות מזון"}
+            />
+            <ReportGrade
+              reportGradeBoxColor={gradeBackgroundColor(reportGrade)}
+              reportGradeNumber={reportGrade}
+              reportGradeText={"ציון לדוח"}
+            />
+          </View>
+          {isLoading ? (
+            <Loader visible={isLoading} />
+          ) : (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                padding: 16,
+                borderWidth: 1,
+                borderColor: "rgba(83, 104, 180, 0.30)",
+              }}
+            >
+              <FlatList
+                data={AccordionCategoriesGeneralList}
+                renderItem={({ item }) => <CategoryAccordion item={item} />}
+                keyExtractor={(item) => item.id.toString()}
+              />
+              {/* <FlatList
               data={AccordionCategoriesTemperatureList}
               renderItem={({ item }) => <CategoryAccordion item={item} />}
               keyExtractor={(item) => item.id.toString()}
+            /> */}
+            </View>
+          )}
+        </View>
+
+        {modalVisible && (
+          <View>
+            <ModalUi
+              header="קטגוריות"
+              modalContent={categoriesModal}
+              onClose={handleModalClose}
+              handleOptionClick={handleOptionClick}
             />
           </View>
         )}
-      </View>
+      </ScreenWrapper>
+      <View
+        style={{
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "flex-end",
+          marginBottom: 100,
+          // bottom: 0,
+        }}
+      >
+        <Drawer
+          content={
+            <LinearGradient
+              colors={["#37549D", "#26489F"]}
+              start={[0, 0]}
+              end={[1, 0]}
+              style={{ width: "100%", padding: 16, height: 76, zIndex: 1 }}
+            >
+              <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexDirection: "row",
+                }}
+              >
+                {isDrawerOpen && (
+                  <TouchableOpacity onPress={closeDrawer}>
+                    <Image
+                      source={CloseDrawerIcon}
+                      style={{ width: 20, height: 20 }}
+                    />
+                  </TouchableOpacity>
+                )}
+                {!isDrawerOpen && (
+                  <TouchableOpacity
+                    onPress={handlePrevCategory}
+                    style={{
+                      alignSelf: "center",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 5,
+                    }}
+                  >
+                    <Image
+                      source={accordionCloseIcon}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        transform: [{ rotate: "180deg" }],
+                      }}
+                    />
+                    <Text style={styles.categoryDirButton}>
+                      הקטגוריה הקודמת:
+                      {/* {checkedCategoryNameById[currentCategoryIndex - 1]?.name} */}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                    flex: 1,
+                    // marginLeft:
+                    //   formData && formData.categories && formData.categories[0]
+                    //     ? "auto"
+                    //     : 0,
+                    // marginRight:
+                    //   formData && formData.categories && formData.categories[0]
+                    //     ? -150
+                    // : 0,
+                    gap: 12,
+                  }}
+                >
+                  <Image source={FileIcon} style={{ width: 24, height: 24 }} />
+                  <Text
+                    style={{
+                      justifyContent: "center",
+                      alignSelf: "center",
+                      color: colors.white,
+                      fontSize: 24,
+                      fontFamily: fonts.ABold,
+                    }}
+                  >
+                    תמצית והערות
+                  </Text>
+                </View>
+                {/* {formData && formData.categories && formData.categories[0] && ( */}
+                {!isDrawerOpen && (
+                  <TouchableOpacity
+                    onPress={handleNextCategory}
+                    style={{
+                      alignSelf: "center",
+                      flexDirection: "row",
+                      gap: 5,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={styles.categoryDirButton}>
+                      הקטגוריה הבאה:{" "}
+                      {/* {checkedCategoryNameById[currentCategoryIndex + 1]?.name} */}
+                      {/* {formData.categories[0]} */}
+                      {/* {checkedCategoryNameById[currentCategoryIndex].name} */}
+                    </Text>
+                    <Image
+                      source={accordionCloseIcon}
+                      style={{ width: 20, height: 20 }}
+                    />
+                  </TouchableOpacity>
+                )}
 
-      {modalVisible && (
-        <View>
-          <ModalUi
-            header="קטגוריות"
-            modalContent={categoriesModal}
-            onClose={handleModalClose}
-            handleOptionClick={handleOptionClick}
-          />
-        </View>
-      )}
-    </ScreenWrapper>
+                {/* )} */}
+              </View>
+            </LinearGradient>
+          }
+          height={300}
+          onToggle={handleDrawerToggle}
+          ref={drawerRef}
+        />
+      </View>
+    </>
   );
 };
 
