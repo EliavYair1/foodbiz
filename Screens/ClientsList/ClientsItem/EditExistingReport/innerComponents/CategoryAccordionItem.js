@@ -217,7 +217,7 @@ const CategoryAccordionItem = ({
                     : "black",
               }}
             >
-              {item.name}{" "}
+              {item.name}
             </Text>
             {item.critical == 1 && (
               <Image source={criticalIcon} style={{ width: 20, height: 20 }} />

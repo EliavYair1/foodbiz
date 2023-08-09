@@ -78,7 +78,7 @@ const SelectMenu = ({
       width: selectWidth,
       borderWidth: errorMessage && !selectedItem ? 2 : 1,
       padding: 10,
-      borderRadius: 4,
+      // borderRadius: 4,
       justifyContent: "space-between",
       flexDirection: "row-reverse",
       borderColor:
@@ -165,7 +165,7 @@ const SelectMenu = ({
         name={name}
         control={control}
         defaultValue={displayedValue}
-        render={({ field: { value, onChange } }) => (
+        render={({ field: { value } }) => (
           <View
             ref={elementRef}
             style={[

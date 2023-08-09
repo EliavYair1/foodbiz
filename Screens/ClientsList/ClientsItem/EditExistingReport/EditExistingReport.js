@@ -5,6 +5,9 @@ import {
   Image,
   TouchableOpacity,
   Button,
+  ScrollView,
+  Switch,
+  KeyboardAvoidingView,
   Dimensions,
 } from "react-native";
 
@@ -45,6 +48,17 @@ import { fetchCategories } from "../../../../store/redux/reducers/categoriesSlic
 import Category from "../../../../Components/modals/category";
 import ModalUi from "../../../../Components/ui/ModalUi";
 import CloseDrawerIcon from "../../../../assets/imgs/oncloseDrawerIcon.png";
+import { debounce, get, result } from "lodash";
+import {
+  RichEditor,
+  RichToolbar,
+  actions,
+} from "react-native-pell-rich-editor";
+import ColorPicker from "react-native-wheel-color-picker";
+import SummaryAndNote from "./innerComponents/SummaryAndNote";
+import CategoryItemName from "./innerComponents/categoryItemName";
+import "@env";
+import axios from "axios";
 const EditExistingReport = () => {
   // ! redux stpre fetching
   const dispatch = useDispatch();
@@ -63,6 +77,7 @@ const EditExistingReport = () => {
   const passedDownCategoryId = currentCategoryId.currentCategory;
   // ! redux stpre fetching end
   const drawerRef = useRef(null);
+  const richText = useRef();
   const { navigateTogoBack } = useScreenNavigator();
   const [categoryGrade, setCategoryGrade] = useState(0);
   const [majorCategoryGrade, setMajorCategoryGrade] = useState(0);
@@ -73,7 +88,7 @@ const EditExistingReport = () => {
   const [ratingCheckboxItem, setRatingCheckboxItem] = useState([]);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [selectedModalCategory, setSelectedModalCategory] = useState([]);
-
+  const [colorSelected, setcolorSelected] = useState(null);
   const [categoryNames, setCategoryNames] = useState({
     foodSafetyReviewNames: [],
     culinaryReviewNames: [],
@@ -84,6 +99,14 @@ const EditExistingReport = () => {
     culinaryReviewCbStatus: [],
     nutritionReviewCbStatus: [],
   });
+  const haveFine = currentReport.getData("haveFine");
+  const haveSafetyGrade = currentReport.getData("haveSafetyGrade");
+  const haveCulinaryGrade = currentReport.getData("haveCulinaryGrade");
+  const haveNutritionGrade = currentReport.getData("haveNutritionGrade");
+  const haveCategoriesNameForCriticalItems = currentReport.getData(
+    "haveCategoriesNameForCriticalItems"
+  );
+
   // * category header
   const [categoryHeader, setCategoryHeader] = useState(false);
   // * category subheader
@@ -95,6 +118,20 @@ const EditExistingReport = () => {
     []
   );
   const [categoryType, setCategoryType] = useState(null);
+
+  // * get the category type value from the categories
+  const getCategory = (categoryId) => {
+    for (const [key, value] of Object.entries(categories.categories)) {
+      let found = value.categories.find(
+        (category) => category.id == categoryId
+      );
+      if (found) {
+        // console.log("found", found);
+        return found;
+      }
+    }
+    return false;
+  };
 
   const desiredCategory = () => {
     let parentCategory = false;
@@ -200,7 +237,6 @@ const EditExistingReport = () => {
       console.log("currentCategories is not a valid Set or is empty.");
     }
   }, [currentCategories]);
-
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
@@ -278,12 +314,6 @@ const EditExistingReport = () => {
       },
     },
   ];
-  // useEffect(() => {
-  //   setIsLoading(true);
-  //   setTimeout(() => {
-  //     setIsLoading(false);
-  //   }, 0);
-  // }, []);
 
   // * determain the color of the gradewrapper based on the grade value
   const gradeBackgroundColor = (grade) => {
@@ -313,7 +343,7 @@ const EditExistingReport = () => {
   };
 
   // * finding the current report data based on the category id from the report edit mode.
-  const getRelevantData = (data) => {
+  const getRelevantReportData = (data) => {
     // * parsing the data
     const CategoriesArrayOfData = JSON.parse(data);
 
@@ -328,13 +358,14 @@ const EditExistingReport = () => {
       console.log("Failed to find Relevant Data");
     }
   };
+
   //  * fetching the data from the current report
-  const categoriesDataReport = currentReport.getCategoriesData();
+  const categoriesDataFromReport = currentReport.getCategoriesData();
   useEffect(() => {
-    getRelevantData(categoriesDataReport);
+    getRelevantReportData(categoriesDataFromReport);
   }, [ratingCheckboxItem]);
 
-  // * handling changes in the report finding and replacing and returning the new report item
+  // * handling changes in the report finding , replacing and returning the new report item
   const handleReportItemChange = useCallback((newReportItem) => {
     setCurrentReportItemsForGrade((prev) => {
       let temp = [...prev];
@@ -349,9 +380,10 @@ const EditExistingReport = () => {
     });
   }, []);
 
+  // ! categories scores calculation
   // * Major category grade calculation
   const calculateMajorCategoryGrade = () => {
-    const parsedCategories = JSON.parse(categoriesDataReport);
+    const parsedCategories = JSON.parse(categoriesDataFromReport);
 
     let currentSubcategories = false;
     // * chosing to calculate which current subcategories based on the type.
@@ -428,10 +460,31 @@ const EditExistingReport = () => {
       );
     }
   };
-  // console.log("after", categoryGrade);
-  /* todo list */
-  /* end todo list */
+  // * calculating the report Grade
+  const calculateReportGrade = (value) => {
+    let culinaryGrade = currentReport.getData("culinaryGrade");
+    let nutritionGrade = currentReport.getData("nutritionGrade");
+    let safetyGrade = currentReport.getData("safetyGrade");
+    let reportGradeCalc = 0;
+    if (categoryType == 1) {
+      reportGradeCalc =
+        value * 0.5 + culinaryGrade * 0.4 + nutritionGrade * 0.1;
+    } else if (categoryType == 2) {
+      reportGradeCalc = safetyGrade * 0.5 + value * 0.4 + nutritionGrade * 0.1;
+    } else {
+      reportGradeCalc = safetyGrade * 0.5 + culinaryGrade * 0.4 + value * 0.1;
+    }
+    setReportGrade(Math.round(reportGradeCalc));
+  };
 
+  useEffect(() => {
+    calculateCategoryGrade();
+    calculateMajorCategoryGrade();
+    calculateReportGrade(majorCategoryGrade);
+  }, [currentReportItemsForGrade]);
+  // ! categories scores calculation end
+
+  // ! drawer logic
   // * drawer handler
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
@@ -445,6 +498,169 @@ const EditExistingReport = () => {
       setIsDrawerOpen(false);
     }
   };
+  // * newGeneralCommentTopText drawer change handler
+  const handleContentChange = debounce((content) => {
+    // console.log(content);
+    const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
+    richText.current?.setContentHTML(strippedContent);
+  }, 300);
+
+  useEffect(() => {
+    let newGeneralCommentTopText = currentReport.getData(
+      "newGeneralCommentTopText"
+    );
+    if (newGeneralCommentTopText) {
+      handleContentChange(currentReport.getData("newGeneralCommentTopText"));
+    }
+  }, [currentReport]);
+
+  /* todo list */
+  // todo 1. save the changes after and send the new report data. //done
+  // todo 2. to locate the current id by the 'passedDownCategoryId' in the categoriesDataFromReport(which is report categories data) // done
+  // todo 3. replace the old category items with the currentReportItemsForGrade(which is the edited category items) // done
+  // todo 4. to convert with the 'new FormData' method and stringify the currentReportItemsForGrade // done
+  // todo 5. to send post request of the whole json (categoriesDataFromReport) with the new changes
+  // todo 6. to check if you getting the new changes when refreshing the the screen
+
+  useEffect(() => {
+    // console.log("currentReportItemsForGrade:", currentReportItemsForGrade);
+    // console.log("passedDownCategoryId", passedDownCategoryId);
+    // console.log("categoriesDataFromReport:", categoriesDataFromReport);
+    // console.log("currentReport:", currentReport);
+  }, []);
+  // * summery and notes drawer logic
+  const summeryAndNotesManager = (types, condition) => {
+    let commentGroups = { critical: [], severe: [], normal: [] };
+    const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+    // * looping through the report categories data.
+    parsedCategoriesDataFromReport.forEach((category) => {
+      const items =
+        category.id == passedDownCategoryId
+          ? currentReportItemsForGrade
+          : category.items;
+      // * inner loop of the categories items.
+      for (const currentReportItem of items) {
+        for (let type of types) {
+          // * looking for the major category base on the type so we can display its subcategories
+          const relevantCategoryToFind = categories.categories[
+            type
+          ].categories.find((el) => el.id == category.id);
+          if (!relevantCategoryToFind) continue;
+          // * looking the relevent category in the items based on their id's.
+          const categoriesMatchReportId = relevantCategoryToFind.items.find(
+            (categoryItem) => categoryItem.id == currentReportItem.id
+          );
+
+          // * checking if the conditions is true base on
+          if (condition(category, currentReportItem)) {
+            let comment = currentReportItem.comment;
+
+            if (
+              currentReportItem.image ||
+              currentReportItem.image2 ||
+              currentReportItem.image3
+            ) {
+              comment += " - מצורפת תמונה";
+            }
+
+            if (
+              categoriesMatchReportId &&
+              categoriesMatchReportId.critical == 1 &&
+              currentReportItem.grade == 0
+            ) {
+              if (haveCategoriesNameForCriticalItems == 1) {
+                comment = (
+                  <Text style={{ color: "red" }}>
+                    {comment}
+                    <Text style={{ fontFamily: fonts.ABold }}>
+                      {" "}
+                      *הקטגוריה {getCategory(category.id).name} התאפסה
+                    </Text>
+                  </Text>
+                );
+              }
+
+              commentGroups.critical.push(comment);
+            } else if (
+              categoriesMatchReportId &&
+              categoriesMatchReportId.critical == 0 &&
+              currentReportItem.grade == 0
+            ) {
+              commentGroups.severe.push(comment);
+            } else {
+              commentGroups.normal.push(comment);
+            }
+          }
+        }
+      }
+    });
+
+    return [
+      ...commentGroups.critical,
+      ...commentGroups.severe,
+      ...commentGroups.normal,
+    ];
+  };
+
+  // * post request on the changes of the report edit
+  const saveReport = async () => {
+    const targetId = passedDownCategoryId;
+    let foundCategory = null;
+    const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+    // console.log(
+    //   "before parsedCategoriesDataFromReport:",
+    //   parsedCategoriesDataFromReport.map((item) => item.items)
+    // );
+    parsedCategoriesDataFromReport.forEach((category) => {
+      if (category.id == targetId) {
+        foundCategory = category;
+        return;
+      }
+    });
+
+    if (foundCategory) {
+      // console.log("before Found Category:", foundCategory.items);
+      const bodyFormData = new FormData();
+      // let newBody = bodyFormData.append(
+      //   "data",
+      //   JSON.stringify(currentReportItemsForGrade)
+      // );
+
+      let newBody = bodyFormData.append(
+        "data",
+        JSON.stringify(parsedCategoriesDataFromReport)
+      );
+      foundCategory.items = [...newBody];
+      // console.log(
+      //   "after parsedCategoriesDataFromReport:",
+      //   parsedCategoriesDataFromReport.map((item) => item.items)
+      // );
+      // console.log("after the changes:", foundCategory.items);
+    } else {
+      console.log("ID not found");
+    }
+
+    // try {
+    //   const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
+    //   const response = await axios.post(apiUrl, {
+    //     id: currentReport.getData("id"),
+    //     workerId: currentReport.getData("workerId"),
+    //     clientId: currentReport.getData("clientId"),
+    //     newGeneralCommentTopText: currentReport.getData(
+    //       "newGeneralCommentTopText"
+    //     ),
+    //     data: foundCategory.items,
+    //     status: currentReport.getData("status"),
+    //     newCategorys: currentReport.getData("categorys"),
+    //   });
+    //   if (response.status == 200) {
+    //     console.log("response:", response.data);
+    //   }
+    // } catch (error) {
+    //   console.error("Error making POST request:", error);
+    // }
+  };
+
   // * paginations between categories names : Prev
   const handlePrevCategory = () => {
     // setCurrentCategoryIndex((prevIndex) => {
@@ -469,30 +685,12 @@ const EditExistingReport = () => {
     //   return newIndex;
     // });
     console.log("next");
+    // const stringifiedEditedReportData = JSON.stringify(
+    //   currentReportItemsForGrade
+    // );
+    saveReport();
   };
-
-  // * calculating the report Grade
-  const calculateReportGrade = (value) => {
-    let culinaryGrade = currentReport.getData("culinaryGrade");
-    let nutritionGrade = currentReport.getData("nutritionGrade");
-    let safetyGrade = currentReport.getData("safetyGrade");
-    let reportGradeCalc = 0;
-    if (categoryType == 1) {
-      reportGradeCalc =
-        value * 0.5 + culinaryGrade * 0.4 + nutritionGrade * 0.1;
-    } else if (categoryType == 2) {
-      reportGradeCalc = safetyGrade * 0.5 + value * 0.4 + nutritionGrade * 0.1;
-    } else {
-      reportGradeCalc = safetyGrade * 0.5 + culinaryGrade * 0.4 + value * 0.1;
-    }
-    setReportGrade(Math.round(reportGradeCalc));
-  };
-
-  useEffect(() => {
-    calculateCategoryGrade();
-    calculateMajorCategoryGrade();
-    calculateReportGrade(majorCategoryGrade);
-  }, [currentReportItemsForGrade]);
+  // ! drawer logic end
 
   // * mapping over CategoriesItems and displaying the items
   const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
@@ -500,7 +698,6 @@ const EditExistingReport = () => {
       (element) => element.id == item.id
     );
     const timeOfReport = currentReport.getData("timeOfReport");
-    const haveFine = currentReport.getData("haveFine");
 
     return {
       id: item.id,
@@ -590,6 +787,8 @@ const EditExistingReport = () => {
     },
   ];
 
+  const summeryAndNotes = [];
+
   return (
     <>
       <ScreenWrapper
@@ -618,6 +817,7 @@ const EditExistingReport = () => {
               {categorySubHeader}
             </Text>
           </View>
+
           <View style={styles.imageTextList}>
             <FlatList
               data={imageTextsAndFunctionality}
@@ -627,6 +827,7 @@ const EditExistingReport = () => {
             />
           </View>
         </View>
+
         <View style={styles.categoryContainer}>
           <View style={styles.gradesContainer}>
             <ReportGrade
@@ -693,7 +894,7 @@ const EditExistingReport = () => {
         }}
       >
         <Drawer
-          content={
+          header={
             <LinearGradient
               colors={["#37549D", "#26489F"]}
               start={[0, 0]}
@@ -708,7 +909,7 @@ const EditExistingReport = () => {
                 }}
               >
                 {isDrawerOpen && (
-                  <TouchableOpacity onPress={closeDrawer}>
+                  <TouchableOpacity onPress={() => closeDrawer()}>
                     <Image
                       source={CloseDrawerIcon}
                       style={{ width: 20, height: 20 }}
@@ -746,14 +947,6 @@ const EditExistingReport = () => {
                     alignItems: "center",
                     textAlign: "center",
                     flex: 1,
-                    // marginLeft:
-                    //   formData && formData.categories && formData.categories[0]
-                    //     ? "auto"
-                    //     : 0,
-                    // marginRight:
-                    //   formData && formData.categories && formData.categories[0]
-                    //     ? -150
-                    // : 0,
                     gap: 12,
                   }}
                 >
@@ -784,8 +977,6 @@ const EditExistingReport = () => {
                     <Text style={styles.categoryDirButton}>
                       הקטגוריה הבאה:{" "}
                       {/* {checkedCategoryNameById[currentCategoryIndex + 1]?.name} */}
-                      {/* {formData.categories[0]} */}
-                      {/* {checkedCategoryNameById[currentCategoryIndex].name} */}
                     </Text>
                     <Image
                       source={accordionCloseIcon}
@@ -798,9 +989,298 @@ const EditExistingReport = () => {
               </View>
             </LinearGradient>
           }
-          height={300}
+          content={[
+            <SummaryAndNote
+              height={207}
+              header={"תמצית הדוח"}
+              summaryAndNoteContent={
+                <View
+                  style={{
+                    flex: 1,
+                    width: "100%",
+                    marginTop: 20,
+                    height: "100%",
+                    direction: "rtl",
+                    paddingHorizontal: 16,
+                  }}
+                >
+                  <View
+                    style={{
+                      backgroundColor: "#D3E0FF",
+                      width: "100%",
+                      alignItems: "flex-start",
+                      // marginBottom: 200,
+                      position: "relative",
+                      zIndex: 3,
+                    }}
+                  >
+                    <RichToolbar
+                      editor={richText}
+                      selectedButtonStyle={{ backgroundColor: "#baceff" }}
+                      unselectedButtonStyle={{ backgroundColor: "#D3E0FF" }}
+                      iconTint="#000000"
+                      selectedIconTint="#000000"
+                      actions={[
+                        actions.insertOrderedList,
+                        actions.insertBulletsList,
+                        actions.setUnderline,
+                        actions.setItalic,
+                        actions.setBold,
+                        "custom",
+                      ]}
+                      // onPressAddImage={onPressAddImage}
+                      // onAction={onAction} // Add the onAction prop for custom actions
+                      iconMap={{
+                        ["custom"]: ({}) => <Text>C</Text>,
+                      }}
+                      custom={() => {
+                        setcolorSelected(!colorSelected);
+                        console.log("object");
+                      }}
+                    />
+                  </View>
+                  {colorSelected && (
+                    <View
+                      style={{
+                        direction: "ltr",
+                        width: 200,
+                        position: "absolute",
+                        top: 20,
+                        zIndex: 3,
+                      }}
+                    >
+                      <ColorPicker
+                        onColorChange={(color) => {
+                          console.log(color);
+                          richText.current?.setForeColor(color);
+                        }}
+                        sliderSize={20}
+                        thumbSize={60}
+                        gapSize={5}
+                        // noSnap={true}
+                        color="#000000"
+                        palette={[
+                          "#000000",
+                          "#ffff00",
+                          "#0000ff",
+                          "#ff0000",
+                          "#00ff00",
+                        ]}
+                        swatches={true}
+                      />
+                    </View>
+                  )}
+                  <ScrollView
+                    style={{
+                      // flex: Platform.OS === "ios" ? 1 : 0,
+                      flex: 1,
+                      // direction: "ltr",
+                      // direction: "rtl",
+                      overflow: "visible",
+                      height: "100%",
+                      minHeight: 250,
+                    }}
+                  >
+                    <KeyboardAvoidingView
+                      behavior={Platform.OS === "ios" ? "padding" : "height"}
+                      style={{ flex: 1 }}
+                    >
+                      <RichEditor
+                        ref={richText}
+                        onChange={handleContentChange}
+                        initialContentHTML="<div></div>"
+                        placeholder={
+                          "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
+                        }
+                        shouldStartLoadWithRequest={(request) => {
+                          return true;
+                        }}
+                        style={{
+                          minHeight: 123,
+                          // direction: "ltr",
+                          // direction: "rtl",
+                          borderWidth: 1,
+                          borderColor: "#eee",
+                          zIndex: 2,
+                          overflow: "visible",
+                        }}
+                      />
+                    </KeyboardAvoidingView>
+                  </ScrollView>
+                </View>
+              }
+            />,
+            <SummaryAndNote
+              header={" הערות ביקורת בטיחות מזון"}
+              height={160}
+              verticalSpace={16}
+              summaryAndNoteContent={
+                <>
+                  <FlatList
+                    data={
+                      haveSafetyGrade == 1
+                        ? summeryAndNotesManager(
+                            [1],
+                            (category, item) =>
+                              item.showOnComment == 1 &&
+                              item.charge != "הלקוח" &&
+                              item.charge != "מנהל המשק" &&
+                              item.charge != "בית החולים"
+                            // item &&
+                            // getCategory(category.id).type == 1
+                          )
+                        : null
+                    }
+                    renderItem={({ item, index }) => {
+                      // summeryAndNotesManager(item);
+                      // console.log(`currentReportItems:`, currentReportItems);
+                      return (
+                        <CategoryItemName
+                          key={item.id}
+                          number={index + 1}
+                          item={item}
+                        />
+                      );
+                    }}
+                    keyExtractor={(item, index) =>
+                      item.id ? item.id.toString() : index.toString()
+                    }
+                  />
+                </>
+              }
+            />,
+            <SummaryAndNote
+              header={"הערות ביקורת קולינארית"}
+              height={160}
+              verticalSpace={16}
+              summaryAndNoteContent={
+                <>
+                  <FlatList
+                    data={
+                      haveCulinaryGrade == 1
+                        ? summeryAndNotesManager(
+                            [2],
+                            (category, item) =>
+                              item.showOnComment == 1 &&
+                              item.charge != "הלקוח" &&
+                              item.charge != "מנהל המשק" &&
+                              item.charge != "בית החולים"
+                            // item &&
+                            // getCategory(category.id).type == 2
+                          )
+                        : null
+                    }
+                    // data={haveCulinaryGrade == 1 ? categoriesDataFromReport : null}
+                    renderItem={({ item, index }) => (
+                      <CategoryItemName
+                        key={item.id}
+                        number={index + 1}
+                        item={item}
+                      />
+                    )}
+                    keyExtractor={(item, index) =>
+                      item.id ? item.id.toString() : index.toString()
+                    }
+                  />
+                </>
+              }
+            />,
+            <SummaryAndNote
+              header={"הערות תזונה"}
+              height={160}
+              verticalSpace={16}
+              summaryAndNoteContent={
+                <>
+                  <FlatList
+                    data={
+                      haveNutritionGrade == 1
+                        ? summeryAndNotesManager(
+                            [3],
+                            (category, item) =>
+                              item.showOnComment == 1 &&
+                              item.charge != "הלקוח" &&
+                              item.charge != "מנהל המשק" &&
+                              item.charge != "בית החולים"
+                            // item &&
+                            // getCategory(category.id).type == 3
+                          )
+                        : null
+                    }
+                    // data={haveNutritionGrade == 1 ? categoriesDataFromReport : null}
+                    renderItem={({ item, index }) => (
+                      <CategoryItemName
+                        key={item.id}
+                        number={index + 1}
+                        item={item}
+                      />
+                    )}
+                    keyExtractor={(item, index) =>
+                      item.id ? item.id.toString() : index.toString()
+                    }
+                  />
+                </>
+              }
+            />,
+            <SummaryAndNote
+              header={"הערות באחריות לקוח"}
+              height={160}
+              verticalSpace={16}
+              summaryAndNoteContent={
+                <>
+                  <FlatList
+                    // data={haveSafetyGrade == 1 ? categoriesDataFromReport : null}
+                    data={summeryAndNotesManager(
+                      [1, 2, 3],
+                      (category, item) =>
+                        item.showOnComment == 1 &&
+                        (item.charge == "הלקוח" || item.charge == "מנהל המשק")
+                    )}
+                    renderItem={({ item, index }) => (
+                      <CategoryItemName
+                        key={item.id}
+                        number={index + 1}
+                        item={item}
+                      />
+                    )}
+                    keyExtractor={(item, index) =>
+                      item.id ? item.id.toString() : index.toString()
+                    }
+                  />
+                </>
+              }
+            />,
+            <SummaryAndNote
+              header={"הערות תשתית (באחריות בית החולים)"}
+              height={160}
+              verticalSpace={16}
+              summaryAndNoteContent={
+                <>
+                  <FlatList
+                    // data={haveSafetyGrade == 1 ? categoriesDataFromReport : null}
+                    data={summeryAndNotesManager(
+                      [1, 2, 3],
+                      (category, item) =>
+                        item.showOnComment == 1 && item.charge == "בית החולים"
+                    )}
+                    renderItem={({ item, index }) => (
+                      <CategoryItemName
+                        key={item.id}
+                        number={index + 1}
+                        item={item}
+                      />
+                    )}
+                    keyExtractor={(item, index) =>
+                      item.id ? item.id.toString() : index.toString()
+                    }
+                  />
+                </>
+              }
+            />,
+          ]}
+          height={647}
           onToggle={handleDrawerToggle}
           ref={drawerRef}
+          closeDrawer={closeDrawer}
         />
       </View>
     </>

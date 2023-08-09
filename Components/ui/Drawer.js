@@ -1,5 +1,11 @@
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
+import React, {
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useEffect,
+} from "react";
+
 import {
   View,
   TouchableOpacity,
@@ -7,95 +13,148 @@ import {
   StyleSheet,
   Text,
   Image,
+  Animated,
+  Platform,
+  SafeAreaView,
 } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
+// import Animated, {
+//   useSharedValue,
+//   useAnimatedStyle,
+//   withSpring,
+// } from "react-native-reanimated";
 import FileIcon from "../../assets/icons/iconImgs/FileIcon.png";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
-const Drawer = ({ content, height, onToggle, onClose = false }) => {
+import { FlatList } from "react-native-gesture-handler";
+
+const Drawer = (
+  { content, height, onToggle, onClose = false, header },
+  ref
+) => {
   const [isOpen, setIsOpen] = useState(false);
-  const animatedHeight = useSharedValue(0);
+  const animatedHeight = new Animated.Value(0);
+
+  useEffect(() => {
+    if (isOpen) {
+      Animated.spring(animatedHeight, {
+        toValue: height,
+        damping: 15,
+        stiffness: 100,
+        useNativeDriver: false,
+      }).start();
+    } else {
+      Animated.spring(animatedHeight, {
+        toValue: 0,
+        damping: 15,
+        stiffness: 100,
+        useNativeDriver: false,
+      }).start(() => {
+        onToggle(false);
+      });
+    }
+  }, [isOpen, height]);
 
   const toggleDrawer = () => {
     setIsOpen(!isOpen);
-    animatedHeight.value = withSpring(isOpen ? 0 : height, {
-      damping: 15,
-      stiffness: 150,
-    });
     onToggle(!isOpen);
   };
 
   const closeDrawer = () => {
     setIsOpen(false);
-    animatedHeight.value = withSpring(0, {
-      damping: 15,
-      stiffness: 150,
-    });
-    onToggle(false);
-    // onClose();
   };
 
-  const drawerStyle = useAnimatedStyle(() => {
-    return {
-      height: animatedHeight.value,
-    };
-  });
+  useImperativeHandle(ref, () => ({
+    closeDrawer,
+  }));
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      //   height: height,
-    },
-    overlay: {
-      height: 76,
-      //   flex: !isOpen ? 1 : 0,
-      //   backgroundColor: "rgba(0, 0, 0, 0.5)",
-      //   marginTop: 350,
-    },
-    drawer: {
-      backgroundColor: "white",
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-      //   padding: 16,
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      width: "100%",
-      alignItems: "center",
-    },
-    closeButton: {
-      alignSelf: "center",
-      justifyContent: "center",
-      padding: 8,
-    },
-    closeButtonText: {
-      fontSize: 16,
-      color: "black",
-    },
-  });
+  const drawerStyle = {
+    height: animatedHeight,
+  };
+
+  const renderItem = ({ item }) => {
+    return <View>{item}</View>;
+  };
 
   return (
-    <View style={styles.container}>
-      <TouchableWithoutFeedback onPress={toggleDrawer}>
-        <View style={styles.overlay} />
-      </TouchableWithoutFeedback>
-      <Animated.View style={[styles.drawer, drawerStyle]}>
-        {content}
-        <TouchableOpacity style={styles.closeButton} onPress={closeDrawer}>
-          <Text style={styles.closeButtonText}>Close</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    </View>
+    <>
+      {Platform.OS === "ios" ? (
+        <SafeAreaView style={styles.container}>
+          <View
+            style={[styles.overlay, { zIndex: isOpen ? 1 : -1 }]}
+            onTouchEnd={toggleDrawer}
+          />
+          <Animated.View style={[styles.drawer, drawerStyle]} ref={ref}>
+            {header}
+            <View style={{ padding: 16, width: "100%" }}>
+              {Array.isArray(content) ? (
+                <FlatList
+                  data={content}
+                  renderItem={renderItem}
+                  keyExtractor={(item, index) => index.toString()}
+                />
+              ) : (
+                content
+              )}
+            </View>
+          </Animated.View>
+        </SafeAreaView>
+      ) : (
+        <View style={styles.container}>
+          <View
+            style={[styles.overlay, { zIndex: isOpen ? 1 : -1 }]}
+            onTouchEnd={toggleDrawer}
+          />
+          <Animated.View style={[styles.drawer, drawerStyle]} ref={ref}>
+            {header}
+            <View style={{ padding: 16, width: "100%" }}>
+              {Array.isArray(content) ? (
+                <FlatList
+                  data={content}
+                  renderItem={renderItem}
+                  keyExtractor={(item, index) => index.toString()}
+                />
+              ) : (
+                content
+              )}
+            </View>
+          </Animated.View>
+        </View>
+      )}
+    </>
   );
 };
 
-export default Drawer;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  overlay: {
+    height: 76,
+  },
+  drawer: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: "100%",
+    alignItems: "center",
+  },
+  closeButton: {
+    alignSelf: "center",
+    justifyContent: "center",
+    padding: 8,
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: "black",
+  },
+});
+
+export default React.forwardRef(Drawer);

@@ -9,6 +9,7 @@ import {
   Switch,
   KeyboardAvoidingView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
@@ -65,7 +66,7 @@ import "@env";
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [colorSelected, setColorSelected] = useState(false);
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -169,9 +170,19 @@ const WorkerNewReport = () => {
   }, [formData, schema]);
 
   // * categories fetching start
+
   useEffect(() => {
-    dispatch(fetchCategories());
-    dispatch(fetchReportsTimes());
+    // Fetch the categories from the API and other necessary data when the component mounts
+    Promise.all([dispatch(fetchCategories()), dispatch(fetchReportsTimes())])
+      .then(() => {
+        // Handle successful fetch if needed
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        // Handle error fetching data
+        console.error("Error fetching data:", error);
+        setIsLoading(false);
+      });
   }, [dispatch]);
 
   const memoizedCategories = useMemo(() => categories, [categories]);
@@ -181,7 +192,7 @@ const WorkerNewReport = () => {
     const reportTime = data.find((item) => item.id === reportTimeId);
     return reportTime ? reportTime.name : "";
   };
-
+  //  * edit mode current report initialization
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
     // todo to use getData class method
@@ -288,7 +299,7 @@ const WorkerNewReport = () => {
     }));
   }, 300);
 
-  // * setting the oldReportId from selected repor
+  // * setting the oldReportId from selected report
   const handleReportIdAndWorkerId = (selectedReport) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -300,6 +311,8 @@ const WorkerNewReport = () => {
     trigger("clientStationId");
     trigger("oldReportId");
   };
+
+  // * parsing the data coming from the current report
   const parsedArrayOfStr = (arr) => {
     const parsedSelectedReportCategory = new Set(
       arr
@@ -310,7 +323,8 @@ const WorkerNewReport = () => {
     );
     return parsedSelectedReportCategory;
   };
-  // * parsing the report categories
+
+  // * parsing the categories coming from the report
   const handleSelectedReportCategory = (selectedReport) => {
     const selectedReportCategory = selectedReport.getData("categorys");
 
@@ -321,7 +335,7 @@ const WorkerNewReport = () => {
   };
 
   //  * 1. checking if the ids of the categories match to the selected report
-  // *  2.  sorting them by type to their right location of the state
+  // *  2.  sorting them by type to their right location of major category
   const handleCheckboxStatusChange = (parsedSelectedReportCategory) => {
     const memoRizedCats = memoizedCategories?.categories;
     const globalStateCategories = memoRizedCats
@@ -356,11 +370,15 @@ const WorkerNewReport = () => {
       ...newCheckboxStatus.culinaryReviewCbStatus,
       ...newCheckboxStatus.nutritionReviewCbStatus,
     ];
-
+    // console.log(typeof categories);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      categories,
+      categories:
+        categories.length > 0 || Object.keys(categories).length > 0
+          ? categories
+          : parsedSelectedReportCategory,
     }));
+
     setValue("categories", categories);
     trigger("categories");
     setCheckboxStatus(newCheckboxStatus);
@@ -397,8 +415,15 @@ const WorkerNewReport = () => {
     // console.log("categories:", categories);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      categories: categories,
+      categories,
     }));
+    // setFormData((prevFormData) => ({
+    //   ...prevFormData,
+    //   categories:
+    //     categories.length > 0 || Object.keys(categories).length > 0
+    //       ? categories
+    //       : parsedArrayOfStr(currentReport.getData("categorys")),
+    // }));
     setValue("categories", categories);
     trigger("categories");
   }, [checkboxStatus]);
@@ -530,7 +555,6 @@ const WorkerNewReport = () => {
       return newState;
     });
   };
-  // console.log(currentReport);
   const postNewReport = async (formData) => {
     try {
       const response = await axios.post(
@@ -591,12 +615,11 @@ const WorkerNewReport = () => {
   const globalCategories = memoRizedCats
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
     : null;
-
   // * comparing between the categories names to the ids in the forms to display it in the drawer
   const checkedCategoryNameById =
     globalCategories && formData.categories
-      ? globalCategories.reduce((result, item) => {
-          if (formData.categories.includes(parseInt(item.id, 10))) {
+      ? globalCategories?.reduce((result, item) => {
+          if (formData?.categories?.includes(parseInt(item.id, 10))) {
             result.push(item);
           }
           return result;
@@ -1332,7 +1355,6 @@ categorys[]: 5
       draggable={item.draggable}
     />
   );
-
   // * filtering out timeofReport when on edit mode.
   const modifiedAccordionContent = currentReport
     ? NewReportAccordionContent.map((section) => {
@@ -1346,71 +1368,85 @@ categorys[]: 5
       })
     : NewReportAccordionContent;
 
+  // console.log(checkedCategoryNameById);
+  // if (!checkedCategoryNameById) {
+  //   return ;
+  // }
   // console.log(formData.categories);
-
   return (
-    <ScreenWrapper
-      newReportBackGroundImg={true}
-      isConnectedUser
-      wrapperStyle={styles.container}
-      edges={[]}
-    >
-      <View style={styles.headerWrapper}>
-        <View style={styles.navigationWrapper}>
-          <TouchableOpacity onPress={navigateTogoBack}>
-            <Image source={rightDirectionIcon} style={styles.icon} />
-          </TouchableOpacity>
-          <Text style={styles.navigationText}>חזרה לרשימת הלקוחות</Text>
-        </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={styles.header}>
-            {currentReport
-              ? `עריכת דוח עבור ${currentReport.data.station_name}`
-              : `יצירת דוח חדש עבור ${currentClient.getCompany()}`}
-          </Text>
-          {currentReport && (
-            <View style={styles.imageTextList}>
-              <FlatList
-                data={imageTextsAndFunctionality}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderImageTextItem}
-                horizontal={true}
-              />
-            </View>
-          )}
-        </View>
-
-        <FlatList
-          data={modifiedAccordionContent}
-          renderItem={renderAccordion}
-          keyExtractor={(item, index) => index.toString()}
-        />
-      </View>
-      {currentReport ? (
-        <View
-          style={{
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "center",
-            marginBottom: 50,
-          }}
+    <>
+      {isLoading ? (
+        <Loader visible={isLoading} />
+      ) : (
+        <ScreenWrapper
+          newReportBackGroundImg={true}
+          isConnectedUser
+          wrapperStyle={styles.container}
+          edges={[]}
         >
-          <Drawer
-            content={
-              <LinearGradient
-                colors={["#37549D", "#26489F"]}
-                start={[0, 0]}
-                end={[1, 0]}
-                style={{ width: "100%", padding: 16, height: 76, zIndex: 1 }}
-              >
-                <View
-                  style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                    flexDirection: "row",
-                  }}
-                >
-                  {/* <TouchableOpacity
+          <View style={styles.headerWrapper}>
+            <View style={styles.navigationWrapper}>
+              <TouchableOpacity onPress={navigateTogoBack}>
+                <Image source={rightDirectionIcon} style={styles.icon} />
+              </TouchableOpacity>
+              <Text style={styles.navigationText}>חזרה לרשימת הלקוחות</Text>
+            </View>
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <Text style={styles.header}>
+                {currentReport
+                  ? `עריכת דוח עבור ${currentReport.data.station_name}`
+                  : `יצירת דוח חדש עבור ${currentClient.getCompany()}`}
+              </Text>
+              {currentReport && (
+                <View style={styles.imageTextList}>
+                  <FlatList
+                    data={imageTextsAndFunctionality}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderImageTextItem}
+                    horizontal={true}
+                  />
+                </View>
+              )}
+            </View>
+
+            <FlatList
+              data={modifiedAccordionContent}
+              renderItem={renderAccordion}
+              keyExtractor={(item, index) => index.toString()}
+            />
+          </View>
+          {currentReport ? (
+            <View
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+                marginBottom: 50,
+              }}
+            >
+              <Drawer
+                content={
+                  <LinearGradient
+                    colors={["#37549D", "#26489F"]}
+                    start={[0, 0]}
+                    end={[1, 0]}
+                    style={{
+                      width: "100%",
+                      padding: 16,
+                      height: 76,
+                      zIndex: 1,
+                    }}
+                  >
+                    <View
+                      style={{
+                        justifyContent: "center",
+                        alignItems: "center",
+                        flexDirection: "row",
+                      }}
+                    >
+                      {/* <TouchableOpacity
                     onPress={handlePrevCategory}
                     style={{
                       alignSelf: "center",
@@ -1434,108 +1470,113 @@ categorys[]: 5
                       {checkedCategoryNameById[currentCategoryIndex - 1]?.name}
                     </Text>
                   </TouchableOpacity> */}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      textAlign: "center",
-                      marginLeft:
-                        formData &&
-                        formData.categories &&
-                        formData.categories[0]
-                          ? "auto"
-                          : 0,
-                      marginRight:
-                        formData &&
-                        formData.categories &&
-                        formData.categories[0]
-                          ? -150
-                          : 0,
-                      gap: 12,
-                    }}
-                  >
-                    <Image
-                      source={FileIcon}
-                      style={{ width: 24, height: 24 }}
-                    />
-                    <Text
-                      style={{
-                        justifyContent: "center",
-                        alignSelf: "center",
-                        color: colors.white,
-                        fontSize: 24,
-                        fontFamily: fonts.ABold,
-                      }}
-                    >
-                      תמצית והערות
-                    </Text>
-                  </View>
-                  {formData &&
-                    formData.categories &&
-                    formData.categories[0] && (
-                      <TouchableOpacity
-                        onPress={handleNextCategory}
+                      <View
                         style={{
-                          alignSelf: "center",
-                          // justifyContent: "flex-end",
                           flexDirection: "row",
-                          gap: 5,
+                          justifyContent: "center",
                           alignItems: "center",
-                          marginLeft: "auto",
+                          textAlign: "center",
+                          marginLeft:
+                            formData &&
+                            formData.categories &&
+                            formData.categories[0]
+                              ? "auto"
+                              : 0,
+                          marginRight:
+                            formData &&
+                            formData.categories &&
+                            formData.categories[0]
+                              ? -150
+                              : 0,
+                          gap: 12,
                         }}
                       >
-                        <Text style={styles.categoryDirButton}>
-                          הקטגוריה הבאה:{" "}
-                          {/* {checkedCategoryNameById[currentCategoryIndex + 1]?.name} */}
-                          {/* {formData.categories[0]} */}
-                          {checkedCategoryNameById[currentCategoryIndex].name}
-                        </Text>
                         <Image
-                          source={accordionCloseIcon}
-                          style={{ width: 20, height: 20 }}
+                          source={FileIcon}
+                          style={{ width: 24, height: 24 }}
                         />
-                      </TouchableOpacity>
-                    )}
-                </View>
-              </LinearGradient>
-            }
-            height={300}
-            onToggle={handleDrawerToggle}
-          />
-        </View>
-      ) : (
-        <LinearGradient
-          colors={["#37549D", "#26489F"]}
-          start={[0, 0]}
-          end={[1, 0]}
-        >
-          <TouchableOpacity
-            style={{
-              width: "100%",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            onPress={
-              handleSubmit(onSubmitForm)
-              // console.log("new report");
-            }
-          >
-            <Text
-              style={{
-                alignSelf: "center",
-                paddingVertical: 12,
-                fontSize: 24,
-                fontFamily: fonts.ABold,
-                color: colors.white,
-              }}
+                        <Text
+                          style={{
+                            justifyContent: "center",
+                            alignSelf: "center",
+                            color: colors.white,
+                            fontSize: 24,
+                            fontFamily: fonts.ABold,
+                          }}
+                        >
+                          תמצית והערות
+                        </Text>
+                      </View>
+                      {formData &&
+                        formData.categories &&
+                        formData.categories[0] && (
+                          <TouchableOpacity
+                            onPress={handleNextCategory}
+                            style={{
+                              alignSelf: "center",
+                              // justifyContent: "flex-end",
+                              flexDirection: "row",
+                              gap: 5,
+                              alignItems: "center",
+                              marginLeft: "auto",
+                            }}
+                          >
+                            <Text style={styles.categoryDirButton}>
+                              הקטגוריה הבאה:{" "}
+                              {/* {checkedCategoryNameById[currentCategoryIndex + 1]?.name} */}
+                              {/* {formData.categories[0]} */}
+                              {
+                                checkedCategoryNameById[currentCategoryIndex]
+                                  .name
+                              }
+                            </Text>
+                            <Image
+                              source={accordionCloseIcon}
+                              style={{ width: 20, height: 20 }}
+                            />
+                          </TouchableOpacity>
+                        )}
+                    </View>
+                  </LinearGradient>
+                }
+                height={0}
+                onToggle={handleDrawerToggle}
+              />
+            </View>
+          ) : (
+            <LinearGradient
+              colors={["#37549D", "#26489F"]}
+              start={[0, 0]}
+              end={[1, 0]}
             >
-              יצירת הדוח
-            </Text>
-          </TouchableOpacity>
-        </LinearGradient>
+              <TouchableOpacity
+                style={{
+                  width: "100%",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                onPress={
+                  handleSubmit(onSubmitForm)
+                  // console.log("new report");
+                }
+              >
+                <Text
+                  style={{
+                    alignSelf: "center",
+                    paddingVertical: 12,
+                    fontSize: 24,
+                    fontFamily: fonts.ABold,
+                    color: colors.white,
+                  }}
+                >
+                  יצירת הדוח
+                </Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          )}
+        </ScreenWrapper>
       )}
-    </ScreenWrapper>
+    </>
   );
 };
 
