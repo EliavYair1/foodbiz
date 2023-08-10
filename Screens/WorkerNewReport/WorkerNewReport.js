@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
 } from "react-native";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
@@ -1418,7 +1419,7 @@ categorys[]: 5
             />
           </View>
           {currentReport ? (
-            <View
+            <SafeAreaView
               style={{
                 width: "100%",
                 justifyContent: "center",
@@ -1542,7 +1543,7 @@ categorys[]: 5
                 height={0}
                 onToggle={handleDrawerToggle}
               />
-            </View>
+            </SafeAreaView>
           ) : (
             <LinearGradient
               colors={["#37549D", "#26489F"]}

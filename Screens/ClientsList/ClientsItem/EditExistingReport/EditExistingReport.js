@@ -88,7 +88,7 @@ const EditExistingReport = () => {
   const [ratingCheckboxItem, setRatingCheckboxItem] = useState([]);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [selectedModalCategory, setSelectedModalCategory] = useState([]);
-  const [colorSelected, setcolorSelected] = useState(null);
+  const [colorSelected, setColorSelected] = useState(null);
   const [categoryNames, setCategoryNames] = useState({
     foodSafetyReviewNames: [],
     culinaryReviewNames: [],
@@ -118,7 +118,18 @@ const EditExistingReport = () => {
     []
   );
   const [categoryType, setCategoryType] = useState(null);
+  const [content, setContent] = useState("");
 
+  // * Simulating your debounce function
+  const debounce = (fn, delay) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        fn(...args);
+      }, delay);
+    };
+  };
   // * get the category type value from the categories
   const getCategory = (categoryId) => {
     for (const [key, value] of Object.entries(categories.categories)) {
@@ -498,29 +509,35 @@ const EditExistingReport = () => {
       setIsDrawerOpen(false);
     }
   };
+
+  const handleCustomAction = () => {
+    setColorSelected(!colorSelected);
+    console.log("Custom action triggered");
+  };
+
   // * newGeneralCommentTopText drawer change handler
   const handleContentChange = debounce((content) => {
-    // console.log(content);
+    // console.log("content:", content);
     const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
     richText.current?.setContentHTML(strippedContent);
+    setContent(content);
   }, 300);
-
   useEffect(() => {
     let newGeneralCommentTopText = currentReport.getData(
       "newGeneralCommentTopText"
     );
-    if (newGeneralCommentTopText) {
+    if (content == "") {
       handleContentChange(currentReport.getData("newGeneralCommentTopText"));
     }
-  }, [currentReport]);
-
+  }, [currentReport, content]);
   /* todo list */
   // todo 1. save the changes after and send the new report data. //done
   // todo 2. to locate the current id by the 'passedDownCategoryId' in the categoriesDataFromReport(which is report categories data) // done
   // todo 3. replace the old category items with the currentReportItemsForGrade(which is the edited category items) // done
   // todo 4. to convert with the 'new FormData' method and stringify the currentReportItemsForGrade // done
-  // todo 5. to send post request of the whole json (categoriesDataFromReport) with the new changes
+  // todo 5. to send post request of the whole json (categoriesDataFromReport) with the new changes // done
   // todo 6. to check if you getting the new changes when refreshing the the screen
+  // todo 6. to
 
   useEffect(() => {
     // console.log("currentReportItemsForGrade:", currentReportItemsForGrade);
@@ -607,10 +624,7 @@ const EditExistingReport = () => {
     const targetId = passedDownCategoryId;
     let foundCategory = null;
     const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
-    // console.log(
-    //   "before parsedCategoriesDataFromReport:",
-    //   parsedCategoriesDataFromReport.map((item) => item.items)
-    // );
+
     parsedCategoriesDataFromReport.forEach((category) => {
       if (category.id == targetId) {
         foundCategory = category;
@@ -619,46 +633,36 @@ const EditExistingReport = () => {
     });
 
     if (foundCategory) {
-      // console.log("before Found Category:", foundCategory.items);
-      const bodyFormData = new FormData();
-      // let newBody = bodyFormData.append(
-      //   "data",
-      //   JSON.stringify(currentReportItemsForGrade)
-      // );
-
-      let newBody = bodyFormData.append(
-        "data",
-        JSON.stringify(parsedCategoriesDataFromReport)
-      );
-      foundCategory.items = [...newBody];
-      // console.log(
-      //   "after parsedCategoriesDataFromReport:",
-      //   parsedCategoriesDataFromReport.map((item) => item.items)
-      // );
-      // console.log("after the changes:", foundCategory.items);
+      foundCategory.items = [...currentReportItemsForGrade];
+      foundCategory.grade = categoryGrade;
     } else {
       console.log("ID not found");
     }
+    console.log(
+      "parsedCategoriesDataFromReport:",
+      parsedCategoriesDataFromReport
+    );
+    const bodyFormData = new FormData();
+    bodyFormData.append("id", currentReport.getData("id"));
+    bodyFormData.append("workerId", currentReport.getData("workerId"));
+    bodyFormData.append("clientId", currentReport.getData("clientId"));
+    bodyFormData.append("newGeneralCommentTopText", content);
+    bodyFormData.append("data", JSON.stringify(parsedCategoriesDataFromReport));
+    bodyFormData.append("status", currentReport.getData("status"));
+    bodyFormData.append("newCategorys", currentReport.getData("categorys"));
 
-    // try {
-    //   const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
-    //   const response = await axios.post(apiUrl, {
-    //     id: currentReport.getData("id"),
-    //     workerId: currentReport.getData("workerId"),
-    //     clientId: currentReport.getData("clientId"),
-    //     newGeneralCommentTopText: currentReport.getData(
-    //       "newGeneralCommentTopText"
-    //     ),
-    //     data: foundCategory.items,
-    //     status: currentReport.getData("status"),
-    //     newCategorys: currentReport.getData("categorys"),
-    //   });
-    //   if (response.status == 200) {
-    //     console.log("response:", response.data);
-    //   }
-    // } catch (error) {
-    //   console.error("Error making POST request:", error);
-    // }
+    // console.log("con:", content);
+    // console.log(currentReport.getData("id"));
+    try {
+      const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
+      const response = await axios.post(apiUrl, bodyFormData);
+      if (response.status == 200) {
+        console.log("response:", response.status);
+        // todo to save the data and the content
+      }
+    } catch (error) {
+      console.error("Error making POST request:", error);
+    }
   };
 
   // * paginations between categories names : Prev
@@ -688,8 +692,10 @@ const EditExistingReport = () => {
     // const stringifiedEditedReportData = JSON.stringify(
     //   currentReportItemsForGrade
     // );
+
     saveReport();
   };
+
   // ! drawer logic end
 
   // * mapping over CategoriesItems and displaying the items
@@ -1033,10 +1039,7 @@ const EditExistingReport = () => {
                       iconMap={{
                         ["custom"]: ({}) => <Text>C</Text>,
                       }}
-                      custom={() => {
-                        setcolorSelected(!colorSelected);
-                        console.log("object");
-                      }}
+                      custom={handleCustomAction}
                     />
                   </View>
                   {colorSelected && (
