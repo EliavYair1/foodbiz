@@ -58,7 +58,12 @@ import ColorPicker from "react-native-wheel-color-picker";
 import SummaryAndNote from "./innerComponents/SummaryAndNote";
 import CategoryItemName from "./innerComponents/categoryItemName";
 import "@env";
+
 import axios from "axios";
+import { getCurrentReport } from "../../../../store/redux/reducers/getCurrentReport";
+
+import routes from "../../../../Navigation/routes";
+import { getCurrentCategory } from "../../../../store/redux/reducers/getCurrentCategory";
 const EditExistingReport = () => {
   // ! redux stpre fetching
   const dispatch = useDispatch();
@@ -78,7 +83,7 @@ const EditExistingReport = () => {
   // ! redux stpre fetching end
   const drawerRef = useRef(null);
   const richText = useRef();
-  const { navigateTogoBack } = useScreenNavigator();
+  const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
   const [categoryGrade, setCategoryGrade] = useState(0);
   const [majorCategoryGrade, setMajorCategoryGrade] = useState(0);
   const [reportGrade, setReportGrade] = useState(0);
@@ -523,28 +528,13 @@ const EditExistingReport = () => {
     setContent(content);
   }, 300);
   useEffect(() => {
-    let newGeneralCommentTopText = currentReport.getData(
-      "newGeneralCommentTopText"
-    );
     if (content == "") {
       handleContentChange(currentReport.getData("newGeneralCommentTopText"));
     }
-  }, [currentReport, content]);
-  /* todo list */
-  // todo 1. save the changes after and send the new report data. //done
-  // todo 2. to locate the current id by the 'passedDownCategoryId' in the categoriesDataFromReport(which is report categories data) // done
-  // todo 3. replace the old category items with the currentReportItemsForGrade(which is the edited category items) // done
-  // todo 4. to convert with the 'new FormData' method and stringify the currentReportItemsForGrade // done
-  // todo 5. to send post request of the whole json (categoriesDataFromReport) with the new changes // done
-  // todo 6. to check if you getting the new changes when refreshing the the screen
-  // todo 6. to
-
-  useEffect(() => {
-    // console.log("currentReportItemsForGrade:", currentReportItemsForGrade);
-    // console.log("passedDownCategoryId", passedDownCategoryId);
-    // console.log("categoriesDataFromReport:", categoriesDataFromReport);
-    // console.log("currentReport:", currentReport);
   }, []);
+
+  /* todo list */
+
   // * summery and notes drawer logic
   const summeryAndNotesManager = (types, condition) => {
     let commentGroups = { critical: [], severe: [], normal: [] };
@@ -638,27 +628,26 @@ const EditExistingReport = () => {
     } else {
       console.log("ID not found");
     }
-    console.log(
-      "parsedCategoriesDataFromReport:",
-      parsedCategoriesDataFromReport
-    );
+
     const bodyFormData = new FormData();
     bodyFormData.append("id", currentReport.getData("id"));
     bodyFormData.append("workerId", currentReport.getData("workerId"));
     bodyFormData.append("clientId", currentReport.getData("clientId"));
-    bodyFormData.append("newGeneralCommentTopText", content);
-    bodyFormData.append("data", JSON.stringify(parsedCategoriesDataFromReport));
     bodyFormData.append("status", currentReport.getData("status"));
     bodyFormData.append("newCategorys", currentReport.getData("categorys"));
+    bodyFormData.append("newGeneralCommentTopText", content);
+    bodyFormData.append("data", JSON.stringify(parsedCategoriesDataFromReport));
 
-    // console.log("con:", content);
-    // console.log(currentReport.getData("id"));
     try {
       const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
       const response = await axios.post(apiUrl, bodyFormData);
       if (response.status == 200) {
         console.log("response:", response.status);
-        // todo to save the data and the content
+        let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
+
+        currentReport.setData("data", updatedValues);
+        currentReport.setData("newGeneralCommentTopText", content);
+        dispatch(getCurrentReport(currentReport));
       }
     } catch (error) {
       console.error("Error making POST request:", error);
@@ -694,8 +683,10 @@ const EditExistingReport = () => {
     // );
 
     saveReport();
+    // dispatch(getCurrentCategory(currentCategories.currentCategories[1]));
+    navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
-
+  // console.log(categoriesDataFromReport);
   // ! drawer logic end
 
   // * mapping over CategoriesItems and displaying the items
@@ -1091,7 +1082,7 @@ const EditExistingReport = () => {
                       <RichEditor
                         ref={richText}
                         onChange={handleContentChange}
-                        initialContentHTML="<div></div>"
+                        initialContentHTML={content}
                         placeholder={
                           "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
                         }

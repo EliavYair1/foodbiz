@@ -5,7 +5,7 @@ import Checkbox from "../../../Components/ui/Checkbox";
 import colors from "../../../styles/colors";
 const CheckboxItem = ({ label, checkboxItemText, handleChange, checked }) => {
   const handleCheckboxToggle = (checked, label) => {
-    handleChange(checked, label);
+    handleChange(checked ? 1 : 0, label);
     console.log(`${label} is ${checked}`);
   };
   return (

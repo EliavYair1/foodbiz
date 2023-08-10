@@ -108,6 +108,7 @@ const CategoryAccordionItem = ({
     }).start();
   };
 
+  // todo to reset the grade value to 0 when categoryReset is picked
   // * change handler
   const handleReportChange = useCallback(
     (value, label) => {

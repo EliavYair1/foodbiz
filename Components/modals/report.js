@@ -42,6 +42,9 @@ export default class Report {
   getAccompany() {
     return this.data.accompany;
   }
+  setData(attr, data) {
+    this.data[attr] = data;
+  }
 
   getData(attr) {
     return this.data[attr];
