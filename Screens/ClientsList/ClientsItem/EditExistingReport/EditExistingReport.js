@@ -78,7 +78,19 @@ const EditExistingReport = () => {
     (state) => state.currentReport.currentReport
   );
   const memoizedCategories = useMemo(() => categories, [categories]);
+
   const memoRizedCats = memoizedCategories?.categories;
+  const globalStateCategories = memoRizedCats
+    ? Object.values(memoRizedCats).flatMap((category) => category.categories)
+    : null;
+  // console.log(globalStateCategories);
+  // * converting the chosen categories to strings
+  const matchedNames = globalStateCategories
+    .filter((obj) =>
+      currentCategories.currentCategories.find((obj2) => obj2 == obj.id)
+    )
+    .map((obj) => obj.name);
+
   const passedDownCategoryId = currentCategoryId.currentCategory;
   // ! redux stpre fetching end
   const drawerRef = useRef(null);
@@ -104,13 +116,6 @@ const EditExistingReport = () => {
     culinaryReviewCbStatus: [],
     nutritionReviewCbStatus: [],
   });
-  const haveFine = currentReport.getData("haveFine");
-  const haveSafetyGrade = currentReport.getData("haveSafetyGrade");
-  const haveCulinaryGrade = currentReport.getData("haveCulinaryGrade");
-  const haveNutritionGrade = currentReport.getData("haveNutritionGrade");
-  const haveCategoriesNameForCriticalItems = currentReport.getData(
-    "haveCategoriesNameForCriticalItems"
-  );
 
   // * category header
   const [categoryHeader, setCategoryHeader] = useState(false);
@@ -124,6 +129,16 @@ const EditExistingReport = () => {
   );
   const [categoryType, setCategoryType] = useState(null);
   const [content, setContent] = useState("");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  // *
+  const haveFine = currentReport.getData("haveFine");
+  const haveSafetyGrade = currentReport.getData("haveSafetyGrade");
+  const haveCulinaryGrade = currentReport.getData("haveCulinaryGrade");
+  const haveNutritionGrade = currentReport.getData("haveNutritionGrade");
+  const haveCategoriesNameForCriticalItems = currentReport.getData(
+    "haveCategoriesNameForCriticalItems"
+  );
 
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
@@ -149,13 +164,17 @@ const EditExistingReport = () => {
     return false;
   };
 
+  // * getting the desired category information to display
   const desiredCategory = () => {
     let parentCategory = false;
     let indexSubcategory = false;
 
     for (const [key, value] of Object.entries(categories.categories)) {
       value.categories.find((subcategory, index) => {
-        if (subcategory.id == passedDownCategoryId) {
+        if (
+          subcategory.id ==
+          currentCategories.currentCategories[currentCategoryIndex]
+        ) {
           indexSubcategory = index;
           parentCategory = key;
           return subcategory;
@@ -173,12 +192,10 @@ const EditExistingReport = () => {
       categories.categories[parentCategory].categories[indexSubcategory].type
     );
   };
-
   useEffect(() => {
     desiredCategory();
   }, [desiredCategory]);
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const schema = yup.object().shape({
     remarks: yup.string().required("remarks is required"),
     executioner: yup.string().required("executioner is required"),
@@ -205,7 +222,7 @@ const EditExistingReport = () => {
   }, [dispatch]);
 
   //  * 1. checking if the ids of the categories match to the selected report
-  // *  2.  sorting them by type to their right location of the state
+  // *  2.  sorting them by type to their right location based on their parent category
   const handleCheckboxStatusChange = (passedCategories) => {
     const globalStateCategories = memoRizedCats
       ? Object.values(memoRizedCats).flatMap((category) => category.categories)
@@ -244,6 +261,48 @@ const EditExistingReport = () => {
     setCheckboxStatus(newCheckboxStatus);
   };
 
+  // const handleCheckboxStatusChange = (passedCategories) => {
+  //   const globalStateCategories = memoRizedCats
+  //     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
+  //     : null;
+
+  //   let newCheckboxStatus = {
+  //     foodSafetyReview: [],
+  //     culinaryReview: [],
+  //     nutritionReview: [],
+  //   };
+
+  //   if (globalStateCategories) {
+  //     globalStateCategories.forEach((category) => {
+  //       const categoryId = parseInt(category.id, 10);
+  //       const categoryName = category.name;
+  //       const categoryType = parseInt(category.type, 10);
+
+  //       if (passedCategories.has(categoryId)) {
+  //         if (categoryType === 1) {
+  //           newCheckboxStatus.foodSafetyReview.push({
+  //             id: categoryId,
+  //             name: categoryName,
+  //           });
+  //         } else if (categoryType === 2) {
+  //           newCheckboxStatus.culinaryReview.push({
+  //             id: categoryId,
+  //             name: categoryName,
+  //           });
+  //         } else if (categoryType === 3) {
+  //           newCheckboxStatus.nutritionReview.push({
+  //             id: categoryId,
+  //             name: categoryName,
+  //           });
+  //         }
+  //       }
+  //     });
+  //   }
+
+  //   setCheckboxStatus(newCheckboxStatus);
+  // };
+
+  console.log(checkboxStatus);
   useEffect(() => {
     if (currentCategories) {
       const categoryIds = currentCategories.currentCategories;
@@ -253,6 +312,7 @@ const EditExistingReport = () => {
       console.log("currentCategories is not a valid Set or is empty.");
     }
   }, [currentCategories]);
+
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
@@ -260,76 +320,14 @@ const EditExistingReport = () => {
 
   // * modal pick handler
   const handleOptionClick = (option) => {
-    setSelectedModalCategory((prevSelectedOptions) => [
-      ...prevSelectedOptions,
-      option,
-    ]);
+    setSelectedModalCategory(option);
     if (selectedModalCategory) {
       console.log("modal option choice:", option);
       handleModalClose();
     }
   };
 
-  // * form submit function
-  const onSubmitForm = () => {
-    // console.log("form values:", getValues());
-    if (isFormSubmitted) {
-      console.log("form submitted");
-    }
-  };
-  const imageTextsAndFunctionality = [
-    {
-      id: 0,
-      text: "קבצים",
-      source: require("../../../../assets/icons/iconImgs/folder.png"),
-      iconPress: () => {
-        console.log("folder");
-      },
-    },
-    {
-      id: 1,
-      text: "מפרט",
-      source: require("../../../../assets/icons/iconImgs/paperSheet.png"),
-      iconPress: () => {
-        console.log("paperSheet");
-      },
-    },
-    {
-      id: 2,
-      text: "הגדרות",
-      source: require("../../../../assets/icons/iconImgs/settings.png"),
-      iconPress: () => {
-        console.log("settings");
-      },
-    },
-    {
-      id: 3,
-      text: "קטגוריות",
-      source: require("../../../../assets/icons/iconImgs/categories.png"),
-      iconPress: () => {
-        console.log("categories");
-        setModalVisible(true);
-      },
-    },
-    {
-      id: 4,
-      text: "סיכום",
-
-      source: require("../../../../assets/icons/iconImgs/notebook.png"),
-      iconPress: () => {
-        console.log("notebook");
-      },
-    },
-    {
-      id: 5,
-      text: "צפייה",
-
-      source: require("../../../../assets/icons/iconImgs/eye.png"),
-      iconPress: () => {
-        console.log("eye");
-      },
-    },
-  ];
+  // ? random functions
 
   // * determain the color of the gradewrapper based on the grade value
   const gradeBackgroundColor = (grade) => {
@@ -345,6 +343,7 @@ const EditExistingReport = () => {
       return colors.redish;
     }
   };
+
   const renderImageTextItem = ({ item }) => {
     return (
       <View style={{ marginRight: 10 }}>
@@ -358,28 +357,42 @@ const EditExistingReport = () => {
     );
   };
 
+  // * form submit function
+  const onSubmitForm = () => {
+    // console.log("form values:", getValues());
+    if (isFormSubmitted) {
+      console.log("form submitted");
+    }
+  };
+  // ! random function end
+
   // * finding the current report data based on the category id from the report edit mode.
   const getRelevantReportData = (data) => {
-    // * parsing the data
+    //  parsing the data.
+    if (!data) {
+      console.log("No data provided");
+      return;
+    }
     const CategoriesArrayOfData = JSON.parse(data);
-
+    //  getting the relevent data of the categories based on the current sub Category.
     const relevantData = CategoriesArrayOfData.find(
-      (category) => category.id == passedDownCategoryId
+      (category) =>
+        category.id == currentCategories.currentCategories[currentCategoryIndex]
     );
+    // if the current sub category is true then set me his items else send a err msg.
     if (relevantData) {
       setCurrentReportItemsForGrade(relevantData.items);
       setCurrentReportItems(relevantData.items);
-      // ! setCategoryGrade(relevantData.grade);
     } else {
       console.log("Failed to find Relevant Data");
     }
   };
 
-  //  * fetching the data from the current report
+  //  * passing the data from the current report and storing it in the state in the getRelevantReportData function.
   const categoriesDataFromReport = currentReport.getCategoriesData();
   useEffect(() => {
     getRelevantReportData(categoriesDataFromReport);
-  }, [ratingCheckboxItem]);
+  }, [ratingCheckboxItem, currentCategoryIndex]);
 
   // * handling changes in the report finding , replacing and returning the new report item
   const handleReportItemChange = useCallback((newReportItem) => {
@@ -396,7 +409,7 @@ const EditExistingReport = () => {
     });
   }, []);
 
-  // ! categories scores calculation
+  // ? categories scores calculation
   // * Major category grade calculation
   const calculateMajorCategoryGrade = () => {
     const parsedCategories = JSON.parse(categoriesDataFromReport);
@@ -404,11 +417,11 @@ const EditExistingReport = () => {
     let currentSubcategories = false;
     // * chosing to calculate which current subcategories based on the type.
     if (categoryType == 1) {
-      currentSubcategories = checkboxStatus.foodSafetyReviewCbStatus;
+      currentSubcategories = checkboxStatus.foodSafetyReviewCbStatus || [];
     } else if (categoryType == 2) {
-      currentSubcategories = checkboxStatus.culinaryReviewCbStatus;
+      currentSubcategories = checkboxStatus.culinaryReviewCbStatus || [];
     } else {
-      currentSubcategories = checkboxStatus.nutritionReviewCbStatus;
+      currentSubcategories = checkboxStatus.nutritionReviewCbStatus || [];
     }
     // * counting the amount of the currentSubcategories for calculation.
     let numberOfCurrentSubcategories = currentSubcategories.length;
@@ -498,26 +511,20 @@ const EditExistingReport = () => {
     calculateMajorCategoryGrade();
     calculateReportGrade(majorCategoryGrade);
   }, [currentReportItemsForGrade]);
+
   // ! categories scores calculation end
 
-  // ! drawer logic
+  // ? drawer logic
   // * drawer handler
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
   };
-  // const onCloseDrawer = () => {
-  //   setIsDrawerOpen(false);
-  // };
+
   const closeDrawer = () => {
     if (drawerRef.current) {
       drawerRef.current.closeDrawer();
       setIsDrawerOpen(false);
     }
-  };
-
-  const handleCustomAction = () => {
-    setColorSelected(!colorSelected);
-    console.log("Custom action triggered");
   };
 
   // * newGeneralCommentTopText drawer change handler
@@ -527,22 +534,30 @@ const EditExistingReport = () => {
     richText.current?.setContentHTML(strippedContent);
     setContent(content);
   }, 300);
+
+  // * newGeneralCommentTopText color picker
+  const handleCustomAction = () => {
+    setColorSelected(!colorSelected);
+    console.log("Custom action triggered");
+  };
   useEffect(() => {
     if (content == "") {
       handleContentChange(currentReport.getData("newGeneralCommentTopText"));
     }
   }, []);
+  const parsedCategoriesDataFromReport = useMemo(() => {
+    return JSON.parse(categoriesDataFromReport);
+  }, [categoriesDataFromReport]);
 
   /* todo list */
-
   // * summery and notes drawer logic
   const summeryAndNotesManager = (types, condition) => {
     let commentGroups = { critical: [], severe: [], normal: [] };
-    const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+    // const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
     // * looping through the report categories data.
     parsedCategoriesDataFromReport.forEach((category) => {
       const items =
-        category.id == passedDownCategoryId
+        category.id == currentCategories.currentCategories[currentCategoryIndex]
           ? currentReportItemsForGrade
           : category.items;
       // * inner loop of the categories items.
@@ -608,12 +623,12 @@ const EditExistingReport = () => {
       ...commentGroups.normal,
     ];
   };
-
+  // console.log("currentCategoryIndex:", currentCategoryIndex);
   // * post request on the changes of the report edit
   const saveReport = async () => {
-    const targetId = passedDownCategoryId;
+    const targetId = currentCategories.currentCategories[currentCategoryIndex];
     let foundCategory = null;
-    const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+    // let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
 
     parsedCategoriesDataFromReport.forEach((category) => {
       if (category.id == targetId) {
@@ -636,15 +651,17 @@ const EditExistingReport = () => {
     bodyFormData.append("status", currentReport.getData("status"));
     bodyFormData.append("newCategorys", currentReport.getData("categorys"));
     bodyFormData.append("newGeneralCommentTopText", content);
-    bodyFormData.append("data", JSON.stringify(parsedCategoriesDataFromReport));
-
+    bodyFormData.append(
+      "data",
+      JSON.stringify([parsedCategoriesDataFromReport[currentCategoryIndex]])
+    );
+    // console.log(bodyFormData);
     try {
       const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
       const response = await axios.post(apiUrl, bodyFormData);
       if (response.status == 200) {
         console.log("response:", response.status);
         let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
-
         currentReport.setData("data", updatedValues);
         currentReport.setData("newGeneralCommentTopText", content);
         dispatch(getCurrentReport(currentReport));
@@ -654,40 +671,60 @@ const EditExistingReport = () => {
     }
   };
 
-  // * paginations between categories names : Prev
-  const handlePrevCategory = () => {
-    // setCurrentCategoryIndex((prevIndex) => {
-    //   const newIndex = prevIndex > 0 ? prevIndex - 1 : prevIndex;
-    //   const currentItem = checkedCategoryNameById[newIndex];
-    //   // dispatch(setCurrentCategory(currentItem));
-    //   return newIndex;
-    // });
-    console.log("prev");
+  // * pagination's between categories names : Prev
+  const prevCategory = async () => {
+    debounce(saveReport(), 300);
+    try {
+      if (currentCategoryIndex === 0) {
+        console.log(
+          "the first of categories:",
+          currentCategories.currentCategories[currentCategoryIndex]
+        );
+        return;
+      }
+
+      setCurrentCategoryIndex((prevIndex) => prevIndex - 1);
+      console.log("moving to the prev category");
+    } catch (error) {
+      console.error("Error in nextCategory:", error);
+    }
+  };
+  // * pagination's between categories names : Next
+  const nextCategory = async () => {
+    debounce(saveReport(), 300);
+
+    try {
+      if (
+        currentCategoryIndex ===
+        Object.keys(currentCategories.currentCategories).length - 1
+      ) {
+        console.log(
+          "Reached the last category:",
+          currentCategories.currentCategories[currentCategoryIndex]
+        );
+        return;
+      }
+
+      setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
+
+      console.log("Moving to the next category");
+      // dispatch(getCurrentCategory(currentCategories.currentCategories[1]));
+      // navigateToRoute(routes.ONBOARDING.EditExistingReport);
+    } catch (error) {
+      console.error("Error in nextCategory:", error);
+    }
+    // console.log("end");
   };
 
-  // * paginations between categories names : Next
-  const handleNextCategory = () => {
-    // setCurrentCategoryIndex((prevIndex) => {
-    //   const newIndex =
-    //     prevIndex < checkedCategoryNameById.length - 1
-    //       ? prevIndex + 1
-    //       : prevIndex;
-    //   const currentItem = checkedCategoryNameById[newIndex];
-    //   // dispatch(setCurrentCategory(currentItem));
-    //   // console.log(currentItem);
-    //   return newIndex;
-    // });
-    console.log("next");
-    // const stringifiedEditedReportData = JSON.stringify(
-    //   currentReportItemsForGrade
-    // );
-
-    saveReport();
-    // dispatch(getCurrentCategory(currentCategories.currentCategories[1]));
-    navigateToRoute(routes.ONBOARDING.EditExistingReport);
-  };
-  // console.log(categoriesDataFromReport);
   // ! drawer logic end
+
+  // ? console log section
+  // console.log("currentReport", currentReport.getData("id"));
+  // console.log("selectedModalCategory", selectedModalCategory);
+
+  // ! console log end
+
+  // ? arrays for flatList
 
   // * mapping over CategoriesItems and displaying the items
   const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
@@ -695,7 +732,9 @@ const EditExistingReport = () => {
       (element) => element.id == item.id
     );
     const timeOfReport = currentReport.getData("timeOfReport");
-
+    // console.log("reportItem", reportItem);
+    // console.log("currentReportItems", currentReportItems);
+    // console.log("item", item);
     return {
       id: item.id,
       component: (
@@ -783,9 +822,61 @@ const EditExistingReport = () => {
       options: categoryNames.nutritionReviewNames,
     },
   ];
+  const imageTextsAndFunctionality = [
+    {
+      id: 0,
+      text: "קבצים",
+      source: require("../../../../assets/icons/iconImgs/folder.png"),
+      iconPress: () => {
+        console.log("folder");
+      },
+    },
+    {
+      id: 1,
+      text: "מפרט",
+      source: require("../../../../assets/icons/iconImgs/paperSheet.png"),
+      iconPress: () => {
+        console.log("paperSheet");
+      },
+    },
+    {
+      id: 2,
+      text: "הגדרות",
+      source: require("../../../../assets/icons/iconImgs/settings.png"),
+      iconPress: () => {
+        console.log("settings");
+      },
+    },
+    {
+      id: 3,
+      text: "קטגוריות",
+      source: require("../../../../assets/icons/iconImgs/categories.png"),
+      iconPress: () => {
+        console.log("categories");
+        setModalVisible(true);
+      },
+    },
+    {
+      id: 4,
+      text: "סיכום",
 
-  const summeryAndNotes = [];
+      source: require("../../../../assets/icons/iconImgs/notebook.png"),
+      iconPress: () => {
+        console.log("notebook");
+      },
+    },
+    {
+      id: 5,
+      text: "צפייה",
 
+      source: require("../../../../assets/icons/iconImgs/eye.png"),
+      iconPress: () => {
+        console.log("eye");
+      },
+    },
+  ];
+
+  // ! arrays for flatList
   return (
     <>
       <ScreenWrapper
@@ -913,9 +1004,10 @@ const EditExistingReport = () => {
                     />
                   </TouchableOpacity>
                 )}
+
                 {!isDrawerOpen && (
                   <TouchableOpacity
-                    onPress={handlePrevCategory}
+                    onPress={prevCategory}
                     style={{
                       alignSelf: "center",
                       flexDirection: "row",
@@ -931,9 +1023,10 @@ const EditExistingReport = () => {
                         transform: [{ rotate: "180deg" }],
                       }}
                     />
+
                     <Text style={styles.categoryDirButton}>
                       הקטגוריה הקודמת:
-                      {/* {checkedCategoryNameById[currentCategoryIndex - 1]?.name} */}
+                      {matchedNames[currentCategoryIndex - 1]}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -963,7 +1056,7 @@ const EditExistingReport = () => {
                 {/* {formData && formData.categories && formData.categories[0] && ( */}
                 {!isDrawerOpen && (
                   <TouchableOpacity
-                    onPress={handleNextCategory}
+                    onPress={nextCategory}
                     style={{
                       alignSelf: "center",
                       flexDirection: "row",
@@ -972,8 +1065,7 @@ const EditExistingReport = () => {
                     }}
                   >
                     <Text style={styles.categoryDirButton}>
-                      הקטגוריה הבאה:{" "}
-                      {/* {checkedCategoryNameById[currentCategoryIndex + 1]?.name} */}
+                      הקטגוריה הבאה: {matchedNames[currentCategoryIndex + 1]}
                     </Text>
                     <Image
                       source={accordionCloseIcon}
@@ -1281,7 +1373,7 @@ const EditExistingReport = () => {
   );
 };
 
-export default EditExistingReport;
+export default React.memo(EditExistingReport);
 
 const styles = StyleSheet.create({
   goBackWrapper: {
