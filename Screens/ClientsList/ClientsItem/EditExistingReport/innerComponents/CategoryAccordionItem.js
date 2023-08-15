@@ -313,6 +313,7 @@ const CategoryAccordionItem = ({
               disabled={reportItemState.grade == 3}
               displayedValue={reportItemState.charge}
               optionsLocation={100}
+              defaultText={"בחירה"}
               centeredViewStyling={{ marginLeft: 120 }}
               onChange={(value) => {
                 console.log(value, "is selected");
@@ -340,6 +341,7 @@ const CategoryAccordionItem = ({
                 selectWidth={237}
                 optionsCenterView={"flex-start"}
                 optionsHeight={150}
+                defaultText={"בחירה"}
                 disabled={reportItemState.grade == 3}
                 displayedValue={dateSelected}
                 optionsLocation={100}

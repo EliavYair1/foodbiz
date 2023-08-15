@@ -349,6 +349,7 @@ const PopUp = ({
                       alignItems: "flex-start",
                       marginBottom: 0,
                     }}
+                    defaultText={"בחירה"}
                     optionsHeight={250}
                     centeredViewStyling={
                       {

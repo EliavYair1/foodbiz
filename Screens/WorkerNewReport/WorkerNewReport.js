@@ -626,7 +626,6 @@ const WorkerNewReport = () => {
           return result;
         }, [])
       : [];
-
   const imageTextsAndFunctionality = [
     {
       id: 0,
@@ -777,6 +776,7 @@ categorys[]: 5
               control={control}
               selectWidth={240}
               optionsHeight={200}
+              defaultText={"בחירה"}
               displayedValue={getValues().clientStationId}
               selectMenuStyling={{
                 flexDirection: "column",
@@ -816,6 +816,7 @@ categorys[]: 5
               control={control}
               selectWidth={240}
               optionsHeight={750}
+              defaultText={"בחירה"}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",
@@ -980,6 +981,7 @@ categorys[]: 5
               control={control}
               selectWidth={240}
               optionsHeight={200}
+              defaultText={"בחירה"}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",

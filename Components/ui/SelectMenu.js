@@ -39,6 +39,7 @@ const SelectMenu = ({
   returnObject = false,
   displayedValue = false,
   disabled = false,
+  defaultText,
 }) => {
   const [visible, setVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -204,7 +205,7 @@ const SelectMenu = ({
                                 : selectedItem[propertyName]
                               : selectedItem
                           } ${value ? "(נבחר)" : ""}`
-                        : "בחירה"}
+                        : defaultText}
                     </Text>
                   </View>
                 </TouchableOpacity>

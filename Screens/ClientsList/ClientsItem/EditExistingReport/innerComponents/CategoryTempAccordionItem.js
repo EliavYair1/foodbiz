@@ -21,7 +21,7 @@ import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
-const CategoryWeightsAccordionItem = ({
+const CategoryTempAccordionItem = ({
   handleRatingCheckboxChange,
   ratingCheckboxItem,
   control,
@@ -43,7 +43,12 @@ const CategoryWeightsAccordionItem = ({
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
 
+  // * image picker
   const pickImage = async () => {
+    if (images.length >= 3) {
+      alert("You can only select up to 3 images.");
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync();
     if (!result.canceled) {
       const selectedAssets = result.assets;
@@ -92,10 +97,7 @@ const CategoryWeightsAccordionItem = ({
               gap: 12,
             }}
           >
-            <Text style={{ fontFamily: fonts.ABold }}>
-              סוג המזון שנבדק:{" "}
-              <Text style={{ fontFamily: fonts.ARegular }}>{sectionText}</Text>:
-            </Text>
+            <Text style={{ fontFamily: fonts.ABold }}>סוג המזון שנבדק:</Text>
             <SelectMenu
               control={control}
               name={"lastDate"}
@@ -104,6 +106,7 @@ const CategoryWeightsAccordionItem = ({
               selectWidth={188}
               optionsCenterView={"flex-start"}
               optionsHeight={150}
+              defaultText={"בחירה"}
               displayedValue={dateSelected}
               optionsLocation={100}
               // centeredViewStyling={{ marginLeft: 480 }}
@@ -114,14 +117,19 @@ const CategoryWeightsAccordionItem = ({
               returnObject={true}
               errorMessage={errors.lastDate && errors.lastDate.message}
             />
-            <Text style={{ fontFamily: fonts.ABold }}>שם המנה: :</Text>
+            <Text style={{ fontFamily: fonts.ABold, marginLeft: 20 }}>
+              שם המנה:{" "}
+            </Text>
             <Input
               control={control}
               name={"remarks"}
-              mode={"flat"}
-              placeholder={"יש לנקות *ממטרות* מדיח כלים"}
-              contentStyle={styles.inputContentStyling}
-              inputStyle={[styles.inputStyling, { width: 150 }]}
+              mode={"outlined"}
+              label={"יש לנקות *ממטרות* מדיח כלים"}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
+              inputStyle={[styles.inputStyling, { width: 270 }]}
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
@@ -149,15 +157,16 @@ const CategoryWeightsAccordionItem = ({
 
         <View style={styles.categoryRatingCheckboxWrapper}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Text style={{ fontFamily: fonts.ABold }}>טמפ׳:</Text>
+            <Text style={{ fontFamily: fonts.ABold }}>טמפ׳ שנמדדה:</Text>
             <SelectMenu
               control={control}
               name={"lastDate"}
               selectOptions={selectedDates}
               propertyName={null}
-              selectWidth={188}
+              selectWidth={70}
               optionsCenterView={"flex-start"}
               optionsHeight={150}
+              defaultText={"בחר"}
               displayedValue={dateSelected}
               optionsLocation={100}
               // centeredViewStyling={{ marginLeft: 480 }}
@@ -174,7 +183,10 @@ const CategoryWeightsAccordionItem = ({
               name={"remarks"}
               mode={"flat"}
               placeholder={"יש לנקות *ממטרות* מדיח כלים"}
-              contentStyle={styles.inputContentStyling}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
               inputStyle={[styles.inputStyling, { width: 50 }]}
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
@@ -340,4 +352,4 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 });
-export default CategoryWeightsAccordionItem;
+export default CategoryTempAccordionItem;

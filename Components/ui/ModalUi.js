@@ -13,11 +13,11 @@ const ModalUi = ({ header, onClose, handleOptionClick, modalContent }) => {
         <ScrollView style={{ flex: 1 }}>
           {item.options.map((option, index) => (
             <TouchableOpacity
-              key={index}
+              key={option.id}
               style={styles.button}
-              onPress={() => handleOptionClick(option)}
+              onPress={() => handleOptionClick(option.id)}
             >
-              <Text style={styles.optionText}>{option}</Text>
+              <Text style={styles.optionText}>{option.name}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>

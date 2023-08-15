@@ -26,7 +26,7 @@ const CategoryAccordion = ({ item }) => {
 
   useEffect(() => {
     Animated.timing(heightAnim, {
-      toValue: open ? 350 : 0,
+      toValue: open ? 100 : 0,
       duration: 250,
       useNativeDriver: false,
     }).start();
