@@ -132,7 +132,6 @@ const EditExistingReport = () => {
   const [content, setContent] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  // *
   const haveFine = currentReport.getData("haveFine");
   const haveSafetyGrade = currentReport.getData("haveSafetyGrade");
   const haveCulinaryGrade = currentReport.getData("haveCulinaryGrade");
@@ -168,6 +167,10 @@ const EditExistingReport = () => {
     return false;
   };
 
+  useEffect(() => {
+    getCategory(2);
+  }, []);
+
   // * getting the desired category information to display
   const desiredCategory = () => {
     let parentCategory = false;
@@ -196,21 +199,6 @@ const EditExistingReport = () => {
       categories.categories[parentCategory].categories[indexSubcategory].type
     );
   };
-  // * getting the desired category information to display ** refactor **
-  // const desiredCategory = () => {
-  //   const foundCategoryInfo = getCategory(
-  //     currentCategories.currentCategories[currentCategoryIndex],
-  //     categories.categories
-  //   );
-
-  //   if (foundCategoryInfo) {
-  //     const { key, value } = foundCategoryInfo;
-  //     setCategoriesItems(value.items);
-  //     setCategorySubHeader(value.name);
-  //     setCategoryHeader(categories.categories[key].name);
-  //     setCategoryType(value.type);
-  //   }
-  // };
 
   useEffect(() => {
     desiredCategory();
@@ -307,7 +295,7 @@ const EditExistingReport = () => {
   const handleModalClose = () => {
     setModalVisible(false);
   };
-  // todo apply saveReport
+
   // * modal pick handler
   const handleOptionClick = (option) => {
     const indexOfCategory = currentCategories.currentCategories.findIndex(
@@ -322,7 +310,6 @@ const EditExistingReport = () => {
     }
   };
 
-  // console.log("selectedModalCategory:", currentCategories.currentCategories);
   // ? random functions
 
   // * determain the color of the gradewrapper based on the grade value
@@ -383,7 +370,6 @@ const EditExistingReport = () => {
       console.log("Failed to find Relevant Data");
     }
   };
-
   //  * passing the data from the current report and storing it in the state in the getRelevantReportData function.
   useEffect(() => {
     getRelevantReportData(categoriesDataFromReport);
@@ -404,6 +390,9 @@ const EditExistingReport = () => {
     });
   }, []);
 
+  const handleReportTempItemChange = useCallback((newReportItem) => {
+    // console.log("newReportItem:", newReportItem);
+  }, []);
   // ? categories scores calculation
   // * Major category grade calculation
   const calculateMajorCategoryGrade = () => {
@@ -617,6 +606,7 @@ const EditExistingReport = () => {
       ...commentGroups.normal,
     ];
   };
+
   // console.log("currentCategoryIndex:", currentCategoryIndex);
   // * post request on the changes of the report edit
   const saveReport = async () => {
@@ -712,12 +702,12 @@ const EditExistingReport = () => {
   // ! drawer logic end
 
   // ? console log section
-  // console.log("currentReport", currentReport.getData("id"));
-  // console.log(CategoriesItems);
   useEffect(() => {
     // console.log(currentCategoryId.currentCategory);
-    // console.log(CategoriesItems);
-    // console.log(JSON.stringify(categories.categories.map((item) => item.id)));
+    // console.log(JSON.stringify(CategoriesItems));
+    // console.log(JSON.stringify(categories.categories));
+    // console.log(categoriesDataFromReport);
+    // console.log(currentReport.getCategoriesData());
   }, []);
   // ! console log end
 
@@ -741,9 +731,6 @@ const EditExistingReport = () => {
       (element) => element.id == item.id
     );
     const timeOfReport = currentReport.getData("timeOfReport");
-    // console.log("reportItem", reportItem);
-    // console.log("currentReportItems", currentReportItems);
-    // console.log("item", item);
     return {
       id: item.id,
       component: (
@@ -762,189 +749,25 @@ const EditExistingReport = () => {
       ),
     };
   });
-  // const AccordionCategoriesTemperatureList = [
-
-  //   {
-  //     id: 1,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         dateSelected={"dsadsa"}
-  //         trigger={trigger}
-  //         errors={errors}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         // imagesArray={images}
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 2,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         errors={errors}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 3,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         errors={errors}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 4,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         errors={errors}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 5,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         errors={errors}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 6,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         errors={errors}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 7,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         errors={errors}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 8,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         errors={errors}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 9,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         errors={errors}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  //   {
-  //     id: 10,
-  //     component: (
-  //       <CategoryTempAccordionItem
-  //         releventCheckboxItems={relevantCheckboxItems}
-  //         ratingCheckboxItem={ratingCheckboxItem}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         selectedDates={[1, 2, 3, 4, 5, 6]}
-  //         errors={errors}
-  //         sectionText="טמפרטורת מזון חם בהגשה"
-  //         accordionHeight={150}
-  //       />
-  //     ),
-  //   },
-  // ];
 
   const AccordionCategoriesTemperatureList = [];
 
   const accordionTempItemsLength = 10;
 
-  for (let i = 1; i <= accordionTempItemsLength; i++) {
+  for (let i = 0; i < accordionTempItemsLength; i++) {
+    // console.log(currentReportItems[i] ?? false);
     AccordionCategoriesTemperatureList.push({
       id: i,
       component: (
         <CategoryTempAccordionItem
-          releventCheckboxItems={relevantCheckboxItems}
-          ratingCheckboxItem={ratingCheckboxItem}
+          reportItem={currentReportItems[i] ?? false}
           control={control}
           setValue={setValue}
           trigger={trigger}
-          selectedDates={[1, 2, 3, 4, 5, 6]}
+          // temperatureOptions={[]}
           errors={errors}
-          accordionHeight={150}
+          accordionHeight={140}
+          onTempReportItem={handleReportTempItemChange}
         />
       ),
     });

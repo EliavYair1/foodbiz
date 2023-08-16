@@ -21,7 +21,6 @@ const Radio = ({
       {options.map((option) => (
         <TouchableOpacity
           key={option.value}
-          // onPress={() => onChange(option.value)}
           onPress={() => !disabled && onChange(option.value)}
           style={{
             flexDirection: "row",

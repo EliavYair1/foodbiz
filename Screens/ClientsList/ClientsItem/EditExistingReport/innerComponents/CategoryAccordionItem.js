@@ -256,7 +256,6 @@ const CategoryAccordionItem = ({
         </View>
         <Divider />
         <View style={styles.categoryRatingCheckboxWrapper}>
-          {/* add disabled prop */}
           <Radio
             options={ratingsOptions}
             optionGap={75}

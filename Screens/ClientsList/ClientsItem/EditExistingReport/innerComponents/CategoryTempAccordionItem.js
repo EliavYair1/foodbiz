@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
+import Radio from "../../../../../Components/ui/Radio";
 const CategoryTempAccordionItem = ({
   handleRatingCheckboxChange,
   ratingCheckboxItem,
@@ -35,17 +36,31 @@ const CategoryTempAccordionItem = ({
   grade3,
   itemId,
   dateSelected,
-  selectedDates,
   accordionHeight,
+  foodTypeOptions,
+  reportItem,
+  // temperatureOptions,
 }) => {
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
-
+  const [reportItemState, setReportItemState] = useState(reportItem || {});
+  const [selectedOption, setSelectedOption] = useState(reportItemState?.grade);
+  useEffect(() => {
+    setReportItemState((prevReportItemState) => ({
+      ...prevReportItemState,
+      ...reportItem,
+    }));
+  }, [reportItem]);
+  console.log(reportItemState?.grade);
+  const handleOptionChange = (value) => {
+    // console.log("value:", value);
+    setSelectedOption(value);
+  };
   // * image picker
   const pickImage = async () => {
-    if (images.length >= 3) {
+    if (images.length >= 1) {
       alert("You can only select up to 3 images.");
       return;
     }
@@ -59,6 +74,20 @@ const CategoryTempAccordionItem = ({
       }
     }
   };
+  const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
+  // * change handler
+  const handleReportChange = useCallback((value, label) => {
+    setReportItemState((prev) => {
+      const temp = { ...prev };
+      temp[label] = value;
+      if (label === "grade") {
+        temp["comment"] = gradeLabels[value];
+      }
+
+      return temp;
+    });
+  }, []);
+  // console.log(selectedOption);
   const toggleAccordion = () => {
     setOpen(!open);
     if (!open) {
@@ -72,7 +101,34 @@ const CategoryTempAccordionItem = ({
       useNativeDriver: false,
     }).start();
   };
-
+  const temperatureOptions = ["מתחת ל-0", ...Array(81).keys(), "מעל 80"].map(
+    (item) => {
+      return { value: item + "", label: item + "" };
+    }
+  );
+  const ratingsOptions = [
+    { label: "0", value: "0" },
+    { label: "1", value: "1" },
+    { label: "2", value: "2" },
+    { label: "3", value: "3" },
+  ];
+  const tempFoodTypeOptions = [
+    { value: "1", label: "טמפרטורת מזון חם בהגשה" },
+    { value: "2", label: "טמפרטורת מזון חם בקבלה" },
+    { value: "3", label: "טמפרטורת מזון חם בארון חימום" },
+    { value: "4", label: "טמפרטורת מזון חם בשילוח" },
+    { value: "5", label: "טמפרטורת מזון חם בבישול" },
+    { value: "6", label: "טמפרטורת מזון קר" },
+    { value: "7", label: "טמפרטורת מזון קר בקבלה" },
+    { value: "8", label: "טמפרטורה מזון לאחר שיחזור המזון" },
+  ];
+  const selectedTempFoodType = tempFoodTypeOptions.find(
+    (option) => option.value == reportItemState.TempFoodType
+  );
+  const selectedTemperature = temperatureOptions.find(
+    (option) => option.value == reportItemState.TempMeasured
+  );
+  // console.log(reportItemState.grade == undefined);
   return (
     <View
       style={[
@@ -100,31 +156,39 @@ const CategoryTempAccordionItem = ({
             <Text style={{ fontFamily: fonts.ABold }}>סוג המזון שנבדק:</Text>
             <SelectMenu
               control={control}
-              name={"lastDate"}
-              selectOptions={selectedDates}
-              propertyName={null}
+              name={"foodType"}
+              selectOptions={tempFoodTypeOptions}
+              propertyName={"label"}
               selectWidth={188}
               optionsCenterView={"flex-start"}
               optionsHeight={150}
-              defaultText={"בחירה"}
-              displayedValue={dateSelected}
+              defaultText={
+                selectedTempFoodType
+                  ? selectedTempFoodType.label
+                  : tempFoodTypeOptions[0].label
+              }
+              // displayedValue={
+              //   selectedTempFoodType ? selectedTempFoodType.value : "בחירה"
+              // }
               optionsLocation={100}
               // centeredViewStyling={{ marginLeft: 480 }}
               onChange={(value) => {
-                setValue("lastDate", value);
-                trigger("lastDate");
+                // setValue("foodType", value.value);
+                // trigger("foodType");
+                // console.log(value);
               }}
               returnObject={true}
-              errorMessage={errors.lastDate && errors.lastDate.message}
+              errorMessage={errors.foodType && errors.foodType.message}
             />
             <Text style={{ fontFamily: fonts.ABold, marginLeft: 20 }}>
               שם המנה:{" "}
             </Text>
             <Input
               control={control}
-              name={"remarks"}
+              name={"nameOfDish"}
               mode={"outlined"}
-              label={"יש לנקות *ממטרות* מדיח כלים"}
+              // label={"חזה עוף"}
+              defaultValue={reportItemState.TempFoodName}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
@@ -133,8 +197,8 @@ const CategoryTempAccordionItem = ({
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                setValue("remarks", value);
-                trigger("remarks");
+                setValue("nameOfDish", value);
+                trigger("nameOfDish");
               }}
             />
           </View>
@@ -160,67 +224,66 @@ const CategoryTempAccordionItem = ({
             <Text style={{ fontFamily: fonts.ABold }}>טמפ׳ שנמדדה:</Text>
             <SelectMenu
               control={control}
-              name={"lastDate"}
-              selectOptions={selectedDates}
-              propertyName={null}
-              selectWidth={70}
+              name={"temp"}
+              selectOptions={temperatureOptions}
+              propertyName={"label"}
+              selectWidth={90}
+              foodTypeOptions
               optionsCenterView={"flex-start"}
               optionsHeight={150}
-              defaultText={"בחר"}
-              displayedValue={dateSelected}
+              defaultText={
+                selectedTemperature
+                  ? selectedTemperature.label
+                  : temperatureOptions[0].label
+              }
+              // displayedValue={dateSelected}
               optionsLocation={100}
               // centeredViewStyling={{ marginLeft: 480 }}
               onChange={(value) => {
-                setValue("lastDate", value);
-                trigger("lastDate");
+                // setValue("temp", value);
+                // trigger("temp");
+                console.log("val:", value);
               }}
               returnObject={true}
-              errorMessage={errors.lastDate && errors.lastDate.message}
+              errorMessage={errors.temp && errors.temp.message}
             />
             <Text style={{ fontFamily: fonts.ABold }}> טמפ׳ יעד:</Text>
             <Input
               control={control}
-              name={"remarks"}
+              name={"tempGoal"}
               mode={"flat"}
-              placeholder={"יש לנקות *ממטרות* מדיח כלים"}
+              // label={"65c"}
+              defaultValue={reportItemState.TempTarget ?? "65"}
+              disabled
+              // placeholder={"יש לנקות *ממטרות* מדיח כלים"}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
               ]}
-              inputStyle={[styles.inputStyling, { width: 50 }]}
+              inputStyle={[styles.inputStyling, { width: 70 }]}
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                setValue("remarks", value);
-                trigger("remarks");
+                setValue("tempGoal", value);
+                trigger("tempGoal");
               }}
             />
           </View>
-          <Text> דירוג:</Text>
-          <CheckboxItem
-            label={`${grade3}_${itemId}`}
-            checkboxItemText="3"
-            handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes(`${grade3}_${itemId}`)}
-          />
-          <CheckboxItem
-            label={`${grade2}_${itemId}`}
-            checkboxItemText="2"
-            handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes(`${grade2}_${itemId}`)}
-          />
-          <CheckboxItem
-            label={`${grade1}_${itemId}`}
-            checkboxItemText="1"
-            handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes(`${grade1}_${itemId}`)}
-          />
-          <CheckboxItem
-            label={`${grade0}_${itemId}`}
-            checkboxItemText="0"
-            handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes(`${grade0}_${itemId}`)}
-          />
+          {/* <Text> דירוג:</Text> */}
+
+          <View style={styles.categoryRatingCheckboxWrapper}>
+            <Radio
+              options={ratingsOptions}
+              optionGap={38}
+              optionText="דירוג:"
+              disabled={false}
+              selectedOption={
+                reportItemState?.grade == undefined ? 3 : reportItemState?.grade
+              }
+              onChange={(option) => handleReportChange(option, "grade")}
+              // disabled={reportItemState.noRelevant}
+            />
+          </View>
         </View>
       </TouchableOpacity>
 
@@ -238,7 +301,8 @@ const CategoryTempAccordionItem = ({
             control={control}
             name={"remarks"}
             mode={"flat"}
-            label={'"יש לנקות *ממטרות* מדיח כלים"'}
+            // label={'"יש לנקות *ממטרות* מדיח כלים"'}
+            defaultValue={reportItemState.comment}
             // placeholder={"יש לנקות *ממטרות* מדיח כלים"}
             contentStyle={styles.inputContentStyling}
             inputStyle={[styles.inputStyling, { minWidth: "100%" }]}
@@ -290,7 +354,7 @@ const styles = StyleSheet.create({
   },
   categoryRatingCheckboxWrapper: {
     flexDirection: "row",
-    gap: 28,
+    // gap: 5,
     alignItems: "center",
     marginTop: 16,
     marginBottom: 16,

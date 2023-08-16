@@ -135,8 +135,9 @@ const SelectMenu = ({
       height: optionsHeight,
     },
   });
-
   const renderMenuItem = ({ item, idx }) => {
+    // console.log("item:", item, item[propertyName]);
+
     return (
       <TouchableOpacity
         key={item.id}
@@ -166,86 +167,89 @@ const SelectMenu = ({
         name={name}
         control={control}
         defaultValue={displayedValue}
-        render={({ field: { value } }) => (
-          <View
-            ref={elementRef}
-            style={[
-              {
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-              },
-              selectMenuStyling ?? "",
-            ]}
-          >
-            <Menu
-              visible={visible}
-              onDismiss={closeMenu}
-              contentStyle={{
-                backgroundColor: "white",
-              }}
-              anchor={
-                <TouchableOpacity onPress={openMenu} disabled={disabled}>
-                  <View style={styles.button}>
-                    <Image
-                      source={selectorIcon}
-                      style={{
-                        width: 12.5,
-                        height: 12.5,
-                      }}
-                    />
-                    <Text style={styles.menuItemText}>
-                      {value
-                        ? value
-                        : selectedItem
-                        ? `${
-                            returnObject
-                              ? selectedItem.getData
-                                ? selectedItem.getData(propertyName)
-                                : selectedItem[propertyName]
-                              : selectedItem
-                          } ${value ? "(נבחר)" : ""}`
-                        : defaultText}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              }
+        render={({ field: { value } }) => {
+          // console.log("from select:", value);
+          return (
+            <View
+              ref={elementRef}
+              style={[
+                {
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                },
+                selectMenuStyling ?? "",
+              ]}
             >
-              <Modal
-                animationType="fade"
-                transparent={true}
+              <Menu
                 visible={visible}
-                onRequestClose={closeMenu}
-                style={{ alignItems: "flex-end", justifyContent: "flex-end" }}
-              >
-                <TouchableWithoutFeedback onPress={closeMenu}>
-                  <View
-                    style={[styles.centeredView, centeredViewStyling ?? ""]}
-                  >
-                    <View style={styles.modalView}>
-                      <FlatList
-                        data={selectOptions}
-                        keyExtractor={(option) => uuid()}
-                        renderItem={renderMenuItem}
-                        ItemSeparatorComponent={Divider}
-                      />
-                    </View>
-                  </View>
-                </TouchableWithoutFeedback>
-              </Modal>
-            </Menu>
-            {errorMessage && (
-              <HelperText
-                type="error"
-                style={{
-                  fontFamily: fonts.AMedium,
+                onDismiss={closeMenu}
+                contentStyle={{
+                  backgroundColor: "white",
                 }}
+                anchor={
+                  <TouchableOpacity onPress={openMenu} disabled={disabled}>
+                    <View style={styles.button}>
+                      <Image
+                        source={selectorIcon}
+                        style={{
+                          width: 12.5,
+                          height: 12.5,
+                        }}
+                      />
+                      <Text style={styles.menuItemText}>
+                        {value
+                          ? value
+                          : selectedItem
+                          ? `${
+                              returnObject
+                                ? selectedItem.getData
+                                  ? selectedItem.getData(propertyName)
+                                  : selectedItem[propertyName]
+                                : selectedItem
+                            } ${value ? "(נבחר)" : ""}`
+                          : defaultText}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                }
               >
-                {selectedItem ? null : errorMessage}
-              </HelperText>
-            )}
-          </View>
-        )}
+                <Modal
+                  animationType="fade"
+                  transparent={true}
+                  visible={visible}
+                  onRequestClose={closeMenu}
+                  style={{ alignItems: "flex-end", justifyContent: "flex-end" }}
+                >
+                  <TouchableWithoutFeedback onPress={closeMenu}>
+                    <View
+                      style={[styles.centeredView, centeredViewStyling ?? ""]}
+                    >
+                      <View style={styles.modalView}>
+                        <FlatList
+                          data={selectOptions}
+                          keyExtractor={(option) => uuid()}
+                          renderItem={renderMenuItem}
+                          ItemSeparatorComponent={Divider}
+                        />
+                      </View>
+                    </View>
+                  </TouchableWithoutFeedback>
+                </Modal>
+              </Menu>
+              {errorMessage && (
+                <HelperText
+                  type="error"
+                  style={{
+                    fontFamily: fonts.AMedium,
+                  }}
+                >
+                  {selectedItem ? null : errorMessage}
+                </HelperText>
+              )}
+            </View>
+          );
+        }}
       />
     </>
   );
