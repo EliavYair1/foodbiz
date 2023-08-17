@@ -53,11 +53,8 @@ const CategoryTempAccordionItem = ({
       ...reportItem,
     }));
   }, [reportItem]);
-  console.log(reportItemState?.grade);
-  const handleOptionChange = (value) => {
-    // console.log("value:", value);
-    setSelectedOption(value);
-  };
+  // console.log(reportItemState);
+
   // * image picker
   const pickImage = async () => {
     if (images.length >= 1) {
@@ -74,16 +71,76 @@ const CategoryTempAccordionItem = ({
       }
     }
   };
+
+  // {"TempFoodName": "מנה 1", "TempFoodType": "3", "TempMeasured": "6",
+  // "TempTarget": "65", "comment": "ליקוי חמור", "grade": "0", "image": ""}
   const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
   // * change handler
   const handleReportChange = useCallback((value, label) => {
     setReportItemState((prev) => {
       const temp = { ...prev };
       temp[label] = value;
+      const measuredTemp = parseFloat(temp["TempMeasured"]);
+
+      // * match the grade to his str based on gradeLabels array
       if (label === "grade") {
         temp["comment"] = gradeLabels[value];
       }
-
+      // * if TempFoodType value is x then change the TempTarget to y
+      if (label == "TempFoodType") {
+        if (value <= "4") {
+          temp["TempTarget"] = "65";
+        } else if (value == "5") {
+          temp["TempTarget"] = "75";
+        } else if (value == "6" || value == "7") {
+          temp["TempTarget"] = "5";
+        } else {
+          temp["TempTarget"] = "80";
+        }
+      }
+      // * TempTarget value is 5 set the following conditions
+      if (temp["TempTarget"] == "5" && label === "TempMeasured") {
+        // * if TempMeasured <x || y change the grade to z
+        if (measuredTemp < 6 || temp["TempMeasured"] == "מתחת ל-0") {
+          temp["grade"] = 3;
+        } else if (measuredTemp >= 6 && measuredTemp < 11) {
+          temp["grade"] = 2;
+        } else if (measuredTemp >= 11 && measuredTemp < 16) {
+          temp["grade"] = 1;
+        } else {
+          temp["grade"] = 0;
+        }
+      } else if (temp["TempTarget"] == "65" && label === "TempMeasured") {
+        if (measuredTemp > 64 || temp["TempMeasured"] == "מעל 80") {
+          temp["grade"] = 3;
+        } else if (measuredTemp > 59 && measuredTemp <= 64) {
+          temp["grade"] = 2;
+        } else if (measuredTemp > 54 && measuredTemp <= 59) {
+          temp["grade"] = 1;
+        } else {
+          temp["grade"] = 0;
+        }
+      } else if (temp["TempTarget"] == "75" && label === "TempMeasured") {
+        if (measuredTemp > 74 || temp["TempMeasured"] == "מעל 80") {
+          temp["grade"] = 3;
+        } else if (measuredTemp > 64 && measuredTemp <= 74) {
+          temp["grade"] = 2;
+        } else if (measuredTemp > 59 && measuredTemp <= 64) {
+          temp["grade"] = 1;
+        } else {
+          temp["grade"] = 0;
+        }
+      } else if (temp["TempTarget"] == "80" && label === "TempMeasured") {
+        if (measuredTemp > 79 || temp["TempMeasured"] == "מעל 80") {
+          temp["grade"] = 3;
+        } else if (measuredTemp > 74 && measuredTemp <= 79) {
+          temp["grade"] = 2;
+        } else if (measuredTemp > 69 && measuredTemp <= 74) {
+          temp["grade"] = 1;
+        } else {
+          temp["grade"] = 0;
+        }
+      }
       return temp;
     });
   }, []);
@@ -125,6 +182,7 @@ const CategoryTempAccordionItem = ({
   const selectedTempFoodType = tempFoodTypeOptions.find(
     (option) => option.value == reportItemState.TempFoodType
   );
+  // console.log(tempFoodTypeOptions[3]);
   const selectedTemperature = temperatureOptions.find(
     (option) => option.value == reportItemState.TempMeasured
   );
@@ -156,7 +214,7 @@ const CategoryTempAccordionItem = ({
             <Text style={{ fontFamily: fonts.ABold }}>סוג המזון שנבדק:</Text>
             <SelectMenu
               control={control}
-              name={"foodType"}
+              name={"TempFoodType"}
               selectOptions={tempFoodTypeOptions}
               propertyName={"label"}
               selectWidth={188}
@@ -173,6 +231,7 @@ const CategoryTempAccordionItem = ({
               optionsLocation={100}
               // centeredViewStyling={{ marginLeft: 480 }}
               onChange={(value) => {
+                handleReportChange(value.value, "TempFoodType");
                 // setValue("foodType", value.value);
                 // trigger("foodType");
                 // console.log(value);
@@ -224,7 +283,7 @@ const CategoryTempAccordionItem = ({
             <Text style={{ fontFamily: fonts.ABold }}>טמפ׳ שנמדדה:</Text>
             <SelectMenu
               control={control}
-              name={"temp"}
+              name={"TempMeasured"}
               selectOptions={temperatureOptions}
               propertyName={"label"}
               selectWidth={90}
@@ -241,16 +300,18 @@ const CategoryTempAccordionItem = ({
               // centeredViewStyling={{ marginLeft: 480 }}
               onChange={(value) => {
                 // setValue("temp", value);
+                handleReportChange(value.value, "TempMeasured");
+
                 // trigger("temp");
-                console.log("val:", value);
+                // console.log("val:", value);
               }}
               returnObject={true}
-              errorMessage={errors.temp && errors.temp.message}
+              errorMessage={errors.TempMeasured && errors.TempMeasured.message}
             />
             <Text style={{ fontFamily: fonts.ABold }}> טמפ׳ יעד:</Text>
             <Input
               control={control}
-              name={"tempGoal"}
+              name={"TempTarget"}
               mode={"flat"}
               // label={"65c"}
               defaultValue={reportItemState.TempTarget ?? "65"}
@@ -264,8 +325,8 @@ const CategoryTempAccordionItem = ({
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                setValue("tempGoal", value);
-                trigger("tempGoal");
+                setValue("TempTarget", value);
+                trigger("TempTarget");
               }}
             />
           </View>
