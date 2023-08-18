@@ -72,78 +72,88 @@ const CategoryTempAccordionItem = ({
     }
   };
 
-  // {"TempFoodName": "מנה 1", "TempFoodType": "3", "TempMeasured": "6",
-  // "TempTarget": "65", "comment": "ליקוי חמור", "grade": "0", "image": ""}
   const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
   // * change handler
-  const handleReportChange = useCallback((value, label) => {
-    setReportItemState((prev) => {
-      const temp = { ...prev };
-      temp[label] = value;
-      const measuredTemp = parseFloat(temp["TempMeasured"]);
+  const handleReportChange = useCallback(
+    (value, label) => {
+      setReportItemState((prev) => {
+        const temp = { ...prev };
+        temp[label] = value;
+        const measuredTemp = parseFloat(temp["TempMeasured"]);
 
-      // * match the grade to his str based on gradeLabels array
-      if (label === "grade") {
-        temp["comment"] = gradeLabels[value];
-      }
-      // * if TempFoodType value is x then change the TempTarget to y
-      if (label == "TempFoodType") {
-        if (value <= "4") {
-          temp["TempTarget"] = "65";
-        } else if (value == "5") {
-          temp["TempTarget"] = "75";
-        } else if (value == "6" || value == "7") {
-          temp["TempTarget"] = "5";
-        } else {
-          temp["TempTarget"] = "80";
+        // * match the grade to his str based on gradeLabels array
+        if (label === "grade") {
+          temp["comment"] = gradeLabels[value];
         }
-      }
-      // * TempTarget value is 5 set the following conditions
-      if (temp["TempTarget"] == "5" && label === "TempMeasured") {
-        // * if TempMeasured <x || y change the grade to z
-        if (measuredTemp < 6 || temp["TempMeasured"] == "מתחת ל-0") {
-          temp["grade"] = 3;
-        } else if (measuredTemp >= 6 && measuredTemp < 11) {
-          temp["grade"] = 2;
-        } else if (measuredTemp >= 11 && measuredTemp < 16) {
-          temp["grade"] = 1;
-        } else {
-          temp["grade"] = 0;
+        // * if TempFoodType value is x then change the TempTarget to y
+        if (label == "TempFoodType") {
+          if (value <= "4") {
+            temp["TempTarget"] = "65";
+          } else if (value == "5") {
+            temp["TempTarget"] = "75";
+          } else if (value == "6" || value == "7") {
+            temp["TempTarget"] = "5";
+          } else {
+            temp["TempTarget"] = "80";
+          }
         }
-      } else if (temp["TempTarget"] == "65" && label === "TempMeasured") {
-        if (measuredTemp > 64 || temp["TempMeasured"] == "מעל 80") {
-          temp["grade"] = 3;
-        } else if (measuredTemp > 59 && measuredTemp <= 64) {
-          temp["grade"] = 2;
-        } else if (measuredTemp > 54 && measuredTemp <= 59) {
-          temp["grade"] = 1;
-        } else {
-          temp["grade"] = 0;
+        // * TempTarget value is 5 set the following conditions
+        if (temp["TempTarget"] == "5" && label === "TempMeasured") {
+          // * if TempMeasured <x || y change the grade to z
+          if (measuredTemp < 6 || temp["TempMeasured"] == "מתחת ל-0") {
+            temp["grade"] = 3;
+          } else if (measuredTemp >= 6 && measuredTemp < 11) {
+            temp["grade"] = 2;
+          } else if (measuredTemp >= 11 && measuredTemp < 16) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+          // * TempTarget value is 65 set the following conditions
+        } else if (temp["TempTarget"] == "65" && label === "TempMeasured") {
+          if (measuredTemp > 64 || temp["TempMeasured"] == "מעל 80") {
+            temp["grade"] = 3;
+          } else if (measuredTemp > 59 && measuredTemp <= 64) {
+            temp["grade"] = 2;
+          } else if (measuredTemp > 54 && measuredTemp <= 59) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+          // * TempTarget value is 75 set the following conditions
+        } else if (temp["TempTarget"] == "75" && label === "TempMeasured") {
+          if (measuredTemp > 74 || temp["TempMeasured"] == "מעל 80") {
+            temp["grade"] = 3;
+          } else if (measuredTemp > 64 && measuredTemp <= 74) {
+            temp["grade"] = 2;
+          } else if (measuredTemp > 59 && measuredTemp <= 64) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+          // * TempTarget value is 80 set the following conditions
+        } else if (temp["TempTarget"] == "80" && label === "TempMeasured") {
+          if (measuredTemp > 79 || temp["TempMeasured"] == "מעל 80") {
+            temp["grade"] = 3;
+          } else if (measuredTemp > 74 && measuredTemp <= 79) {
+            temp["grade"] = 2;
+          } else if (measuredTemp > 69 && measuredTemp <= 74) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
         }
-      } else if (temp["TempTarget"] == "75" && label === "TempMeasured") {
-        if (measuredTemp > 74 || temp["TempMeasured"] == "מעל 80") {
-          temp["grade"] = 3;
-        } else if (measuredTemp > 64 && measuredTemp <= 74) {
-          temp["grade"] = 2;
-        } else if (measuredTemp > 59 && measuredTemp <= 64) {
-          temp["grade"] = 1;
-        } else {
-          temp["grade"] = 0;
-        }
-      } else if (temp["TempTarget"] == "80" && label === "TempMeasured") {
-        if (measuredTemp > 79 || temp["TempMeasured"] == "מעל 80") {
-          temp["grade"] = 3;
-        } else if (measuredTemp > 74 && measuredTemp <= 79) {
-          temp["grade"] = 2;
-        } else if (measuredTemp > 69 && measuredTemp <= 74) {
-          temp["grade"] = 1;
-        } else {
-          temp["grade"] = 0;
-        }
-      }
-      return temp;
-    });
-  }, []);
+        return temp;
+      });
+    },
+    [reportItemState]
+  );
+  useEffect(() => {
+    // Initialize reportItemState and compute values
+    const initialReportItemState = { ...reportItem };
+    // Perform any additional computations here based on initialReportItemState
+    setReportItemState(initialReportItemState);
+  }, [reportItem]);
   // console.log(selectedOption);
   const toggleAccordion = () => {
     setOpen(!open);

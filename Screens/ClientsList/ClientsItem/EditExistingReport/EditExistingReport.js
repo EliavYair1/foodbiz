@@ -773,64 +773,32 @@ const EditExistingReport = () => {
     });
   }
 
-  const AccordionCategoriesWeightsList = [
-    {
-      id: 1,
+  const AccordionCategoriesWeightsList = [];
+  const accordionWeightsItemsLength = 1;
+  for (let i = 0; i < accordionWeightsItemsLength; i++) {
+    // console.log(currentReportItems[i] ?? false);
+    AccordionCategoriesWeightsList.push({
+      id: i,
       component: (
         <CategoryWeightsAccordionItem
+          reportItem={currentReportItems[i] ?? false}
           // handleCheckboxChange={handleCheckboxChange}
           // handleRatingCheckboxChange={handleRatingCheckboxChange}
           releventCheckboxItems={relevantCheckboxItems}
           ratingCheckboxItem={ratingCheckboxItem}
           control={control}
           setValue={setValue}
-          dateSelected={"dsadsa"}
           trigger={trigger}
           errors={errors}
-          selectedDates={[1, 2, 3, 4, 5, 6]}
-          sectionText="טמפרטורת מזון חם בהגשה"
+          // dateSelected={"dsadsa"}
+          // selectedDates={[1, 2, 3, 4, 5, 6]}
           // imagesArray={images}
           accordionHeight={150}
         />
       ),
-    },
-    {
-      id: 2,
-      component: (
-        <CategoryWeightsAccordionItem
-          // handleCheckboxChange={handleCheckboxChange}
-          // handleRatingCheckboxChange={handleRatingCheckboxChange}
-          releventCheckboxItems={relevantCheckboxItems}
-          ratingCheckboxItem={ratingCheckboxItem}
-          control={control}
-          setValue={setValue}
-          trigger={trigger}
-          errors={errors}
-          selectedDates={[1, 2, 3, 4, 5, 6]}
-          sectionText="טמפרטורת מזון חם בהגשה"
-          accordionHeight={150}
-        />
-      ),
-    },
-    {
-      id: 3,
-      component: (
-        <CategoryWeightsAccordionItem
-          // handleCheckboxChange={handleCheckboxChange}
-          // handleRatingCheckboxChange={handleRatingCheckboxChange}
-          releventCheckboxItems={relevantCheckboxItems}
-          ratingCheckboxItem={ratingCheckboxItem}
-          control={control}
-          setValue={setValue}
-          trigger={trigger}
-          selectedDates={[1, 2, 3, 4, 5, 6]}
-          errors={errors}
-          sectionText="טמפרטורת מזון חם בהגשה"
-          accordionHeight={150}
-        />
-      ),
-    },
-  ];
+    });
+  }
+
   const categoriesModal = [
     {
       subheader: "ביקורת בטיחות מזון",

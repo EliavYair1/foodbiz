@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
+import Radio from "../../../../../Components/ui/Radio";
 const CategoryWeightsAccordionItem = ({
   handleRatingCheckboxChange,
   ratingCheckboxItem,
@@ -34,16 +35,28 @@ const CategoryWeightsAccordionItem = ({
   grade2,
   grade3,
   itemId,
-  dateSelected,
-  selectedDates,
+  // dateSelected,
+  // selectedDates,
   accordionHeight,
+  reportItem,
 }) => {
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
-
+  const [reportItemState, setReportItemState] = useState(reportItem || {});
+  useEffect(() => {
+    setReportItemState((prevReportItemState) => ({
+      ...prevReportItemState,
+      ...reportItem,
+    }));
+  }, [reportItem]);
+  // * image picker
   const pickImage = async () => {
+    if (images.length >= 1) {
+      alert("You can only select up to 3 images.");
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync();
     if (!result.canceled) {
       const selectedAssets = result.assets;
@@ -67,7 +80,94 @@ const CategoryWeightsAccordionItem = ({
       useNativeDriver: false,
     }).start();
   };
+  const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
+  // * change handler
+  const handleReportChange = useCallback(
+    (value, label) => {
+      setReportItemState((prev) => {
+        const temp = { ...prev };
+        temp[label] = value;
+        const measuredTemp = parseFloat(temp["TempMeasured"]);
 
+        // * match the grade to his str based on gradeLabels array
+        if (label === "grade") {
+          temp["comment"] = gradeLabels[value];
+        }
+        // * if TempFoodType value is x then change the TempTarget to y
+        if (label == "TempFoodType") {
+          if (value <= "4") {
+            temp["TempTarget"] = "65";
+          } else if (value == "5") {
+            temp["TempTarget"] = "75";
+          } else if (value == "6" || value == "7") {
+            temp["TempTarget"] = "5";
+          } else {
+            temp["TempTarget"] = "80";
+          }
+        }
+        // * TempTarget value is 5 set the following conditions
+        if (temp["TempTarget"] == "5" && label === "TempMeasured") {
+          // * if TempMeasured <x || y change the grade to z
+          if (measuredTemp < 6 || temp["TempMeasured"] == "מתחת ל-0") {
+            temp["grade"] = 3;
+          } else if (measuredTemp >= 6 && measuredTemp < 11) {
+            temp["grade"] = 2;
+          } else if (measuredTemp >= 11 && measuredTemp < 16) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+          // * TempTarget value is 65 set the following conditions
+        } else if (temp["TempTarget"] == "65" && label === "TempMeasured") {
+          if (measuredTemp > 64 || temp["TempMeasured"] == "מעל 80") {
+            temp["grade"] = 3;
+          } else if (measuredTemp > 59 && measuredTemp <= 64) {
+            temp["grade"] = 2;
+          } else if (measuredTemp > 54 && measuredTemp <= 59) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+          // * TempTarget value is 75 set the following conditions
+        } else if (temp["TempTarget"] == "75" && label === "TempMeasured") {
+          if (measuredTemp > 74 || temp["TempMeasured"] == "מעל 80") {
+            temp["grade"] = 3;
+          } else if (measuredTemp > 64 && measuredTemp <= 74) {
+            temp["grade"] = 2;
+          } else if (measuredTemp > 59 && measuredTemp <= 64) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+          // * TempTarget value is 80 set the following conditions
+        } else if (temp["TempTarget"] == "80" && label === "TempMeasured") {
+          if (measuredTemp > 79 || temp["TempMeasured"] == "מעל 80") {
+            temp["grade"] = 3;
+          } else if (measuredTemp > 74 && measuredTemp <= 79) {
+            temp["grade"] = 2;
+          } else if (measuredTemp > 69 && measuredTemp <= 74) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+        }
+        return temp;
+      });
+    },
+    [reportItemState]
+  );
+  useEffect(() => {
+    // Initialize reportItemState and compute values
+    const initialReportItemState = { ...reportItem };
+    // Perform any additional computations here based on initialReportItemState
+    setReportItemState(initialReportItemState);
+  }, [reportItem]);
+  const ratingsOptions = [
+    { label: "0", value: "0" },
+    { label: "1", value: "1" },
+    { label: "2", value: "2" },
+    { label: "3", value: "3" },
+  ];
   return (
     <View
       style={[
@@ -93,35 +193,38 @@ const CategoryWeightsAccordionItem = ({
             }}
           >
             <Text style={{ fontFamily: fonts.ABold }}>
-              סוג המזון שנבדק:{" "}
-              <Text style={{ fontFamily: fonts.ARegular }}>{sectionText}</Text>:
+              שם המנה:{" "}
+              {/* <Text style={{ fontFamily: fonts.ARegular }}>{sectionText}</Text>: */}
             </Text>
-            <SelectMenu
-              control={control}
-              name={"lastDate"}
-              selectOptions={selectedDates}
-              propertyName={null}
-              selectWidth={188}
-              optionsCenterView={"flex-start"}
-              optionsHeight={150}
-              displayedValue={dateSelected}
-              optionsLocation={100}
-              // centeredViewStyling={{ marginLeft: 480 }}
-              onChange={(value) => {
-                setValue("lastDate", value);
-                trigger("lastDate");
-              }}
-              returnObject={true}
-              errorMessage={errors.lastDate && errors.lastDate.message}
-            />
-            <Text style={{ fontFamily: fonts.ABold }}>שם המנה: :</Text>
+
             <Input
               control={control}
               name={"remarks"}
-              mode={"flat"}
-              placeholder={"יש לנקות *ממטרות* מדיח כלים"}
-              contentStyle={styles.inputContentStyling}
-              inputStyle={[styles.inputStyling, { width: 150 }]}
+              mode={"outlined"}
+              placeholder={""}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
+              inputStyle={[styles.inputStyling, { width: 193 }]}
+              activeUnderlineColor={colors.black}
+              onChangeFunction={(value) => {
+                console.log(value, "is selected");
+                setValue("remarks", value);
+                trigger("remarks");
+              }}
+            />
+            <Text style={{ fontFamily: fonts.ABold }}>משקל נטו לפי מפרט:</Text>
+            <Input
+              control={control}
+              name={"remarks"}
+              mode={"outlined"}
+              defaultValue={""}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
+              inputStyle={[styles.inputStyling, { width: 193 }]}
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
@@ -149,33 +252,31 @@ const CategoryWeightsAccordionItem = ({
 
         <View style={styles.categoryRatingCheckboxWrapper}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Text style={{ fontFamily: fonts.ABold }}>טמפ׳:</Text>
-            <SelectMenu
-              control={control}
-              name={"lastDate"}
-              selectOptions={selectedDates}
-              propertyName={null}
-              selectWidth={188}
-              optionsCenterView={"flex-start"}
-              optionsHeight={150}
-              displayedValue={dateSelected}
-              optionsLocation={100}
-              // centeredViewStyling={{ marginLeft: 480 }}
-              onChange={(value) => {
-                setValue("lastDate", value);
-                trigger("lastDate");
-              }}
-              returnObject={true}
-              errorMessage={errors.lastDate && errors.lastDate.message}
-            />
-            <Text style={{ fontFamily: fonts.ABold }}> טמפ׳ יעד:</Text>
+            <Text style={{ fontFamily: fonts.ABold }}>דירוג:</Text>
+            <View style={styles.categoryRatingCheckboxWrapper}>
+              <Radio
+                options={ratingsOptions}
+                optionGap={38}
+                // optionText="דירוג:"
+                disabled={false}
+                // selectedOption={
+                //   reportItemState?.grade == undefined ? 3 : reportItemState?.grade
+                // }
+                onChange={(option) => handleReportChange(option, "grade")}
+                // disabled={reportItemState.noRelevant}
+              />
+            </View>
+            <Text style={{ fontFamily: fonts.ABold }}> משקל ממוצע:</Text>
             <Input
               control={control}
               name={"remarks"}
-              mode={"flat"}
-              placeholder={"יש לנקות *ממטרות* מדיח כלים"}
-              contentStyle={styles.inputContentStyling}
-              inputStyle={[styles.inputStyling, { width: 50 }]}
+              mode={"outlined"}
+              defaultValue={""}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
+              inputStyle={[styles.inputStyling, { width: 213 }]}
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
@@ -184,31 +285,124 @@ const CategoryWeightsAccordionItem = ({
               }}
             />
           </View>
-          <Text> דירוג:</Text>
-          <CheckboxItem
-            label={`${grade3}_${itemId}`}
-            checkboxItemText="3"
-            handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes(`${grade3}_${itemId}`)}
-          />
-          <CheckboxItem
-            label={`${grade2}_${itemId}`}
-            checkboxItemText="2"
-            handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes(`${grade2}_${itemId}`)}
-          />
-          <CheckboxItem
-            label={`${grade1}_${itemId}`}
-            checkboxItemText="1"
-            handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes(`${grade1}_${itemId}`)}
-          />
-          <CheckboxItem
-            label={`${grade0}_${itemId}`}
-            checkboxItemText="0"
-            handleChange={handleRatingCheckboxChange}
-            checked={ratingCheckboxItem.includes(`${grade0}_${itemId}`)}
-          />
+        </View>
+        {/* !!!!!!! */}
+        <View style={styles.massurementInputsWrapper}>
+          <View
+            style={{ flexDirection: "column", alignItems: "center", gap: 0 }}
+          >
+            <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 1:</Text>
+            <Input
+              control={control}
+              name={"remarks"}
+              mode={"outlined"}
+              defaultValue={""}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
+              inputStyle={[styles.inputStyling, { width: 136 }]}
+              activeUnderlineColor={colors.black}
+              numeric={true}
+              onChangeFunction={(value) => {
+                console.log(value, "is selected");
+                setValue("remarks", value);
+                trigger("remarks");
+              }}
+            />
+          </View>
+          <View
+            style={{ flexDirection: "column", alignItems: "center", gap: 0 }}
+          >
+            <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 2:</Text>
+            <Input
+              control={control}
+              name={"remarks"}
+              mode={"outlined"}
+              defaultValue={""}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
+              inputStyle={[styles.inputStyling, { width: 136 }]}
+              activeUnderlineColor={colors.black}
+              numeric={true}
+              onChangeFunction={(value) => {
+                console.log(value, "is selected");
+                setValue("remarks", value);
+                trigger("remarks");
+              }}
+            />
+          </View>
+          <View
+            style={{ flexDirection: "column", alignItems: "center", gap: 0 }}
+          >
+            <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 3:</Text>
+            <Input
+              control={control}
+              name={"remarks"}
+              mode={"outlined"}
+              defaultValue={""}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
+              inputStyle={[styles.inputStyling, { width: 136 }]}
+              activeUnderlineColor={colors.black}
+              numeric={true}
+              onChangeFunction={(value) => {
+                console.log(value, "is selected");
+                setValue("remarks", value);
+                trigger("remarks");
+              }}
+            />
+          </View>
+          <View
+            style={{ flexDirection: "column", alignItems: "center", gap: 0 }}
+          >
+            <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 4:</Text>
+            <Input
+              control={control}
+              name={"remarks"}
+              mode={"outlined"}
+              defaultValue={""}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
+              inputStyle={[styles.inputStyling, { width: 136 }]}
+              activeUnderlineColor={colors.black}
+              numeric={true}
+              onChangeFunction={(value) => {
+                console.log(value, "is selected");
+                setValue("remarks", value);
+                trigger("remarks");
+              }}
+            />
+          </View>
+          <View
+            style={{ flexDirection: "column", alignItems: "center", gap: 0 }}
+          >
+            <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 5:</Text>
+            <Input
+              control={control}
+              name={"remarks"}
+              mode={"outlined"}
+              defaultValue={""}
+              contentStyle={[
+                styles.inputContentStyling,
+                { backgroundColor: open ? "white" : colors.accordionOpen },
+              ]}
+              inputStyle={[styles.inputStyling, { width: 136 }]}
+              activeUnderlineColor={colors.black}
+              numeric={true}
+              onChangeFunction={(value) => {
+                console.log(value, "is selected");
+                setValue("remarks", value);
+                trigger("remarks");
+              }}
+            />
+          </View>
         </View>
       </TouchableOpacity>
 
@@ -226,9 +420,11 @@ const CategoryWeightsAccordionItem = ({
             control={control}
             name={"remarks"}
             mode={"flat"}
-            label={'"יש לנקות *ממטרות* מדיח כלים"'}
-            // placeholder={"יש לנקות *ממטרות* מדיח כלים"}
-            contentStyle={styles.inputContentStyling}
+            label={""}
+            contentStyle={[
+              styles.inputContentStyling,
+              { backgroundColor: open ? "white" : colors.accordionOpen },
+            ]}
             inputStyle={[styles.inputStyling, { minWidth: "100%" }]}
             activeUnderlineColor={colors.black}
             onChangeFunction={(value) => {
@@ -282,6 +478,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 16,
     marginBottom: 16,
+    marginRight: 24,
+  },
+  massurementInputsWrapper: {
+    flexDirection: "row",
+    gap: 12,
   },
   inputTextWrapper: {
     flexDirection: "row",
