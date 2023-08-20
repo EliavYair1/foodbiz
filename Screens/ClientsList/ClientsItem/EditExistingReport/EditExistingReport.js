@@ -140,7 +140,6 @@ const EditExistingReport = () => {
     "haveCategoriesNameForCriticalItems"
   );
   const categoriesDataFromReport = currentReport.getCategoriesData();
-
   // console.log(targetSubCategoryId, selectedModalCategory);
 
   // * Simulating your debounce function
@@ -376,23 +375,30 @@ const EditExistingReport = () => {
   }, [ratingCheckboxItem, currentCategoryIndex]);
 
   // * handling changes in the report finding , replacing and returning the new report item
-  const handleReportItemChange = useCallback((newReportItem) => {
+  const handleReportItemChange = useCallback((newReportItem, idx = false) => {
     setCurrentReportItemsForGrade((prev) => {
-      let temp = [...prev];
-      temp.splice(
-        temp.findIndex((element) => {
-          return element.id == newReportItem.id;
-        }),
-        1
-      );
-      temp.push(newReportItem);
-      return temp;
+      if (idx) {
+        const updatedReportItems = prev.map((reportItem, currentIndex) => {
+          if (currentIndex === idx) {
+            return newReportItem;
+          }
+          return reportItem;
+        });
+        return updatedReportItems;
+      } else {
+        const temp = [...prev];
+        temp.splice(
+          temp.findIndex((element) => {
+            return element.id === newReportItem.id;
+          }),
+          1
+        );
+        temp.push(newReportItem);
+        return temp;
+      }
     });
   }, []);
 
-  const handleReportTempItemChange = useCallback((newReportItem) => {
-    // console.log("newReportItem:", newReportItem);
-  }, []);
   // ? categories scores calculation
   // * Major category grade calculation
   const calculateMajorCategoryGrade = () => {
@@ -419,7 +425,13 @@ const EditExistingReport = () => {
       let totalGrade = 0;
       // * extracting the grades of the currentPickedCategoriesElementsId and sum the amount of the total grades
       currentPickedCategoriesElementsId.forEach((element) => {
-        const grade = parseInt(element.grade, 10);
+        const grade = parseInt(
+          passedDownCategoryId == element.id ? categoryGrade : element.grade,
+          10
+        );
+        // console.log("grade", grade);
+        // console.log("passedDownCategoryId", passedDownCategoryId);
+        // console.log("passedDownCategoryId", categoryGrade);
         totalGrade += grade;
       });
 
@@ -427,19 +439,18 @@ const EditExistingReport = () => {
       let avgValOfCurrentSubcategories = Math.round(
         totalGrade / numberOfCurrentSubcategories
       );
-
+      // console.log("currentSubcategories", currentSubcategories);
+      // console.log("totalGrade", totalGrade);
       setMajorCategoryGrade(avgValOfCurrentSubcategories);
     }
   };
-  // console.log("before", categoryGrade);
   // * category grade calculation
   const calculateCategoryGrade = () => {
     let itemsTotal = 0;
     let itemsTotal1 = 0;
     let itemsTotal2 = 0;
     let itemsTotal3 = 0;
-    // console.log("inside", categoryGrade);
-
+    // console.log("currentReportItemsForGrade:", currentReportItemsForGrade);
     for (const item of currentReportItemsForGrade) {
       if (item.noRelevant == 1 || item.noCalculate == 1) {
         continue;
@@ -472,32 +483,52 @@ const EditExistingReport = () => {
             100
         )
       );
+      // console.log(itemsTotal, itemsTotal1, itemsTotal2, itemsTotal3);
     }
   };
 
   // * calculating the report Grade
   const calculateReportGrade = (value) => {
-    let culinaryGrade = currentReport.getData("culinaryGrade");
-    let nutritionGrade = currentReport.getData("nutritionGrade");
-    let safetyGrade = currentReport.getData("safetyGrade");
+    let haveSafety = categoryNames.foodSafetyReviewNames.length > 0;
+    let haveCulinary = categoryNames.culinaryReviewNames.length > 0;
+    let haveNutrition = categoryNames.nutritionReviewNames.length > 0;
+    let safetyGrade =
+      categoryType == 1 ? value : currentReport.getData("safetyGrade");
+    let culinaryGrade =
+      categoryType == 2 ? value : currentReport.getData("culinaryGrade");
+    let nutritionGrade =
+      categoryType == 3 ? value : currentReport.getData("nutritionGrade");
     let reportGradeCalc = 0;
-    if (categoryType == 1) {
-      reportGradeCalc =
-        value * 0.5 + culinaryGrade * 0.4 + nutritionGrade * 0.1;
-    } else if (categoryType == 2) {
-      reportGradeCalc = safetyGrade * 0.5 + value * 0.4 + nutritionGrade * 0.1;
+    if (haveSafety && !haveCulinary && !haveNutrition) {
+      reportGradeCalc = safetyGrade;
+    } else if (!haveSafety && haveCulinary && !haveNutrition) {
+      reportGradeCalc = culinaryGrade;
+    } else if (!haveSafety && !haveCulinary && haveNutrition) {
+      reportGradeCalc = nutritionGrade;
+    } else if (haveSafety && haveCulinary && !haveNutrition) {
+      reportGradeCalc = safetyGrade * 0.5 + culinaryGrade * 0.5;
+    } else if (haveSafety && !haveCulinary && haveNutrition) {
+      reportGradeCalc = safetyGrade * 0.9 + nutritionGrade * 0.1;
+    } else if (!haveSafety && haveCulinary && haveNutrition) {
+      reportGradeCalc = culinaryGrade * 0.9 + nutritionGrade * 0.1;
     } else {
-      reportGradeCalc = safetyGrade * 0.5 + culinaryGrade * 0.4 + value * 0.1;
+      reportGradeCalc =
+        safetyGrade * 0.5 + culinaryGrade * 0.4 + nutritionGrade * 0.1;
     }
     setReportGrade(Math.round(reportGradeCalc));
   };
 
   useEffect(() => {
     calculateCategoryGrade();
-    calculateMajorCategoryGrade();
-    calculateReportGrade(majorCategoryGrade);
   }, [currentReportItemsForGrade]);
 
+  useEffect(() => {
+    calculateMajorCategoryGrade();
+  }, [categoryGrade]);
+
+  useEffect(() => {
+    calculateReportGrade(majorCategoryGrade);
+  }, [majorCategoryGrade]);
   // ! categories scores calculation end
 
   // ? drawer logic
@@ -702,13 +733,7 @@ const EditExistingReport = () => {
   // ! drawer logic end
 
   // ? console log section
-  useEffect(() => {
-    // console.log(currentCategoryId.currentCategory);
-    // console.log(JSON.stringify(CategoriesItems));
-    // console.log(JSON.stringify(categories.categories));
-    // console.log(categoriesDataFromReport);
-    // console.log(currentReport.getCategoriesData());
-  }, []);
+  useEffect(() => {}, []);
   // ! console log end
 
   // * define a function to select the appropriate array based on the category ID
@@ -767,14 +792,19 @@ const EditExistingReport = () => {
           // temperatureOptions={[]}
           errors={errors}
           accordionHeight={140}
-          onTempReportItem={handleReportTempItemChange}
+          onTempReportItem={(reportItem) => {
+            if (reportItem.TempFoodName) {
+              console.log("item:", i, reportItem);
+              handleReportItemChange(reportItem, i);
+            }
+          }}
         />
       ),
     });
   }
 
   const AccordionCategoriesWeightsList = [];
-  const accordionWeightsItemsLength = 1;
+  const accordionWeightsItemsLength = 10;
   for (let i = 0; i < accordionWeightsItemsLength; i++) {
     // console.log(currentReportItems[i] ?? false);
     AccordionCategoriesWeightsList.push({
@@ -790,9 +820,13 @@ const EditExistingReport = () => {
           setValue={setValue}
           trigger={trigger}
           errors={errors}
-          // dateSelected={"dsadsa"}
-          // selectedDates={[1, 2, 3, 4, 5, 6]}
-          // imagesArray={images}
+          onWeightReportItem={(reportItem) => {
+            handleReportItemChange(reportItem, i);
+
+            // if (reportItem.TempFoodName) {
+            //   console.log("item:", i, reportItem);
+            // }
+          }}
           accordionHeight={150}
         />
       ),

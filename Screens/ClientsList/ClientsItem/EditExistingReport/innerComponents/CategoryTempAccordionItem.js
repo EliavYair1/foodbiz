@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -39,6 +39,7 @@ const CategoryTempAccordionItem = ({
   accordionHeight,
   foodTypeOptions,
   reportItem,
+  onTempReportItem,
   // temperatureOptions,
 }) => {
   const [open, setOpen] = useState(false);
@@ -81,10 +82,6 @@ const CategoryTempAccordionItem = ({
         temp[label] = value;
         const measuredTemp = parseFloat(temp["TempMeasured"]);
 
-        // * match the grade to his str based on gradeLabels array
-        if (label === "grade") {
-          temp["comment"] = gradeLabels[value];
-        }
         // * if TempFoodType value is x then change the TempTarget to y
         if (label == "TempFoodType") {
           if (value <= "4") {
@@ -97,57 +94,67 @@ const CategoryTempAccordionItem = ({
             temp["TempTarget"] = "80";
           }
         }
-        // * TempTarget value is 5 set the following conditions
-        if (temp["TempTarget"] == "5" && label === "TempMeasured") {
-          // * if TempMeasured <x || y change the grade to z
-          if (measuredTemp < 6 || temp["TempMeasured"] == "מתחת ל-0") {
-            temp["grade"] = 3;
-          } else if (measuredTemp >= 6 && measuredTemp < 11) {
-            temp["grade"] = 2;
-          } else if (measuredTemp >= 11 && measuredTemp < 16) {
-            temp["grade"] = 1;
-          } else {
-            temp["grade"] = 0;
-          }
-          // * TempTarget value is 65 set the following conditions
-        } else if (temp["TempTarget"] == "65" && label === "TempMeasured") {
-          if (measuredTemp > 64 || temp["TempMeasured"] == "מעל 80") {
-            temp["grade"] = 3;
-          } else if (measuredTemp > 59 && measuredTemp <= 64) {
-            temp["grade"] = 2;
-          } else if (measuredTemp > 54 && measuredTemp <= 59) {
-            temp["grade"] = 1;
-          } else {
-            temp["grade"] = 0;
-          }
-          // * TempTarget value is 75 set the following conditions
-        } else if (temp["TempTarget"] == "75" && label === "TempMeasured") {
-          if (measuredTemp > 74 || temp["TempMeasured"] == "מעל 80") {
-            temp["grade"] = 3;
-          } else if (measuredTemp > 64 && measuredTemp <= 74) {
-            temp["grade"] = 2;
-          } else if (measuredTemp > 59 && measuredTemp <= 64) {
-            temp["grade"] = 1;
-          } else {
-            temp["grade"] = 0;
-          }
-          // * TempTarget value is 80 set the following conditions
-        } else if (temp["TempTarget"] == "80" && label === "TempMeasured") {
-          if (measuredTemp > 79 || temp["TempMeasured"] == "מעל 80") {
-            temp["grade"] = 3;
-          } else if (measuredTemp > 74 && measuredTemp <= 79) {
-            temp["grade"] = 2;
-          } else if (measuredTemp > 69 && measuredTemp <= 74) {
-            temp["grade"] = 1;
-          } else {
-            temp["grade"] = 0;
+        if (label === "TempMeasured" || label == "TempFoodType") {
+          // * TempTarget value is 5 set the following conditions
+          if (temp["TempTarget"] == "5") {
+            // * if TempMeasured <x || y change the grade to z
+            if (measuredTemp < 6 || temp["TempMeasured"] == "מתחת ל-0") {
+              temp["grade"] = 3;
+            } else if (measuredTemp >= 6 && measuredTemp < 11) {
+              temp["grade"] = 2;
+            } else if (measuredTemp >= 11 && measuredTemp < 16) {
+              temp["grade"] = 1;
+            } else {
+              temp["grade"] = 0;
+            }
+            // * TempTarget value is 65 set the following conditions
+          } else if (temp["TempTarget"] == "65") {
+            if (measuredTemp > 64 || temp["TempMeasured"] == "מעל 80") {
+              temp["grade"] = 3;
+            } else if (measuredTemp > 59 && measuredTemp <= 64) {
+              temp["grade"] = 2;
+            } else if (measuredTemp > 54 && measuredTemp <= 59) {
+              temp["grade"] = 1;
+            } else {
+              temp["grade"] = 0;
+            }
+            // * TempTarget value is 75 set the following conditions
+          } else if (temp["TempTarget"] == "75") {
+            if (measuredTemp > 74 || temp["TempMeasured"] == "מעל 80") {
+              temp["grade"] = 3;
+            } else if (measuredTemp > 64 && measuredTemp <= 74) {
+              temp["grade"] = 2;
+            } else if (measuredTemp > 59 && measuredTemp <= 64) {
+              temp["grade"] = 1;
+            } else {
+              temp["grade"] = 0;
+            }
+            // * TempTarget value is 80 set the following conditions
+          } else if (temp["TempTarget"] == "80") {
+            if (measuredTemp > 79 || temp["TempMeasured"] == "מעל 80") {
+              temp["grade"] = 3;
+            } else if (measuredTemp > 74 && measuredTemp <= 79) {
+              temp["grade"] = 2;
+            } else if (measuredTemp > 69 && measuredTemp <= 74) {
+              temp["grade"] = 1;
+            } else {
+              temp["grade"] = 0;
+            }
           }
         }
+        // * match the grade to his str based on gradeLabels array
+        temp["comment"] = gradeLabels[temp["grade"]];
+
         return temp;
       });
     },
     [reportItemState]
   );
+
+  useEffect(() => {
+    onTempReportItem({ ...reportItemState });
+  }, [reportItemState]);
+
   useEffect(() => {
     // Initialize reportItemState and compute values
     const initialReportItemState = { ...reportItem };

@@ -171,7 +171,6 @@ const WorkerNewReport = () => {
   }, [formData, schema]);
 
   // * categories fetching start
-
   useEffect(() => {
     // Fetch the categories from the API and other necessary data when the component mounts
     Promise.all([dispatch(fetchCategories()), dispatch(fetchReportsTimes())])
@@ -197,22 +196,22 @@ const WorkerNewReport = () => {
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
     // todo to use getData class method
-    if (currentReport && currentReport.data) {
-      const { data } = currentReport;
+    if (currentReport) {
+      // const { data } = currentReport;
       setSwitchStates({
-        haveFine: data.haveFine === "1",
-        haveAmountOfItems: data.haveAmountOfItems === "1",
-        haveSafetyGrade: data.haveSafetyGrade === "1",
-        haveCulinaryGrade: data.haveCulinaryGrade === "1",
-        haveNutritionGrade: data.haveNutritionGrade === "1",
+        haveFine: currentReport.getData("haveFine") === "1",
+        haveAmountOfItems: currentReport.getData("haveAmountOfItems") === "1",
+        haveSafetyGrade: currentReport.getData("haveSafetyGrade") === "1",
+        haveCulinaryGrade: currentReport.getData("haveCulinaryGrade") === "1",
+        haveNutritionGrade: currentReport.getData("haveNutritionGrade") === "1",
         haveCategoriesNameForCriticalItems:
-          data.haveCategoriesNameForCriticalItems === "1",
+          currentReport.getData("haveCategoriesNameForCriticalItems") === "1",
       });
-      setSelectedStation(data.station_name);
-      setAccompanySelected(data.accompany);
-      setCurrentReportDate(data.timeOfReport);
+      setSelectedStation(currentReport.getData("station_name"));
+      setAccompanySelected(currentReport.getData("accompany"));
+      setCurrentReportDate(currentReport.getData("timeOfReport"));
       setCurrentReportTime(reportTimeName);
-      handleContentChange(data.newGeneralCommentTopText);
+      handleContentChange(currentReport.getData("newGeneralCommentTopText"));
       handleCheckboxStatusChange(
         parsedArrayOfStr(currentReport.getData("categorys"))
       );
@@ -418,13 +417,7 @@ const WorkerNewReport = () => {
       ...prevFormData,
       categories,
     }));
-    // setFormData((prevFormData) => ({
-    //   ...prevFormData,
-    //   categories:
-    //     categories.length > 0 || Object.keys(categories).length > 0
-    //       ? categories
-    //       : parsedArrayOfStr(currentReport.getData("categorys")),
-    // }));
+
     setValue("categories", categories);
     trigger("categories");
   }, [checkboxStatus]);
@@ -722,7 +715,6 @@ const WorkerNewReport = () => {
 
   // console.log(formData.categories);
 
-  //  todo to check i have both function (handleCheckboxStatusChange , handleCategoriesCheckboxesToggle)
   // todo to change the way i save the checkboxes statuses in the state after i pick a report and make another change in one of the checkboxes
   // todo to update the global state of the chosen categories.
   // todo to send post request to the api : /api/duplicateReport.php

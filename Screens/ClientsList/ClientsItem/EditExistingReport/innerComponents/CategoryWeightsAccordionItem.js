@@ -39,17 +39,33 @@ const CategoryWeightsAccordionItem = ({
   // selectedDates,
   accordionHeight,
   reportItem,
+  onWeightReportItem,
 }) => {
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
   const [reportItemState, setReportItemState] = useState(reportItem || {});
+
+  const AvgWeightsParsed = [
+    parseFloat(reportItem.WeightMeasured1),
+    parseFloat(reportItem.WeightMeasured2),
+    parseFloat(reportItem.WeightMeasured3),
+    parseFloat(reportItem.WeightMeasured4),
+    parseFloat(reportItem.WeightMeasured5),
+  ];
+  const totalWeight = AvgWeightsParsed.reduce(
+    (total, weight) => total + weight,
+    0
+  );
+  const [AvgWeight, setAvgWeight] = useState(totalWeight / 5);
+  useEffect(() => {}, [totalWeight, AvgWeight]);
   useEffect(() => {
     setReportItemState((prevReportItemState) => ({
       ...prevReportItemState,
       ...reportItem,
     }));
+    // console.log("reportItem", reportItem);
   }, [reportItem]);
   // * image picker
   const pickImage = async () => {
@@ -157,6 +173,9 @@ const CategoryWeightsAccordionItem = ({
     [reportItemState]
   );
   useEffect(() => {
+    onWeightReportItem({ ...reportItemState });
+  }, [reportItemState]);
+  useEffect(() => {
     // Initialize reportItemState and compute values
     const initialReportItemState = { ...reportItem };
     // Perform any additional computations here based on initialReportItemState
@@ -202,6 +221,7 @@ const CategoryWeightsAccordionItem = ({
               name={"remarks"}
               mode={"outlined"}
               placeholder={""}
+              label={reportItemState.WeightFoodName}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
@@ -220,6 +240,7 @@ const CategoryWeightsAccordionItem = ({
               name={"remarks"}
               mode={"outlined"}
               defaultValue={""}
+              label={reportItemState.WeightMeasureType}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
@@ -259,9 +280,11 @@ const CategoryWeightsAccordionItem = ({
                 optionGap={38}
                 // optionText="דירוג:"
                 disabled={false}
-                // selectedOption={
-                //   reportItemState?.grade == undefined ? 3 : reportItemState?.grade
-                // }
+                selectedOption={
+                  reportItemState?.grade == undefined
+                    ? 3
+                    : reportItemState?.grade
+                }
                 onChange={(option) => handleReportChange(option, "grade")}
                 // disabled={reportItemState.noRelevant}
               />
@@ -271,6 +294,7 @@ const CategoryWeightsAccordionItem = ({
               control={control}
               name={"remarks"}
               mode={"outlined"}
+              label={AvgWeight}
               defaultValue={""}
               contentStyle={[
                 styles.inputContentStyling,
@@ -296,7 +320,8 @@ const CategoryWeightsAccordionItem = ({
               control={control}
               name={"remarks"}
               mode={"outlined"}
-              defaultValue={""}
+              label={reportItemState.WeightMeasured1}
+              defaultValue={reportItemState.WeightMeasured1}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
@@ -306,6 +331,7 @@ const CategoryWeightsAccordionItem = ({
               numeric={true}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
+                handleReportChange(value.value, "WeightMeasured1");
                 setValue("remarks", value);
                 trigger("remarks");
               }}
@@ -319,7 +345,8 @@ const CategoryWeightsAccordionItem = ({
               control={control}
               name={"remarks"}
               mode={"outlined"}
-              defaultValue={""}
+              defaultValue={reportItemState.WeightMeasured2}
+              // defaultValue={""}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
@@ -329,6 +356,7 @@ const CategoryWeightsAccordionItem = ({
               numeric={true}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
+                handleReportChange(value.value, "WeightMeasured2");
                 setValue("remarks", value);
                 trigger("remarks");
               }}
@@ -342,7 +370,8 @@ const CategoryWeightsAccordionItem = ({
               control={control}
               name={"remarks"}
               mode={"outlined"}
-              defaultValue={""}
+              defaultValue={reportItemState.WeightMeasured3}
+              // defaultValue={""}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
@@ -351,6 +380,7 @@ const CategoryWeightsAccordionItem = ({
               activeUnderlineColor={colors.black}
               numeric={true}
               onChangeFunction={(value) => {
+                handleReportChange(value.value, "WeightMeasured3");
                 console.log(value, "is selected");
                 setValue("remarks", value);
                 trigger("remarks");
@@ -365,7 +395,8 @@ const CategoryWeightsAccordionItem = ({
               control={control}
               name={"remarks"}
               mode={"outlined"}
-              defaultValue={""}
+              defaultValue={reportItemState.WeightMeasured4}
+              // defaultValue={""}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
@@ -375,6 +406,7 @@ const CategoryWeightsAccordionItem = ({
               numeric={true}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
+                handleReportChange(value.value, "WeightMeasured4");
                 setValue("remarks", value);
                 trigger("remarks");
               }}
@@ -388,7 +420,8 @@ const CategoryWeightsAccordionItem = ({
               control={control}
               name={"remarks"}
               mode={"outlined"}
-              defaultValue={""}
+              defaultValue={reportItemState.WeightMeasured5}
+              // defaultValue={""}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
@@ -398,6 +431,7 @@ const CategoryWeightsAccordionItem = ({
               numeric={true}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
+                handleReportChange(value.value, "WeightMeasured5");
                 setValue("remarks", value);
                 trigger("remarks");
               }}
@@ -420,7 +454,7 @@ const CategoryWeightsAccordionItem = ({
             control={control}
             name={"remarks"}
             mode={"flat"}
-            label={""}
+            label={reportItemState.comment}
             contentStyle={[
               styles.inputContentStyling,
               { backgroundColor: open ? "white" : colors.accordionOpen },
