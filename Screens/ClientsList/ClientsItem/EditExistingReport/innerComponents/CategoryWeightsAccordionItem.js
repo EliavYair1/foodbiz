@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import {
   View,
   Text,
@@ -23,24 +29,26 @@ import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
 import { debounce, get, result } from "lodash";
 import Radio from "../../../../../Components/ui/Radio";
+const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
+const ratingsOptions = [
+  { label: "0", value: "0" },
+  { label: "1", value: "1" },
+  { label: "2", value: "2" },
+  { label: "3", value: "3" },
+];
+const measureTypeOptions = [
+  { value: "1", label: "גרם" },
+  { value: "2", label: "יחידה" },
+  { value: "3", label: "ליטר" },
+];
 const CategoryWeightsAccordionItem = ({
-  handleRatingCheckboxChange,
-  ratingCheckboxItem,
   control,
   setValue,
   trigger,
-  errors,
-  sectionText,
-  grade0,
-  grade1,
-  grade2,
-  grade3,
-  itemId,
-  // dateSelected,
-  // selectedDates,
   accordionHeight,
   reportItem,
   onWeightReportItem,
+  errors,
 }) => {
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
@@ -49,14 +57,6 @@ const CategoryWeightsAccordionItem = ({
   const [reportItemState, setReportItemState] = useState(reportItem || {});
   const [avgWeight, setAvgWeight] = useState(0);
   const [numsOfWeights, setNumsOfWeights] = useState(0);
-  useEffect(() => {
-    setReportItemState((prevReportItemState) => ({
-      ...prevReportItemState,
-      ...reportItem,
-    }));
-    setAvgWeight(AvgWeightCalculation(reportItem));
-    // console.log("reportItem", reportItem);
-  }, [reportItem]);
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;
@@ -67,9 +67,28 @@ const CategoryWeightsAccordionItem = ({
       }, delay);
     };
   };
+  useEffect(() => {
+    setReportItemState((prevReportItemState) => ({
+      ...prevReportItemState,
+      ...reportItem,
+    }));
+    setAvgWeight(AvgWeightCalculation(reportItem));
+    if (reportItem.WeightMeasureType) {
+      console.log("reportItem", reportItem);
+    }
+  }, [reportItem]);
+  const onWeightReportItemDebounced = useCallback(
+    debounce((data) => {
+      onWeightReportItem(data);
+    }, 0),
+    []
+  );
+  useEffect(() => {
+    onWeightReportItemDebounced({ ...reportItemState });
+  }, [reportItemState]);
+
   // todo to optimize performance in the component
   // todo to nerrow down the amount of input by iterating them
-  // todo to restyle the avg field && the target field
   // * counting the weights and calculating
   const AvgWeightCalculation = (reportItem) => {
     const AvgWeightsParsed = [];
@@ -85,18 +104,19 @@ const CategoryWeightsAccordionItem = ({
         AvgWeightsParsed.push(weight);
       }
     }
-    if (numberOfWeights > 0) {
-      console.log("after", totalWeight, numberOfWeights, AvgWeightsParsed);
-      setNumsOfWeights(numberOfWeights);
-    }
+    // if (numberOfWeights > 0) {
+    //   console.log("after", totalWeight, numberOfWeights, AvgWeightsParsed);
+    // }
+
+    setNumsOfWeights(numberOfWeights);
 
     return numberOfWeights > 0 ? totalWeight / numberOfWeights : 0;
   };
 
   // * image picker
-  const pickImage = async () => {
+  const pickImage = useCallback(async () => {
     if (images.length >= 1) {
-      alert("You can only select up to 3 images.");
+      alert("You can only select up to 1 images.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync();
@@ -108,8 +128,9 @@ const CategoryWeightsAccordionItem = ({
         setImages((prevImages) => [...prevImages, selectedImage]);
       }
     }
-  };
-  const toggleAccordion = () => {
+  }, [images]);
+
+  const toggleAccordion = useCallback(() => {
     setOpen(!open);
     if (!open) {
       setAccordionBg(colors.accordionOpen);
@@ -121,66 +142,51 @@ const CategoryWeightsAccordionItem = ({
       duration: 250,
       useNativeDriver: false,
     }).start();
-  };
-  const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
+  }, [open]);
+
   // * change handler
-  const handleReportChange = useCallback(
-    (value, label) => {
+  const handleMeasuredWeightChange = useCallback(
+    debounce((value, label) => {
       setReportItemState((prev) => {
         const temp = { ...prev };
-
         temp[label] = value;
-
-        // * match the grade to his str based on gradeLabels array
-        if (label === "grade") {
-          temp["comment"] = gradeLabels[value];
-        }
-        const avgWeightsCalculation = AvgWeightCalculation(temp);
-        console.log("avgWeightsCalculation:", avgWeightsCalculation);
-        if (numsOfWeights > 0) {
-          setAvgWeight(avgWeightsCalculation);
-          if (
-            avgWeightsCalculation < temp["WeightTarget"] * 0.95 ||
-            avgWeightsCalculation == temp["WeightTarget"] * 0.95
-          ) {
+        if (label !== "grade") {
+          const avgWeightsCalculation = AvgWeightCalculation(temp);
+          // console.log("avgWeightsCalculation:", avgWeightsCalculation);
+          if (numsOfWeights > 0) {
+            setAvgWeight(avgWeightsCalculation);
+            if (
+              avgWeightsCalculation >=
+              parseInt(temp["WeightTarget"]) * 0.95
+            ) {
+              temp["grade"] = 3;
+            } else if (
+              avgWeightsCalculation >=
+              parseInt(temp["WeightTarget"]) * 0.9
+            ) {
+              temp["grade"] = 2;
+            } else if (
+              avgWeightsCalculation >=
+              parseInt(temp["WeightTarget"]) * 0.8
+            ) {
+              temp["grade"] = 1;
+            } else {
+              temp["grade"] = 0;
+            }
+          } else if (numsOfWeights == 0 || numsOfWeights == undefined) {
+            setAvgWeight("");
             temp["grade"] = 3;
-          } else if (
-            avgWeightsCalculation < temp["WeightTarget"] * 0.9 ||
-            avgWeightsCalculation == temp["WeightTarget"] * 0.9
-          ) {
-            temp["grade"] = 2;
-          } else if (
-            avgWeightsCalculation < temp["WeightTarget"] * 0.8 ||
-            avgWeightsCalculation == temp["WeightTarget"] * 0.8
-          ) {
-            temp["grade"] = 1;
-          } else {
-            temp["grade"] = 0;
           }
-        } else if (numsOfWeights == 0) {
-          setAvgWeight("");
-          temp["grade"] = 3;
         }
+        // * match the grade to his str based on gradeLabels array
+        temp["comment"] = gradeLabels[temp["grade"]];
+        console.log("numsOfWeights", numsOfWeights);
         return temp;
       });
-    },
+    }, 0),
     [reportItemState]
   );
-  useEffect(() => {
-    onWeightReportItem({ ...reportItemState });
-  }, []);
-  useEffect(() => {
-    // Initialize reportItemState and compute values
-    const initialReportItemState = { ...reportItem };
-    // Perform any additional computations here based on initialReportItemState
-    setReportItemState(initialReportItemState);
-  }, [reportItem]);
-  const ratingsOptions = [
-    { label: "0", value: "0" },
-    { label: "1", value: "1" },
-    { label: "2", value: "2" },
-    { label: "3", value: "3" },
-  ];
+
   return (
     <View
       style={[
@@ -205,14 +211,11 @@ const CategoryWeightsAccordionItem = ({
               gap: 12,
             }}
           >
-            <Text style={{ fontFamily: fonts.ABold }}>
-              שם המנה:{" "}
-              {/* <Text style={{ fontFamily: fonts.ARegular }}>{sectionText}</Text>: */}
-            </Text>
+            <Text style={{ fontFamily: fonts.ABold }}>שם המנה: </Text>
 
             <Input
               control={control}
-              name={"remarks"}
+              name={"WeightFoodName"}
               mode={"outlined"}
               placeholder={""}
               label={reportItemState.WeightFoodName}
@@ -224,27 +227,64 @@ const CategoryWeightsAccordionItem = ({
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                setValue("remarks", value);
-                trigger("remarks");
+                // setValue("WeightFoodName", value);
+                // trigger("WeightFoodName");
               }}
+            />
+            <Text style={{ fontFamily: fonts.ABold, marginLeft: -35 }}>
+              אמת מידה:
+            </Text>
+            <SelectMenu
+              control={control}
+              name={"WeightMeasureType"}
+              selectOptions={measureTypeOptions}
+              propertyName={"label"}
+              selectWidth={80}
+              optionsCenterView={"flex-start"}
+              optionsHeight={150}
+              defaultText={
+                // looking for the value inside the reportItemState and display it default value is 1
+                reportItemState.WeightMeasureType &&
+                measureTypeOptions.some(
+                  (option) => option.value == reportItemState.WeightMeasureType
+                )
+                  ? measureTypeOptions.find(
+                      (option) =>
+                        option.value == reportItemState.WeightMeasureType
+                    ).label
+                  : measureTypeOptions[0].label
+              }
+              optionsLocation={100}
+              onChange={(value) => {
+                handleMeasuredWeightChange(value, "WeightMeasureType");
+                // setValue("foodType", value.value);
+                // trigger("foodType");
+                // console.log(value);
+              }}
+              returnObject={true}
+              errorMessage={
+                errors.WeightMeasureType && errors.WeightMeasureType.message
+              }
             />
             <Text style={{ fontFamily: fonts.ABold }}>משקל נטו לפי מפרט:</Text>
             <Input
               control={control}
-              name={"remarks"}
+              name={"WeightTarget"}
               mode={"outlined"}
-              defaultValue={""}
-              label={reportItemState.WeightMeasureType}
+              defaultValue={reportItemState.WeightTarget}
+              label={reportItemState.WeightTarget}
               contentStyle={[
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
               ]}
-              inputStyle={[styles.inputStyling, { width: 193 }]}
+              inputStyle={[styles.inputStyling, { width: 113 }]}
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                setValue("remarks", value);
-                trigger("remarks");
+                handleMeasuredWeightChange(value, "WeightTarget");
+
+                // setValue("WeightTarget", value);
+                // trigger("WeightTarget");
               }}
             />
           </View>
@@ -272,43 +312,23 @@ const CategoryWeightsAccordionItem = ({
               <Radio
                 options={ratingsOptions}
                 optionGap={38}
-                // optionText="דירוג:"
+                optionText="דירוג:"
                 disabled={false}
                 selectedOption={
                   reportItemState?.grade == undefined
                     ? 3
                     : reportItemState?.grade
                 }
-                onChange={(option) => handleReportChange(option, "grade")}
+                onChange={(option) =>
+                  handleMeasuredWeightChange(option, "grade")
+                }
                 // disabled={reportItemState.noRelevant}
               />
             </View>
-
-            <Text style={{ fontFamily: fonts.ABold }}> משקל יעד:</Text>
-            <Input
-              control={control}
-              name={"remarks"}
-              mode={"outlined"}
-              disabled
-              label={reportItemState.WeightTarget}
-              defaultValue={reportItemState.WeightTarget}
-              contentStyle={[
-                styles.inputContentStyling,
-                { backgroundColor: open ? "white" : colors.accordionOpen },
-              ]}
-              inputStyle={[styles.inputStyling, { width: 65 }]}
-              activeUnderlineColor={colors.black}
-              onChangeFunction={(value) => {
-                console.log(value, "is selected");
-                handleReportChange(value, "WeightTarget");
-                // setValue("remarks", value);
-                // trigger("remarks");
-              }}
-            />
             <Text style={{ fontFamily: fonts.ABold }}> משקל ממוצע:</Text>
             <Input
               control={control}
-              name={"remarks"}
+              name={"avgWeight"}
               mode={"outlined"}
               disabled
               label={avgWeight}
@@ -321,8 +341,9 @@ const CategoryWeightsAccordionItem = ({
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                setValue("remarks", value);
-                trigger("remarks");
+                // handleMeasuredWeightChange(value, "WeightMeasured1");
+                // setValue("avgWeight", value);
+                // trigger("avgWeight");
               }}
             />
           </View>
@@ -335,7 +356,7 @@ const CategoryWeightsAccordionItem = ({
             <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 1:</Text>
             <Input
               control={control}
-              name={"remarks"}
+              name={"WeightMeasured1"}
               mode={"outlined"}
               label={reportItemState.WeightMeasured1}
               defaultValue={reportItemState.WeightMeasured1}
@@ -346,12 +367,14 @@ const CategoryWeightsAccordionItem = ({
               inputStyle={[styles.inputStyling, { width: 136 }]}
               activeUnderlineColor={colors.black}
               numeric={true}
-              onChangeFunction={(value) => {
-                console.log(value, "is selected");
-                handleReportChange(value, "WeightMeasured1");
-                // setValue("remarks", value);
-                // trigger("remarks");
-              }}
+              // onChangeFunction={(value) => {
+              //   console.log(value, "is selected");
+              //   handleMeasuredWeightChange(value, "WeightMeasured1");
+
+              // }}
+              onChangeFunction={(value) =>
+                handleMeasuredWeightChange(value, "WeightMeasured1")
+              }
             />
           </View>
           <View
@@ -360,7 +383,7 @@ const CategoryWeightsAccordionItem = ({
             <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 2:</Text>
             <Input
               control={control}
-              name={"remarks"}
+              name={"WeightMeasured2"}
               mode={"outlined"}
               defaultValue={reportItemState.WeightMeasured2}
               // defaultValue={""}
@@ -373,7 +396,7 @@ const CategoryWeightsAccordionItem = ({
               numeric={true}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                handleReportChange(value, "WeightMeasured2");
+                handleMeasuredWeightChange(value, "WeightMeasured2");
                 // setValue("remarks", value);
                 // trigger("remarks");
               }}
@@ -385,7 +408,7 @@ const CategoryWeightsAccordionItem = ({
             <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 3:</Text>
             <Input
               control={control}
-              name={"remarks"}
+              name={"WeightMeasured3"}
               mode={"outlined"}
               defaultValue={reportItemState.WeightMeasured3}
               // defaultValue={""}
@@ -398,7 +421,7 @@ const CategoryWeightsAccordionItem = ({
               numeric={true}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                handleReportChange(value, "WeightMeasured3");
+                handleMeasuredWeightChange(value, "WeightMeasured3");
                 // setValue("remarks", value);
                 // trigger("remarks");
               }}
@@ -410,7 +433,7 @@ const CategoryWeightsAccordionItem = ({
             <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 4:</Text>
             <Input
               control={control}
-              name={"remarks"}
+              name={"WeightMeasured4"}
               mode={"outlined"}
               defaultValue={reportItemState.WeightMeasured4}
               // defaultValue={""}
@@ -423,7 +446,7 @@ const CategoryWeightsAccordionItem = ({
               numeric={true}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                handleReportChange(value, "WeightMeasured4");
+                handleMeasuredWeightChange(value, "WeightMeasured4");
                 // setValue("remarks", value);
                 // trigger("remarks");
               }}
@@ -435,7 +458,7 @@ const CategoryWeightsAccordionItem = ({
             <Text style={{ fontFamily: fonts.ABold }}> משקל שנמדד 5:</Text>
             <Input
               control={control}
-              name={"remarks"}
+              name={"WeightMeasured5"}
               mode={"outlined"}
               defaultValue={reportItemState.WeightMeasured5}
               // defaultValue={""}
@@ -448,7 +471,7 @@ const CategoryWeightsAccordionItem = ({
               numeric={true}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
-                handleReportChange(value, "WeightMeasured5");
+                handleMeasuredWeightChange(value, "WeightMeasured5");
                 // setValue("remarks", value);
                 // trigger("remarks");
               }}
@@ -480,8 +503,8 @@ const CategoryWeightsAccordionItem = ({
             activeUnderlineColor={colors.black}
             onChangeFunction={(value) => {
               console.log(value, "is selected");
-              setValue("remarks", value);
-              trigger("remarks");
+              // setValue("remarks", value);
+              // trigger("remarks");
             }}
           />
         </View>
@@ -592,4 +615,4 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 });
-export default CategoryWeightsAccordionItem;
+export default React.memo(CategoryWeightsAccordionItem);

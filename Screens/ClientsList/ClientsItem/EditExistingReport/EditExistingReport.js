@@ -65,6 +65,61 @@ import { getCurrentReport } from "../../../../store/redux/reducers/getCurrentRep
 
 import routes from "../../../../Navigation/routes";
 import { getCurrentCategory } from "../../../../store/redux/reducers/getCurrentCategory";
+
+const imageTextsAndFunctionality = [
+  {
+    id: 0,
+    text: "קבצים",
+    source: require("../../../../assets/icons/iconImgs/folder.png"),
+    iconPress: () => {
+      console.log("folder");
+    },
+  },
+  {
+    id: 1,
+    text: "מפרט",
+    source: require("../../../../assets/icons/iconImgs/paperSheet.png"),
+    iconPress: () => {
+      console.log("paperSheet");
+    },
+  },
+  {
+    id: 2,
+    text: "הגדרות",
+    source: require("../../../../assets/icons/iconImgs/settings.png"),
+    iconPress: () => {
+      console.log("settings");
+    },
+  },
+  {
+    id: 3,
+    text: "קטגוריות",
+    source: require("../../../../assets/icons/iconImgs/categories.png"),
+    iconPress: () => {
+      console.log("categories");
+      setModalVisible(true);
+    },
+  },
+  {
+    id: 4,
+    text: "סיכום",
+
+    source: require("../../../../assets/icons/iconImgs/notebook.png"),
+    iconPress: () => {
+      console.log("notebook");
+    },
+  },
+  {
+    id: 5,
+    text: "צפייה",
+
+    source: require("../../../../assets/icons/iconImgs/eye.png"),
+    iconPress: () => {
+      console.log("eye");
+    },
+  },
+];
+
 const EditExistingReport = () => {
   // ! redux stpre fetching
   const dispatch = useDispatch();
@@ -141,7 +196,20 @@ const EditExistingReport = () => {
   );
   const categoriesDataFromReport = currentReport.getCategoriesData();
   // console.log(targetSubCategoryId, selectedModalCategory);
-
+  const categoriesModal = [
+    {
+      subheader: "ביקורת בטיחות מזון",
+      options: categoryNames.foodSafetyReviewNames,
+    },
+    {
+      subheader: "ביקורת קולנירית",
+      options: categoryNames.culinaryReviewNames,
+    },
+    {
+      subheader: "ביקורת תזונה",
+      options: categoryNames.nutritionReviewNames,
+    },
+  ];
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;
@@ -775,131 +843,54 @@ const EditExistingReport = () => {
     };
   });
 
-  const AccordionCategoriesTemperatureList = [];
-
   const accordionTempItemsLength = 10;
 
-  for (let i = 0; i < accordionTempItemsLength; i++) {
-    // console.log(currentReportItems[i] ?? false);
-    AccordionCategoriesTemperatureList.push({
-      id: i,
-      component: (
-        <CategoryTempAccordionItem
-          reportItem={currentReportItems[i] ?? false}
-          control={control}
-          setValue={setValue}
-          trigger={trigger}
-          // temperatureOptions={[]}
-          errors={errors}
-          accordionHeight={140}
-          onTempReportItem={(reportItem) => {
-            if (reportItem.TempFoodName) {
-              console.log("item:", i, reportItem);
-              handleReportItemChange(reportItem, i);
-            }
-          }}
-        />
-      ),
-    });
-  }
-
-  const AccordionCategoriesWeightsList = [];
-  const accordionWeightsItemsLength = 10;
-  for (let i = 0; i < accordionWeightsItemsLength; i++) {
-    // console.log(currentReportItems[i] ?? false);
-    AccordionCategoriesWeightsList.push({
-      id: i,
-      component: (
-        <CategoryWeightsAccordionItem
-          reportItem={currentReportItems[i] ?? false}
-          // handleCheckboxChange={handleCheckboxChange}
-          // handleRatingCheckboxChange={handleRatingCheckboxChange}
-          releventCheckboxItems={relevantCheckboxItems}
-          ratingCheckboxItem={ratingCheckboxItem}
-          control={control}
-          setValue={setValue}
-          trigger={trigger}
-          errors={errors}
-          onWeightReportItem={(reportItem) => {
+  const AccordionCategoriesTemperatureList = Array.from({
+    length: accordionTempItemsLength,
+  }).map((_, i) => ({
+    id: i,
+    component: (
+      <CategoryTempAccordionItem
+        reportItem={currentReportItems[i] ?? false}
+        control={control}
+        setValue={setValue}
+        trigger={trigger}
+        // temperatureOptions={[]}
+        errors={errors}
+        accordionHeight={140}
+        onTempReportItem={(reportItem) => {
+          if (reportItem.TempFoodName) {
+            console.log("item:", i, reportItem);
             handleReportItemChange(reportItem, i);
+          }
+        }}
+      />
+    ),
+  }));
 
-            // if (reportItem.TempFoodName) {
-            //   console.log("item:", i, reportItem);
-            // }
-          }}
-          accordionHeight={150}
-        />
-      ),
-    });
-  }
+  const accordionWeightsItemsLength = 10;
 
-  const categoriesModal = [
-    {
-      subheader: "ביקורת בטיחות מזון",
-      options: categoryNames.foodSafetyReviewNames,
-    },
-    {
-      subheader: "ביקורת קולנירית",
-      options: categoryNames.culinaryReviewNames,
-    },
-    {
-      subheader: "ביקורת תזונה",
-      options: categoryNames.nutritionReviewNames,
-    },
-  ];
-  const imageTextsAndFunctionality = [
-    {
-      id: 0,
-      text: "קבצים",
-      source: require("../../../../assets/icons/iconImgs/folder.png"),
-      iconPress: () => {
-        console.log("folder");
-      },
-    },
-    {
-      id: 1,
-      text: "מפרט",
-      source: require("../../../../assets/icons/iconImgs/paperSheet.png"),
-      iconPress: () => {
-        console.log("paperSheet");
-      },
-    },
-    {
-      id: 2,
-      text: "הגדרות",
-      source: require("../../../../assets/icons/iconImgs/settings.png"),
-      iconPress: () => {
-        console.log("settings");
-      },
-    },
-    {
-      id: 3,
-      text: "קטגוריות",
-      source: require("../../../../assets/icons/iconImgs/categories.png"),
-      iconPress: () => {
-        console.log("categories");
-        setModalVisible(true);
-      },
-    },
-    {
-      id: 4,
-      text: "סיכום",
-
-      source: require("../../../../assets/icons/iconImgs/notebook.png"),
-      iconPress: () => {
-        console.log("notebook");
-      },
-    },
-    {
-      id: 5,
-      text: "צפייה",
-
-      source: require("../../../../assets/icons/iconImgs/eye.png"),
-      iconPress: () => {
-        console.log("eye");
-      },
-    },
-  ];
+  const AccordionCategoriesWeightsList = Array.from({
+    length: accordionWeightsItemsLength,
+  }).map((_, i) => ({
+    id: i,
+    component: (
+      <CategoryWeightsAccordionItem
+        reportItem={currentReportItems[i] ?? false}
+        control={control}
+        setValue={setValue}
+        trigger={trigger}
+        errors={errors}
+        onWeightReportItem={(reportItem) => {
+          if (reportItem.WeightFoodName) {
+            // console.log("reportItem", reportItem, i);
+            handleReportItemChange(reportItem);
+          }
+        }}
+        accordionHeight={150}
+      />
+    ),
+  }));
 
   // ! arrays for flatList
   return (

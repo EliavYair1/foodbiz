@@ -494,4 +494,4 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 });
-export default CategoryTempAccordionItem;
+export default React.memo(CategoryTempAccordionItem);
