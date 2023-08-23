@@ -842,7 +842,7 @@ const EditExistingReport = () => {
       ),
     };
   });
-
+  // todo display these component to work faster
   const accordionTempItemsLength = 10;
 
   const AccordionCategoriesTemperatureList = Array.from({

@@ -88,6 +88,7 @@ const CategoryWeightsAccordionItem = ({
   }, [reportItemState]);
 
   // todo to optimize performance in the component
+  // todo to apply loading when component loads
   // todo to nerrow down the amount of input by iterating them
   // * counting the weights and calculating
   const AvgWeightCalculation = (reportItem) => {
