@@ -121,10 +121,12 @@ const imageTextsAndFunctionality = [
 ];
 
 const EditExistingReport = () => {
+  console.log("edit report");
   // ! redux stpre fetching
   const dispatch = useDispatch();
   const currentStation = useSelector((state) => state.currentStation);
   const categories = useSelector((state) => state.categories);
+
   const currentCategoryId = useSelector((state) => state.currentCategory);
   const currentCategories = useSelector((state) => state.currentCategories);
   const currentClient = useSelector(
@@ -149,6 +151,33 @@ const EditExistingReport = () => {
 
   const passedDownCategoryId = currentCategoryId.currentCategory;
   // ! redux stpre fetching end
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const findParentAndChildCategories = useMemo(() => {
+    // console.log("before", currentCategoryIndex);
+    // console.log();
+    let parentCategory = false;
+    let indexSubcategory = false;
+
+    for (const [key, value] of Object.entries(categories.categories)) {
+      value.categories.find((subcategory, index) => {
+        if (
+          subcategory.id ==
+          currentCategories.currentCategories[currentCategoryIndex]
+        ) {
+          indexSubcategory = index;
+          parentCategory = key;
+          return subcategory;
+        }
+      });
+    }
+    // console.log("parent", categories.categories[parentCategory]);
+
+    return {
+      parent: categories.categories[parentCategory],
+      child: categories.categories[parentCategory].categories[indexSubcategory],
+    };
+  }, []);
+  // console.log(findParentAndChildCategories);
   const drawerRef = useRef(null);
   const richText = useRef();
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
@@ -158,15 +187,43 @@ const EditExistingReport = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [relevantCheckboxItems, setRelevantCheckboxItems] = useState([]);
-  const [ratingCheckboxItem, setRatingCheckboxItem] = useState([]);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [selectedModalCategory, setSelectedModalCategory] = useState([]);
   const [colorSelected, setColorSelected] = useState(null);
-  const [categoryNames, setCategoryNames] = useState({
-    foodSafetyReviewNames: [],
-    culinaryReviewNames: [],
-    nutritionReviewNames: [],
-  });
+  const findCategoriesNames = useMemo(() => {
+    // console.log("currentCategories 2 ", currentCategories);
+    const globalStateCategories = memoRizedCats
+      ? Object.values(memoRizedCats).flatMap((category) => category.categories)
+      : null;
+    // console.log("global:", globalStateCategories);
+    // let newCheckboxStatus = {
+    // foodSafetyReviewCbStatus: [],
+    // culinaryReviewCbStatus: [],
+    // nutritionReviewCbStatus: [],
+    // };
+    let newCategoryNames = {
+      1: [],
+      2: [],
+      3: [],
+    };
+    if (globalStateCategories) {
+      globalStateCategories.forEach((category) => {
+        const categoryId = parseInt(category.id, 10);
+        const categoryName = category.name;
+        const categoryType = parseInt(category.type, 10);
+
+        if (currentCategories.currentCategories.includes(categoryId)) {
+          newCategoryNames[categoryType].push({
+            id: categoryId,
+            name: categoryName,
+          });
+        }
+      });
+    }
+    return newCategoryNames;
+  }, []);
+  const [categoryNames, setCategoryNames] = useState(findCategoriesNames);
+  // console.log(categoryNames[2].map((item) => item.id));
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
@@ -174,19 +231,41 @@ const EditExistingReport = () => {
   });
 
   // * category header
-  const [categoryHeader, setCategoryHeader] = useState(false);
-  // * category subheader
-  const [categorySubHeader, setCategorySubHeader] = useState(false);
-  // * categories items
-  const [CategoriesItems, setCategoriesItems] = useState([]);
-  const [currentReportItems, setCurrentReportItems] = useState([]);
-  const [currentReportItemsForGrade, setCurrentReportItemsForGrade] = useState(
-    []
+  const [categoryHeader, setCategoryHeader] = useState(
+    findParentAndChildCategories.parent.name
   );
-  const [categoryType, setCategoryType] = useState(null);
+  // * category subheader
+  const [categorySubHeader, setCategorySubHeader] = useState(
+    findParentAndChildCategories.child.name
+  );
+  // * categories items
+  const [CategoriesItems, setCategoriesItems] = useState(
+    findParentAndChildCategories.child.items
+  );
+  const categoriesDataFromReport = currentReport.getCategoriesData();
+  const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+
+  const findRelevantReportData = useMemo(() => {
+    //  getting the relevent data of the categories based on the current sub Category.
+    const relevantData = parsedCategoriesDataFromReport.find(
+      (category) =>
+        category.id == currentCategories.currentCategories[currentCategoryIndex]
+    );
+    return relevantData.items;
+  }, []);
+  // console.log("findRelevantReportData:", findRelevantReportData);
+  const [currentReportItems, setCurrentReportItems] = useState(
+    findRelevantReportData
+  );
+  const [currentReportItemsForGrade, setCurrentReportItemsForGrade] = useState(
+    findRelevantReportData
+  );
+  const [categoryType, setCategoryType] = useState(
+    findParentAndChildCategories.child.type
+  );
   const [content, setContent] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+
   const haveFine = currentReport.getData("haveFine");
   const haveSafetyGrade = currentReport.getData("haveSafetyGrade");
   const haveCulinaryGrade = currentReport.getData("haveCulinaryGrade");
@@ -194,20 +273,21 @@ const EditExistingReport = () => {
   const haveCategoriesNameForCriticalItems = currentReport.getData(
     "haveCategoriesNameForCriticalItems"
   );
-  const categoriesDataFromReport = currentReport.getCategoriesData();
+
+  const [dataForFlatListToDisplay, setDataForFlatListToDisplay] = useState([]);
   // console.log(targetSubCategoryId, selectedModalCategory);
   const categoriesModal = [
     {
       subheader: "ביקורת בטיחות מזון",
-      options: categoryNames.foodSafetyReviewNames,
+      options: categoryNames[1],
     },
     {
       subheader: "ביקורת קולנירית",
-      options: categoryNames.culinaryReviewNames,
+      options: categoryNames[2],
     },
     {
       subheader: "ביקורת תזונה",
-      options: categoryNames.nutritionReviewNames,
+      options: categoryNames[3],
     },
   ];
   // * Simulating your debounce function
@@ -234,10 +314,8 @@ const EditExistingReport = () => {
     return false;
   };
 
-  useEffect(() => {
-    getCategory(2);
-  }, []);
-
+  // console.log(findParentAndChildCategories);
+  // todo need to verify activity
   // * getting the desired category information to display
   const desiredCategory = () => {
     let parentCategory = false;
@@ -255,21 +333,21 @@ const EditExistingReport = () => {
         }
       });
     }
-    setCategoriesItems(
-      categories.categories[parentCategory].categories[indexSubcategory].items
-    );
-    setCategorySubHeader(
-      categories.categories[parentCategory].categories[indexSubcategory].name
-    );
-    setCategoryHeader(categories.categories[parentCategory].name);
-    setCategoryType(
-      categories.categories[parentCategory].categories[indexSubcategory].type
-    );
+    // setCategoriesItems(
+    //   categories.categories[parentCategory].categories[indexSubcategory].items
+    // );
+    // setCategorySubHeader(
+    //   categories.categories[parentCategory].categories[indexSubcategory].name
+    // );
+    // setCategoryHeader(categories.categories[parentCategory].name);
+    // setCategoryType(
+    //   categories.categories[parentCategory].categories[indexSubcategory].type
+    // );
   };
 
-  useEffect(() => {
-    desiredCategory();
-  }, [desiredCategory]);
+  // useEffect(() => {
+  //   desiredCategory();
+  // }, [currentCategoryIndex]);
 
   const schema = yup.object().shape({
     remarks: yup.string().required("remarks is required"),
@@ -292,28 +370,27 @@ const EditExistingReport = () => {
     resolver: yupResolver(schema),
   });
 
-  useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(fetchCategories());
+  // }, [dispatch]);
 
-  const parsedCategoriesDataFromReport = useMemo(() => {
-    return JSON.parse(categoriesDataFromReport);
-  }, [categoriesDataFromReport]);
+  // console.log(findCategoriesNames);
   //  * 1. checking if the ids of the categories match to the selected report
   // *  2.  sorting them by type to their right location based on their parent category
-  const handleCheckboxStatusChange = (passedCategories) => {
+  // todo need to verify
+  const handleCheckboxStatusChange = () => {
     const globalStateCategories = memoRizedCats
       ? Object.values(memoRizedCats).flatMap((category) => category.categories)
       : null;
-    let newCheckboxStatus = {
-      foodSafetyReviewCbStatus: [],
-      culinaryReviewCbStatus: [],
-      nutritionReviewCbStatus: [],
-    };
+    // let newCheckboxStatus = {
+    // foodSafetyReviewCbStatus: [],
+    // culinaryReviewCbStatus: [],
+    // nutritionReviewCbStatus: [],
+    // };
     let newCategoryNames = {
-      foodSafetyReviewNames: [],
-      culinaryReviewNames: [],
-      nutritionReviewNames: [],
+      1: [],
+      2: [],
+      3: [],
     };
     if (globalStateCategories) {
       globalStateCategories.forEach((category) => {
@@ -321,43 +398,49 @@ const EditExistingReport = () => {
         const categoryName = category.name;
         const categoryType = parseInt(category.type, 10);
 
-        if (passedCategories.has(categoryId)) {
-          if (categoryType === 1) {
-            newCheckboxStatus.foodSafetyReviewCbStatus.push(categoryId);
-            newCategoryNames.foodSafetyReviewNames.push({
-              id: categoryId,
-              name: categoryName,
-            });
-          } else if (categoryType === 2) {
-            newCheckboxStatus.culinaryReviewCbStatus.push(categoryId);
-            newCategoryNames.culinaryReviewNames.push({
-              id: categoryId,
-              name: categoryName,
-            });
-          } else if (categoryType === 3) {
-            newCheckboxStatus.nutritionReviewCbStatus.push(categoryId);
-            newCategoryNames.nutritionReviewNames.push({
-              id: categoryId,
-              name: categoryName,
-            });
-          }
+        if (currentCategories.currentCategories.has(categoryId)) {
+          newCategoryNames[categoryType].push({
+            id: categoryId,
+            name: categoryName,
+          });
+
+          // if (categoryType === 1) {
+          //   // newCheckboxStatus.foodSafetyReviewCbStatus.push(categoryId);
+          //   newCategoryNames.foodSafetyReviewNames.push({
+          //     id: categoryId,
+          //     name: categoryName,
+          //   });
+          // } else if (categoryType === 2) {
+          //   // newCheckboxStatus.culinaryReviewCbStatus.push(categoryId);
+          //   newCategoryNames.culinaryReviewNames.push({
+          //     id: categoryId,
+          //     name: categoryName,
+          //   });
+          // } else if (categoryType === 3) {
+          //   // newCheckboxStatus.nutritionReviewCbStatus.push(categoryId);
+          //   newCategoryNames.nutritionReviewNames.push({
+          //     id: categoryId,
+          //     name: categoryName,
+          //   });
+          // }
         }
       });
     }
     setCategoryNames(newCategoryNames);
-    setCheckboxStatus(newCheckboxStatus);
+    console.log("checkboxes:", newCategoryNames);
+    // setCheckboxStatus(newCheckboxStatus);
   };
 
-  useEffect(() => {
-    if (currentCategories) {
-      const categoryIds = currentCategories.currentCategories;
-      const categorySet = new Set(categoryIds);
-      handleCheckboxStatusChange(categorySet);
-    } else {
-      console.log("currentCategories is not a valid Set or is empty.");
-    }
-  }, [currentCategories]);
-
+  // useEffect(() => {
+  //   console.log("inside", currentCategories);
+  //   if (currentCategories) {
+  //     // const categoryIds = currentCategories.currentCategories;
+  //     // const categorySet = new Set(categoryIds);
+  //     handleCheckboxStatusChange();
+  //   } else {
+  //     console.log("currentCategories is not a valid Set or is empty.");
+  //   }
+  // }, [currentCategories]);
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
@@ -416,6 +499,7 @@ const EditExistingReport = () => {
   };
   // ! random function end
 
+  // todo need to verify
   // * finding the current report data based on the category id from the report edit mode.
   const getRelevantReportData = (data) => {
     //  parsing the data.
@@ -437,10 +521,11 @@ const EditExistingReport = () => {
       console.log("Failed to find Relevant Data");
     }
   };
+
   //  * passing the data from the current report and storing it in the state in the getRelevantReportData function.
-  useEffect(() => {
-    getRelevantReportData(categoriesDataFromReport);
-  }, [ratingCheckboxItem, currentCategoryIndex]);
+  // useEffect(() => {
+  //   getRelevantReportData(categoriesDataFromReport);
+  // }, [currentCategoryIndex]);
 
   // * handling changes in the report finding , replacing and returning the new report item
   const handleReportItemChange = useCallback((newReportItem, idx = false) => {
@@ -472,15 +557,15 @@ const EditExistingReport = () => {
   const calculateMajorCategoryGrade = () => {
     // const parsedCategories = JSON.parse(categoriesDataFromReport);
 
-    let currentSubcategories = false;
+    let currentSubcategories = categoryNames[categoryType];
     // * chosing to calculate which current subcategories based on the type.
-    if (categoryType == 1) {
-      currentSubcategories = checkboxStatus.foodSafetyReviewCbStatus || [];
-    } else if (categoryType == 2) {
-      currentSubcategories = checkboxStatus.culinaryReviewCbStatus || [];
-    } else {
-      currentSubcategories = checkboxStatus.nutritionReviewCbStatus || [];
-    }
+    // if (categoryType == 1) {
+    //   currentSubcategories = checkboxStatus.foodSafetyReviewCbStatus || [];
+    // } else if (categoryType == 2) {
+    //   currentSubcategories = checkboxStatus.culinaryReviewCbStatus || [];
+    // } else {
+    //   currentSubcategories = checkboxStatus.nutritionReviewCbStatus || [];
+    // }
     // * counting the amount of the currentSubcategories for calculation.
     let numberOfCurrentSubcategories = currentSubcategories.length;
 
@@ -488,7 +573,9 @@ const EditExistingReport = () => {
       // * matching the ids of the current categories to the ids of the categories report data.
       let currentPickedCategoriesElementsId =
         parsedCategoriesDataFromReport.filter((element) =>
-          currentSubcategories.includes(parseInt(element.id, 10))
+          currentSubcategories
+            .map((item) => item.id)
+            .includes(parseInt(element.id, 10))
         );
       let totalGrade = 0;
       // * extracting the grades of the currentPickedCategoriesElementsId and sum the amount of the total grades
@@ -557,9 +644,9 @@ const EditExistingReport = () => {
 
   // * calculating the report Grade
   const calculateReportGrade = (value) => {
-    let haveSafety = categoryNames.foodSafetyReviewNames.length > 0;
-    let haveCulinary = categoryNames.culinaryReviewNames.length > 0;
-    let haveNutrition = categoryNames.nutritionReviewNames.length > 0;
+    let haveSafety = categoryNames[1].length > 0;
+    let haveCulinary = categoryNames[2].length > 0;
+    let haveNutrition = categoryNames[3].length > 0;
     let safetyGrade =
       categoryType == 1 ? value : currentReport.getData("safetyGrade");
     let culinaryGrade =
@@ -588,15 +675,19 @@ const EditExistingReport = () => {
 
   useEffect(() => {
     calculateCategoryGrade();
+    console.log("calculateCategoryGrade");
   }, [currentReportItemsForGrade]);
 
   useEffect(() => {
     calculateMajorCategoryGrade();
+    console.log("calculateMajorCategoryGrade");
   }, [categoryGrade]);
 
   useEffect(() => {
     calculateReportGrade(majorCategoryGrade);
+    console.log("calculateReportGrade");
   }, [majorCategoryGrade]);
+
   // ! categories scores calculation end
 
   // ? drawer logic
@@ -801,74 +892,61 @@ const EditExistingReport = () => {
   // ! drawer logic end
 
   // ? console log section
-  useEffect(() => {}, []);
+  // useEffect(() => {}, []);
   // ! console log end
 
-  // * define a function to select the appropriate array based on the category ID
-  const AccordionReportCategoryDataToDisplay = () => {
-    if (currentCategoryId.currentCategory == 1) {
-      // setIsLoading(true);
-      return AccordionCategoriesTemperatureList;
-    } else if (currentCategoryId.currentCategory == 2) {
-      // setIsLoading(true);
-      return AccordionCategoriesWeightsList;
-    } else {
-      // setIsLoading(true);
-      return AccordionCategoriesGeneralList;
-    }
-  };
   // ? arrays for flatList
-  // * mapping over CategoriesItems and displaying the items
-  const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
-    let reportItem = currentReportItems.find(
-      (element) => element.id == item.id
-    );
-    const timeOfReport = currentReport.getData("timeOfReport");
-    return {
-      id: item.id,
-      component: (
-        <CategoryAccordionItem
-          reportItem={reportItem ?? false}
-          item={item}
-          haveFine={haveFine}
-          control={control}
-          setValue={setValue}
-          trigger={trigger}
-          errors={errors}
-          dateSelected={timeOfReport}
-          onReportChange={handleReportItemChange}
-          accordionHeight={350}
-        />
-      ),
-    };
-  });
-  // todo display these component to work faster
-  const accordionTempItemsLength = 10;
+  // // * mapping over CategoriesItems and displaying the items
+  // const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
+  //   let reportItem = currentReportItems.find(
+  //     (element) => element.id == item.id
+  //   );
+  //   const timeOfReport = currentReport.getData("timeOfReport");
+  //   return {
+  //     id: item.id,
+  //     component: (
+  //       <CategoryAccordionItem
+  //         reportItem={reportItem ?? false}
+  //         item={item}
+  //         haveFine={haveFine}
+  //         control={control}
+  //         setValue={setValue}
+  //         trigger={trigger}
+  //         errors={errors}
+  //         dateSelected={timeOfReport}
+  //         onReportChange={handleReportItemChange}
+  //         accordionHeight={350}
+  //       />
+  //     ),
+  //   };
+  // });
+  // // todo display these component to work faster
+  // const accordionTempItemsLength = 10;
 
-  const AccordionCategoriesTemperatureList = Array.from({
-    length: accordionTempItemsLength,
-  }).map((_, i) => ({
-    id: i,
-    component: (
-      <CategoryTempAccordionItem
-        reportItem={currentReportItems[i] ?? false}
-        control={control}
-        setValue={setValue}
-        trigger={trigger}
-        // temperatureOptions={[]}
-        errors={errors}
-        accordionHeight={140}
-        onTempReportItem={(reportItem) => {
-          if (reportItem.TempFoodName) {
-            console.log("item:", i, reportItem);
-            handleReportItemChange(reportItem, i);
-          }
-        }}
-      />
-    ),
-  }));
+  // const AccordionCategoriesTemperatureList = Array.from({
+  //   length: accordionTempItemsLength,
+  // }).map((_, i) => ({
+  //   id: i,
+  //   component: (
+  //     <CategoryTempAccordionItem
+  //       reportItem={currentReportItems[i] ?? false}
+  //       control={control}
+  //       setValue={setValue}
+  //       trigger={trigger}
+  //       // temperatureOptions={[]}
+  //       errors={errors}
+  //       accordionHeight={140}
+  //       onTempReportItem={(reportItem) => {
+  //         if (reportItem.TempFoodName) {
+  //           console.log("item:", i, reportItem);
+  //           handleReportItemChange(reportItem, i);
+  //         }
+  //       }}
+  //     />
+  //   ),
+  // }));
 
-  const accordionWeightsItemsLength = 10;
+  const accordionWeightsItemsLength = 1;
 
   const AccordionCategoriesWeightsList = Array.from({
     length: accordionWeightsItemsLength,
@@ -878,6 +956,7 @@ const EditExistingReport = () => {
       <CategoryWeightsAccordionItem
         reportItem={currentReportItems[i] ?? false}
         control={control}
+        id={i}
         setValue={setValue}
         trigger={trigger}
         errors={errors}
@@ -892,6 +971,43 @@ const EditExistingReport = () => {
     ),
   }));
 
+  // console.log("render...");
+
+  useEffect(() => {
+    if (currentReportItems.length > 0) {
+      if (currentCategoryId.currentCategory == 1) {
+        setDataForFlatListToDisplay(AccordionCategoriesTemperatureList);
+      } else if (currentCategoryId.currentCategory == 2) {
+        setDataForFlatListToDisplay(AccordionCategoriesWeightsList);
+      } else {
+        setDataForFlatListToDisplay(AccordionCategoriesGeneralList);
+      }
+    }
+  }, [currentCategoryId, currentReportItems]);
+  // * define a function to select the appropriate array based on the category ID
+  // const AccordionReportCategoryDataToDisplay = () => {
+
+  // };
+  // todo optimize memorized performance
+  // * define a function to select the appropriate array based on the category ID
+  // const AccordionReportCategoryDataToDisplay = React.useMemo(() => {
+  //   if (currentCategoryId.currentCategory == 1) {
+  //     return AccordionCategoriesTemperatureList;
+  //   } else if (currentCategoryId.currentCategory == 2) {
+  //     return AccordionCategoriesWeightsList;
+  //   } else {
+  //     return AccordionCategoriesGeneralList;
+  //   }
+  // }, [currentCategoryId.currentCategory]);
+
+  // console.log(
+  //   "AccordionReportCategoryDataToDisplay:",
+  //   AccordionReportCategoryDataToDisplay
+  // );
+  const renderItem = ({ item }) => {
+    console.log("Rendering item:", item.id);
+    // return <CategoryAccordion item={item} />
+  };
   // ! arrays for flatList
   return (
     <>
@@ -934,6 +1050,7 @@ const EditExistingReport = () => {
 
         <View style={styles.categoryContainer}>
           <View style={styles.gradesContainer}>
+            {/* ! todo to extract this component into one component and insert the calculation inside of the grades  */}
             <ReportGrade
               reportGradeBoxColor={gradeBackgroundColor(categoryGrade)}
               reportGradeNumber={categoryGrade}
@@ -964,8 +1081,8 @@ const EditExistingReport = () => {
               }}
             >
               <FlatList
-                data={AccordionReportCategoryDataToDisplay()}
-                renderItem={({ item }) => <CategoryAccordion item={item} />}
+                data={dataForFlatListToDisplay}
+                renderItem={renderItem}
                 keyExtractor={(item) => item.id.toString()}
               />
             </View>

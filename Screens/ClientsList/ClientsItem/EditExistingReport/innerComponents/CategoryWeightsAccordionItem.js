@@ -27,7 +27,7 @@ import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
-import { debounce, get, result } from "lodash";
+import { debounce, get, identity, result } from "lodash";
 import Radio from "../../../../../Components/ui/Radio";
 const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
 const ratingsOptions = [
@@ -49,47 +49,17 @@ const CategoryWeightsAccordionItem = ({
   reportItem,
   onWeightReportItem,
   errors,
+  id,
 }) => {
+  console.log("id", id);
+  return;
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
   const [reportItemState, setReportItemState] = useState(reportItem || {});
-  const [avgWeight, setAvgWeight] = useState(0);
   const [numsOfWeights, setNumsOfWeights] = useState(0);
-  // * Simulating your debounce function
-  const debounce = (fn, delay) => {
-    let timer;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        fn(...args);
-      }, delay);
-    };
-  };
-  useEffect(() => {
-    setReportItemState((prevReportItemState) => ({
-      ...prevReportItemState,
-      ...reportItem,
-    }));
-    setAvgWeight(AvgWeightCalculation(reportItem));
-    if (reportItem.WeightMeasureType) {
-      console.log("reportItem", reportItem);
-    }
-  }, [reportItem]);
-  const onWeightReportItemDebounced = useCallback(
-    debounce((data) => {
-      onWeightReportItem(data);
-    }, 0),
-    []
-  );
-  useEffect(() => {
-    onWeightReportItemDebounced({ ...reportItemState });
-  }, [reportItemState]);
 
-  // todo to optimize performance in the component
-  // todo to apply loading when component loads
-  // todo to nerrow down the amount of input by iterating them
   // * counting the weights and calculating
   const AvgWeightCalculation = (reportItem) => {
     const AvgWeightsParsed = [];
@@ -105,14 +75,52 @@ const CategoryWeightsAccordionItem = ({
         AvgWeightsParsed.push(weight);
       }
     }
-    // if (numberOfWeights > 0) {
-    //   console.log("after", totalWeight, numberOfWeights, AvgWeightsParsed);
-    // }
 
-    setNumsOfWeights(numberOfWeights);
+    // setNumsOfWeights(numberOfWeights);
 
     return numberOfWeights > 0 ? totalWeight / numberOfWeights : 0;
   };
+  const [avgWeight, setAvgWeight] = useState(AvgWeightCalculation(reportItem));
+  // const [avgWeight, setAvgWeight] = useState(0);
+
+  // * Simulating your debounce function
+  const debounce = (fn, delay) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        fn(...args);
+      }, delay);
+    };
+  };
+
+  console.log("id/reportItem", id, reportItem);
+  // useEffect(() => {
+  //   //   // setReportItemState((prevReportItemState) => ({
+  //   //   //   ...prevReportItemState,
+  //   //   //   ...reportItem,
+  //   //   // }));
+  //   //   // setAvgWeight(AvgWeightCalculation(reportItem));
+  //   //   // if (reportItem.WeightMeasureType) {
+  //   //   //   console.log("reportItem", reportItem);
+  //   //   // }
+  // }, [reportItem]);
+
+  const onWeightReportItemDebounced = useCallback(
+    debounce((data) => {
+      onWeightReportItem(data);
+    }, 0),
+    []
+  );
+
+  // useEffect(() => {
+  //   // console.log("reportItemState changed");
+  //   onWeightReportItemDebounced({ ...reportItemState });
+  // }, [reportItemState]);
+
+  // todo to optimize performance in the component
+  // todo to apply loading when component loads
+  // todo to nerrow down the amount of input by iterating them
 
   // * image picker
   const pickImage = useCallback(async () => {
@@ -187,7 +195,11 @@ const CategoryWeightsAccordionItem = ({
     }, 0),
     [reportItemState]
   );
-
+  return (
+    <View>
+      <Text>{id}</Text>
+    </View>
+  );
   return (
     <View
       style={[
