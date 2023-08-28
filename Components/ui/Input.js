@@ -12,7 +12,7 @@ const Input = ({
   activeUnderlineColor,
   contentStyle,
   mode,
-  onChangeFunction,
+  onChangeFunction = false,
   inputStyle,
   proxyRef,
   returnKeyType,
@@ -26,6 +26,7 @@ const Input = ({
   disabled = false,
   defaultValue = "",
   numeric = false,
+  onBlurFunction = false,
 }) => {
   return (
     <>
@@ -60,10 +61,15 @@ const Input = ({
               }
               onChangeText={(value) => {
                 onChange(value);
-                onChangeFunction(value);
+                onChangeFunction && onChangeFunction(value);
                 console.log(`field ${name} : ${value}`);
               }}
-              onBlur={onBlur}
+              onBlur={(value) => {
+                onBlur(value);
+                onBlurFunction && onBlurFunction(value);
+                console.log(`field ${name} : ${value}`);
+              }}
+              // onBlur={onBlur}
               value={defaultValue ?? value}
               mode={mode}
               activeOutlineColor={activeOutlineColor}

@@ -65,7 +65,7 @@ import { getCurrentReport } from "../../../../store/redux/reducers/getCurrentRep
 
 import routes from "../../../../Navigation/routes";
 import { getCurrentCategory } from "../../../../store/redux/reducers/getCurrentCategory";
-
+import GradeCalculator from "./innerComponents/GradeCalculator";
 const imageTextsAndFunctionality = [
   {
     id: 0,
@@ -176,7 +176,7 @@ const EditExistingReport = () => {
       parent: categories.categories[parentCategory],
       child: categories.categories[parentCategory].categories[indexSubcategory],
     };
-  }, []);
+  }, [currentCategoryIndex]);
   // console.log(findParentAndChildCategories);
   const drawerRef = useRef(null);
   const richText = useRef();
@@ -190,6 +190,27 @@ const EditExistingReport = () => {
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [selectedModalCategory, setSelectedModalCategory] = useState([]);
   const [colorSelected, setColorSelected] = useState(null);
+  const schema = yup.object().shape({
+    remarks: yup.string().required("remarks is required"),
+    executioner: yup.string().required("executioner is required"),
+    violationType: yup.string().required("type of violation is required"),
+    lastDate: yup.string().required("execution date is required"),
+    fineNis: yup.string().required("defining a fine in NIS is required"),
+    imagePick: yup.string().required("picking an image is required"),
+  });
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+    setValue,
+    watch,
+    trigger,
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
+
   const findCategoriesNames = useMemo(() => {
     // console.log("currentCategories 2 ", currentCategories);
     const globalStateCategories = memoRizedCats
@@ -274,8 +295,106 @@ const EditExistingReport = () => {
     "haveCategoriesNameForCriticalItems"
   );
 
-  const [dataForFlatListToDisplay, setDataForFlatListToDisplay] = useState([]);
-  // console.log(targetSubCategoryId, selectedModalCategory);
+  const categoryChange = () => {
+    setCategoryHeader(findParentAndChildCategories.parent.name);
+    setCategorySubHeader(findParentAndChildCategories.child.name);
+    setCategoriesItems(findParentAndChildCategories.child.items);
+    setCategoryType(findParentAndChildCategories.child.type);
+  };
+
+  // * mapping over CategoriesItems and displaying the items
+  // const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
+  //   let reportItem = currentReportItems.find(
+  //     (element) => element.id == item.id
+  //   );
+  //   const timeOfReport = currentReport.getData("timeOfReport");
+  //   return {
+  //     id: item.id,
+  //     component: (
+  //       <CategoryAccordionItem
+  //         reportItem={reportItem ?? false}
+  //         item={item}
+  //         haveFine={haveFine}
+  //         control={control}
+  //         setValue={setValue}
+  //         trigger={trigger}
+  //         errors={errors}
+  //         dateSelected={timeOfReport}
+  //         onReportChange={handleReportItemChange}
+  //         accordionHeight={350}
+  //       />
+  //     ),
+  //   };
+  // });
+
+  // const accordionTempItemsLength = 10;
+
+  // const AccordionCategoriesTemperatureList = Array.from({
+  //   length: accordionTempItemsLength,
+  // }).map((_, i) => ({
+  //   id: i,
+  //   component: (
+  //     <CategoryTempAccordionItem
+  //       reportItem={currentReportItems[i] ?? false}
+  //       control={control}
+  //       setValue={setValue}
+  //       trigger={trigger}
+  //       // temperatureOptions={[]}
+  //       errors={errors}
+  //       accordionHeight={140}
+  //       onTempReportItem={(reportItem) => {
+  //         if (reportItem.TempFoodName) {
+  //           console.log("item:", i, reportItem);
+  //           handleReportItemChange(reportItem, i);
+  //         }
+  //       }}
+  //     />
+  //   ),
+  // }));
+
+  const accordionWeightsItemsLength = 10;
+
+  const AccordionCategoriesWeightsList = Array.from({
+    length: accordionWeightsItemsLength,
+  }).map((_, i) => ({
+    id: i,
+    component: (
+      <CategoryWeightsAccordionItem
+        reportItem={currentReportItems[i] ?? false}
+        control={control}
+        id={i}
+        setValue={setValue}
+        trigger={trigger}
+        errors={errors}
+        onWeightReportItem={(reportItem) => {
+          if (reportItem.WeightFoodName) {
+            // console.log("reportItem", reportItem, i);
+            handleReportItemChange(reportItem);
+          }
+        }}
+        accordionHeight={150}
+      />
+    ),
+  }));
+
+  const findDataForFlatlist = useMemo(() => {
+    if (currentReportItems.length > 0) {
+      if (currentCategoryId.currentCategory == 1) {
+        return AccordionCategoriesTemperatureList;
+      } else if (currentCategoryId.currentCategory == 2) {
+        return AccordionCategoriesWeightsList;
+      } else {
+        return AccordionCategoriesGeneralList;
+      }
+    }
+    return [];
+  }, []);
+
+  const [dataForFlatListToDisplay, setDataForFlatListToDisplay] =
+    useState(findDataForFlatlist);
+
+  // console.log("findDataForFlatlist", findDataForFlatlist);
+
   const categoriesModal = [
     {
       subheader: "ביקורת בטיחות מזון",
@@ -290,6 +409,7 @@ const EditExistingReport = () => {
       options: categoryNames[3],
     },
   ];
+
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;
@@ -344,31 +464,9 @@ const EditExistingReport = () => {
     //   categories.categories[parentCategory].categories[indexSubcategory].type
     // );
   };
-
   // useEffect(() => {
   //   desiredCategory();
   // }, [currentCategoryIndex]);
-
-  const schema = yup.object().shape({
-    remarks: yup.string().required("remarks is required"),
-    executioner: yup.string().required("executioner is required"),
-    violationType: yup.string().required("type of violation is required"),
-    lastDate: yup.string().required("execution date is required"),
-    fineNis: yup.string().required("defining a fine in NIS is required"),
-    imagePick: yup.string().required("picking an image is required"),
-  });
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    getValues,
-    setValue,
-    watch,
-    trigger,
-  } = useForm({
-    resolver: yupResolver(schema),
-  });
 
   // useEffect(() => {
   //   dispatch(fetchCategories());
@@ -377,7 +475,7 @@ const EditExistingReport = () => {
   // console.log(findCategoriesNames);
   //  * 1. checking if the ids of the categories match to the selected report
   // *  2.  sorting them by type to their right location based on their parent category
-  // todo need to verify
+  // todo need to verify activity
   const handleCheckboxStatusChange = () => {
     const globalStateCategories = memoRizedCats
       ? Object.values(memoRizedCats).flatMap((category) => category.categories)
@@ -403,26 +501,6 @@ const EditExistingReport = () => {
             id: categoryId,
             name: categoryName,
           });
-
-          // if (categoryType === 1) {
-          //   // newCheckboxStatus.foodSafetyReviewCbStatus.push(categoryId);
-          //   newCategoryNames.foodSafetyReviewNames.push({
-          //     id: categoryId,
-          //     name: categoryName,
-          //   });
-          // } else if (categoryType === 2) {
-          //   // newCheckboxStatus.culinaryReviewCbStatus.push(categoryId);
-          //   newCategoryNames.culinaryReviewNames.push({
-          //     id: categoryId,
-          //     name: categoryName,
-          //   });
-          // } else if (categoryType === 3) {
-          //   // newCheckboxStatus.nutritionReviewCbStatus.push(categoryId);
-          //   newCategoryNames.nutritionReviewNames.push({
-          //     id: categoryId,
-          //     name: categoryName,
-          //   });
-          // }
         }
       });
     }
@@ -441,6 +519,7 @@ const EditExistingReport = () => {
   //     console.log("currentCategories is not a valid Set or is empty.");
   //   }
   // }, [currentCategories]);
+
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
@@ -553,144 +632,143 @@ const EditExistingReport = () => {
   }, []);
 
   // ? categories scores calculation
-  // * Major category grade calculation
-  const calculateMajorCategoryGrade = () => {
-    // const parsedCategories = JSON.parse(categoriesDataFromReport);
+  // // * Major category grade calculation
+  // const calculateMajorCategoryGrade = () => {
+  //   // const parsedCategories = JSON.parse(categoriesDataFromReport);
 
-    let currentSubcategories = categoryNames[categoryType];
-    // * chosing to calculate which current subcategories based on the type.
-    // if (categoryType == 1) {
-    //   currentSubcategories = checkboxStatus.foodSafetyReviewCbStatus || [];
-    // } else if (categoryType == 2) {
-    //   currentSubcategories = checkboxStatus.culinaryReviewCbStatus || [];
-    // } else {
-    //   currentSubcategories = checkboxStatus.nutritionReviewCbStatus || [];
-    // }
-    // * counting the amount of the currentSubcategories for calculation.
-    let numberOfCurrentSubcategories = currentSubcategories.length;
+  //   let currentSubcategories = categoryNames[categoryType];
+  //   // * chosing to calculate which current subcategories based on the type.
+  //   // if (categoryType == 1) {
+  //   //   currentSubcategories = checkboxStatus.foodSafetyReviewCbStatus || [];
+  //   // } else if (categoryType == 2) {
+  //   //   currentSubcategories = checkboxStatus.culinaryReviewCbStatus || [];
+  //   // } else {
+  //   //   currentSubcategories = checkboxStatus.nutritionReviewCbStatus || [];
+  //   // }
+  //   // * counting the amount of the currentSubcategories for calculation.
+  //   let numberOfCurrentSubcategories = currentSubcategories.length;
 
-    if (currentSubcategories) {
-      // * matching the ids of the current categories to the ids of the categories report data.
-      let currentPickedCategoriesElementsId =
-        parsedCategoriesDataFromReport.filter((element) =>
-          currentSubcategories
-            .map((item) => item.id)
-            .includes(parseInt(element.id, 10))
-        );
-      let totalGrade = 0;
-      // * extracting the grades of the currentPickedCategoriesElementsId and sum the amount of the total grades
-      currentPickedCategoriesElementsId.forEach((element) => {
-        const grade = parseInt(
-          passedDownCategoryId == element.id ? categoryGrade : element.grade,
-          10
-        );
-        // console.log("grade", grade);
-        // console.log("passedDownCategoryId", passedDownCategoryId);
-        // console.log("passedDownCategoryId", categoryGrade);
-        totalGrade += grade;
-      });
+  //   if (currentSubcategories) {
+  //     // * matching the ids of the current categories to the ids of the categories report data.
+  //     let currentPickedCategoriesElementsId =
+  //       parsedCategoriesDataFromReport.filter((element) =>
+  //         currentSubcategories
+  //           .map((item) => item.id)
+  //           .includes(parseInt(element.id, 10))
+  //       );
+  //     let totalGrade = 0;
+  //     // * extracting the grades of the currentPickedCategoriesElementsId and sum the amount of the total grades
+  //     currentPickedCategoriesElementsId.forEach((element) => {
+  //       const grade = parseInt(
+  //         passedDownCategoryId == element.id ? categoryGrade : element.grade,
+  //         10
+  //       );
+  //       // console.log("grade", grade);
+  //       // console.log("passedDownCategoryId", passedDownCategoryId);
+  //       // console.log("passedDownCategoryId", categoryGrade);
+  //       totalGrade += grade;
+  //     });
 
-      // * calculating the avg of the totalGrade devided by numberOfCurrentSubcategories
-      let avgValOfCurrentSubcategories = Math.round(
-        totalGrade / numberOfCurrentSubcategories
-      );
-      // console.log("currentSubcategories", currentSubcategories);
-      // console.log("totalGrade", totalGrade);
-      setMajorCategoryGrade(avgValOfCurrentSubcategories);
-    }
-  };
-  // * category grade calculation
-  const calculateCategoryGrade = () => {
-    let itemsTotal = 0;
-    let itemsTotal1 = 0;
-    let itemsTotal2 = 0;
-    let itemsTotal3 = 0;
-    // console.log("currentReportItemsForGrade:", currentReportItemsForGrade);
-    for (const item of currentReportItemsForGrade) {
-      if (item.noRelevant == 1 || item.noCalculate == 1) {
-        continue;
-      }
-      if (item.categoryReset == 1) {
-        setCategoryGrade(0);
-        break;
-      }
-      let categoryItem = CategoriesItems.find((el) => el.id == item.id);
-      if (item.grade == 0 && categoryItem?.critical == 1) {
-        setCategoryGrade(0);
-        break;
-      }
-      itemsTotal++;
-      if (item.grade == 1) {
-        itemsTotal1++;
-      } else if (item.grade == 2) {
-        itemsTotal2++;
-      } else if (item.grade == 3) {
-        itemsTotal3++;
-      }
-    }
-    if (itemsTotal == 0) {
-      setCategoryGrade(100);
-    } else {
-      setCategoryGrade(
-        parseInt(
-          ((itemsTotal1 + itemsTotal2 * 2 + itemsTotal3 * 3) /
-            (itemsTotal * 3)) *
-            100
-        )
-      );
-      // console.log(itemsTotal, itemsTotal1, itemsTotal2, itemsTotal3);
-    }
-  };
+  //     // * calculating the avg of the totalGrade devided by numberOfCurrentSubcategories
+  //     let avgValOfCurrentSubcategories = Math.round(
+  //       totalGrade / numberOfCurrentSubcategories
+  //     );
+  //     // console.log("currentSubcategories", currentSubcategories);
+  //     // console.log("totalGrade", totalGrade);
+  //     setMajorCategoryGrade(avgValOfCurrentSubcategories);
+  //   }
+  // };
+  // // * category grade calculation
+  // const calculateCategoryGrade = () => {
+  //   let itemsTotal = 0;
+  //   let itemsTotal1 = 0;
+  //   let itemsTotal2 = 0;
+  //   let itemsTotal3 = 0;
+  //   // console.log("currentReportItemsForGrade:", currentReportItemsForGrade);
+  //   for (const item of currentReportItemsForGrade) {
+  //     if (item.noRelevant == 1 || item.noCalculate == 1) {
+  //       continue;
+  //     }
+  //     if (item.categoryReset == 1) {
+  //       setCategoryGrade(0);
+  //       break;
+  //     }
+  //     let categoryItem = CategoriesItems.find((el) => el.id == item.id);
+  //     if (item.grade == 0 && categoryItem?.critical == 1) {
+  //       setCategoryGrade(0);
+  //       break;
+  //     }
+  //     itemsTotal++;
+  //     if (item.grade == 1) {
+  //       itemsTotal1++;
+  //     } else if (item.grade == 2) {
+  //       itemsTotal2++;
+  //     } else if (item.grade == 3) {
+  //       itemsTotal3++;
+  //     }
+  //   }
+  //   if (itemsTotal == 0) {
+  //     setCategoryGrade(100);
+  //   } else {
+  //     setCategoryGrade(
+  //       parseInt(
+  //         ((itemsTotal1 + itemsTotal2 * 2 + itemsTotal3 * 3) /
+  //           (itemsTotal * 3)) *
+  //           100
+  //       )
+  //     );
+  //     // console.log(itemsTotal, itemsTotal1, itemsTotal2, itemsTotal3);
+  //   }
+  // };
 
-  // * calculating the report Grade
-  const calculateReportGrade = (value) => {
-    let haveSafety = categoryNames[1].length > 0;
-    let haveCulinary = categoryNames[2].length > 0;
-    let haveNutrition = categoryNames[3].length > 0;
-    let safetyGrade =
-      categoryType == 1 ? value : currentReport.getData("safetyGrade");
-    let culinaryGrade =
-      categoryType == 2 ? value : currentReport.getData("culinaryGrade");
-    let nutritionGrade =
-      categoryType == 3 ? value : currentReport.getData("nutritionGrade");
-    let reportGradeCalc = 0;
-    if (haveSafety && !haveCulinary && !haveNutrition) {
-      reportGradeCalc = safetyGrade;
-    } else if (!haveSafety && haveCulinary && !haveNutrition) {
-      reportGradeCalc = culinaryGrade;
-    } else if (!haveSafety && !haveCulinary && haveNutrition) {
-      reportGradeCalc = nutritionGrade;
-    } else if (haveSafety && haveCulinary && !haveNutrition) {
-      reportGradeCalc = safetyGrade * 0.5 + culinaryGrade * 0.5;
-    } else if (haveSafety && !haveCulinary && haveNutrition) {
-      reportGradeCalc = safetyGrade * 0.9 + nutritionGrade * 0.1;
-    } else if (!haveSafety && haveCulinary && haveNutrition) {
-      reportGradeCalc = culinaryGrade * 0.9 + nutritionGrade * 0.1;
-    } else {
-      reportGradeCalc =
-        safetyGrade * 0.5 + culinaryGrade * 0.4 + nutritionGrade * 0.1;
-    }
-    setReportGrade(Math.round(reportGradeCalc));
-  };
+  // // * calculating the report Grade
+  // const calculateReportGrade = (value) => {
+  //   let haveSafety = categoryNames[1].length > 0;
+  //   let haveCulinary = categoryNames[2].length > 0;
+  //   let haveNutrition = categoryNames[3].length > 0;
+  //   let safetyGrade =
+  //     categoryType == 1 ? value : currentReport.getData("safetyGrade");
+  //   let culinaryGrade =
+  //     categoryType == 2 ? value : currentReport.getData("culinaryGrade");
+  //   let nutritionGrade =
+  //     categoryType == 3 ? value : currentReport.getData("nutritionGrade");
+  //   let reportGradeCalc = 0;
+  //   if (haveSafety && !haveCulinary && !haveNutrition) {
+  //     reportGradeCalc = safetyGrade;
+  //   } else if (!haveSafety && haveCulinary && !haveNutrition) {
+  //     reportGradeCalc = culinaryGrade;
+  //   } else if (!haveSafety && !haveCulinary && haveNutrition) {
+  //     reportGradeCalc = nutritionGrade;
+  //   } else if (haveSafety && haveCulinary && !haveNutrition) {
+  //     reportGradeCalc = safetyGrade * 0.5 + culinaryGrade * 0.5;
+  //   } else if (haveSafety && !haveCulinary && haveNutrition) {
+  //     reportGradeCalc = safetyGrade * 0.9 + nutritionGrade * 0.1;
+  //   } else if (!haveSafety && haveCulinary && haveNutrition) {
+  //     reportGradeCalc = culinaryGrade * 0.9 + nutritionGrade * 0.1;
+  //   } else {
+  //     reportGradeCalc =
+  //       safetyGrade * 0.5 + culinaryGrade * 0.4 + nutritionGrade * 0.1;
+  //   }
+  //   setReportGrade(Math.round(reportGradeCalc));
+  // };
 
-  useEffect(() => {
-    calculateCategoryGrade();
-    console.log("calculateCategoryGrade");
-  }, [currentReportItemsForGrade]);
+  // useEffect(() => {
+  //   calculateCategoryGrade();
+  //   console.log("calculateCategoryGrade");
+  // }, [currentReportItemsForGrade]);
 
-  useEffect(() => {
-    calculateMajorCategoryGrade();
-    console.log("calculateMajorCategoryGrade");
-  }, [categoryGrade]);
+  // useEffect(() => {
+  //   calculateMajorCategoryGrade();
+  //   console.log("calculateMajorCategoryGrade");
+  // }, [categoryGrade]);
 
-  useEffect(() => {
-    calculateReportGrade(majorCategoryGrade);
-    console.log("calculateReportGrade");
-  }, [majorCategoryGrade]);
-
+  // useEffect(() => {
+  //   calculateReportGrade(majorCategoryGrade);
+  //   console.log("calculateReportGrade");
+  // }, [majorCategoryGrade]);
   // ! categories scores calculation end
 
-  // ? drawer logic
+  // ?  summeryAndNotesManager drawer logic
   // * drawer handler
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
@@ -896,119 +974,32 @@ const EditExistingReport = () => {
   // ! console log end
 
   // ? arrays for flatList
-  // // * mapping over CategoriesItems and displaying the items
-  // const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
-  //   let reportItem = currentReportItems.find(
-  //     (element) => element.id == item.id
-  //   );
-  //   const timeOfReport = currentReport.getData("timeOfReport");
-  //   return {
-  //     id: item.id,
-  //     component: (
-  //       <CategoryAccordionItem
-  //         reportItem={reportItem ?? false}
-  //         item={item}
-  //         haveFine={haveFine}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         errors={errors}
-  //         dateSelected={timeOfReport}
-  //         onReportChange={handleReportItemChange}
-  //         accordionHeight={350}
-  //       />
-  //     ),
-  //   };
-  // });
-  // // todo display these component to work faster
-  // const accordionTempItemsLength = 10;
-
-  // const AccordionCategoriesTemperatureList = Array.from({
-  //   length: accordionTempItemsLength,
-  // }).map((_, i) => ({
-  //   id: i,
-  //   component: (
-  //     <CategoryTempAccordionItem
-  //       reportItem={currentReportItems[i] ?? false}
-  //       control={control}
-  //       setValue={setValue}
-  //       trigger={trigger}
-  //       // temperatureOptions={[]}
-  //       errors={errors}
-  //       accordionHeight={140}
-  //       onTempReportItem={(reportItem) => {
-  //         if (reportItem.TempFoodName) {
-  //           console.log("item:", i, reportItem);
-  //           handleReportItemChange(reportItem, i);
-  //         }
-  //       }}
-  //     />
-  //   ),
-  // }));
-
-  const accordionWeightsItemsLength = 1;
-
-  const AccordionCategoriesWeightsList = Array.from({
-    length: accordionWeightsItemsLength,
-  }).map((_, i) => ({
-    id: i,
-    component: (
-      <CategoryWeightsAccordionItem
-        reportItem={currentReportItems[i] ?? false}
-        control={control}
-        id={i}
-        setValue={setValue}
-        trigger={trigger}
-        errors={errors}
-        onWeightReportItem={(reportItem) => {
-          if (reportItem.WeightFoodName) {
-            // console.log("reportItem", reportItem, i);
-            handleReportItemChange(reportItem);
-          }
-        }}
-        accordionHeight={150}
-      />
-    ),
-  }));
 
   // console.log("render...");
+  // todo need to verify
+  // useEffect(() => {
+  //   if (currentReportItems.length > 0) {
+  //     if (currentCategoryId.currentCategory == 1) {
+  //       setDataForFlatListToDisplay(AccordionCategoriesTemperatureList);
+  //     } else if (currentCategoryId.currentCategory == 2) {
+  //       setDataForFlatListToDisplay(AccordionCategoriesWeightsList);
+  //     } else {
+  //       setDataForFlatListToDisplay(AccordionCategoriesGeneralList);
+  //     }
+  //   }
+  // }, [currentCategoryId, currentReportItems]);
 
-  useEffect(() => {
-    if (currentReportItems.length > 0) {
-      if (currentCategoryId.currentCategory == 1) {
-        setDataForFlatListToDisplay(AccordionCategoriesTemperatureList);
-      } else if (currentCategoryId.currentCategory == 2) {
-        setDataForFlatListToDisplay(AccordionCategoriesWeightsList);
-      } else {
-        setDataForFlatListToDisplay(AccordionCategoriesGeneralList);
-      }
-    }
-  }, [currentCategoryId, currentReportItems]);
-  // * define a function to select the appropriate array based on the category ID
-  // const AccordionReportCategoryDataToDisplay = () => {
-
-  // };
   // todo optimize memorized performance
   // * define a function to select the appropriate array based on the category ID
-  // const AccordionReportCategoryDataToDisplay = React.useMemo(() => {
-  //   if (currentCategoryId.currentCategory == 1) {
-  //     return AccordionCategoriesTemperatureList;
-  //   } else if (currentCategoryId.currentCategory == 2) {
-  //     return AccordionCategoriesWeightsList;
-  //   } else {
-  //     return AccordionCategoriesGeneralList;
-  //   }
-  // }, [currentCategoryId.currentCategory]);
 
-  // console.log(
-  //   "AccordionReportCategoryDataToDisplay:",
-  //   AccordionReportCategoryDataToDisplay
-  // );
   const renderItem = ({ item }) => {
     console.log("Rendering item:", item.id);
-    // return <CategoryAccordion item={item} />
+    return <CategoryAccordion item={item} />;
   };
+  // console.log(accordionWeightsItemsLength);
   // ! arrays for flatList
+  // todo list
+  // todo to create a function for when category changes
   return (
     <>
       <ScreenWrapper
@@ -1049,8 +1040,7 @@ const EditExistingReport = () => {
         </View>
 
         <View style={styles.categoryContainer}>
-          <View style={styles.gradesContainer}>
-            {/* ! todo to extract this component into one component and insert the calculation inside of the grades  */}
+          {/* <View style={styles.gradesContainer}>
             <ReportGrade
               reportGradeBoxColor={gradeBackgroundColor(categoryGrade)}
               reportGradeNumber={categoryGrade}
@@ -1066,27 +1056,40 @@ const EditExistingReport = () => {
               reportGradeNumber={reportGrade}
               reportGradeText={"ציון לדוח"}
             />
-          </View>
-          {isLoading ? (
-            <Loader visible={isLoading} />
-          ) : (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                padding: 16,
-                borderWidth: 1,
-                borderColor: "rgba(83, 104, 180, 0.30)",
-              }}
-            >
+          </View> */}
+          <GradeCalculator
+            categoryType={categoryType}
+            categoryNames={categoryNames}
+            parsedCategoriesDataFromReport={parsedCategoriesDataFromReport}
+            currentReportItemsForGrade={currentReportItemsForGrade}
+            passedDownCategoryId={passedDownCategoryId}
+            CategoriesItems={CategoriesItems}
+            currentReport={currentReport}
+          />
+
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 16,
+              borderWidth: 1,
+              borderColor: "rgba(83, 104, 180, 0.30)",
+            }}
+          >
+            {isLoading ? (
+              <Loader visible={isLoading} />
+            ) : (
               <FlatList
                 data={dataForFlatListToDisplay}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id.toString()}
+                ListEmptyComponent={
+                  isLoading ? <Loader visible={true} /> : null
+                }
               />
-            </View>
-          )}
+            )}
+          </View>
         </View>
 
         {modalVisible && (

@@ -29,6 +29,7 @@ import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
 import { debounce, get, identity, result } from "lodash";
 import Radio from "../../../../../Components/ui/Radio";
+import Loader from "../../../../../utiles/Loader";
 const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
 const ratingsOptions = [
   { label: "0", value: "0" },
@@ -51,37 +52,39 @@ const CategoryWeightsAccordionItem = ({
   errors,
   id,
 }) => {
-  console.log("id", id);
-  return;
+  // console.log("id", id);
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
   const [reportItemState, setReportItemState] = useState(reportItem || {});
-  const [numsOfWeights, setNumsOfWeights] = useState(0);
-
-  // * counting the weights and calculating
-  const AvgWeightCalculation = (reportItem) => {
-    const AvgWeightsParsed = [];
-    let totalWeight = 0;
+  // * counting the weights and
+  const findNumOfWeights = (data) => {
     let numberOfWeights = 0;
-    // console.log("reportItem", reportItem);
+    let totalWeight = 0;
 
     for (let i = 1; i <= 5; i++) {
-      const weight = parseFloat(reportItem["WeightMeasured" + i]);
+      const weight = parseFloat(data["WeightMeasured" + i]);
       if (!isNaN(weight)) {
         totalWeight += weight;
         numberOfWeights++;
-        AvgWeightsParsed.push(weight);
+        // AvgWeightsParsed.push(weight);
       }
     }
+    return { numberOfWeights, totalWeight };
+  };
 
-    // setNumsOfWeights(numberOfWeights);
+  const [numsOfWeights, setNumsOfWeights] = useState(
+    findNumOfWeights(reportItem).numberOfWeights
+  );
 
+  // *  calculating avg of weights
+  const AvgWeightCalculation = ({ numberOfWeights, totalWeight }) => {
     return numberOfWeights > 0 ? totalWeight / numberOfWeights : 0;
   };
-  const [avgWeight, setAvgWeight] = useState(AvgWeightCalculation(reportItem));
-  // const [avgWeight, setAvgWeight] = useState(0);
+  const [avgWeight, setAvgWeight] = useState(
+    AvgWeightCalculation(findNumOfWeights(reportItem))
+  );
 
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
@@ -94,31 +97,6 @@ const CategoryWeightsAccordionItem = ({
     };
   };
 
-  console.log("id/reportItem", id, reportItem);
-  // useEffect(() => {
-  //   //   // setReportItemState((prevReportItemState) => ({
-  //   //   //   ...prevReportItemState,
-  //   //   //   ...reportItem,
-  //   //   // }));
-  //   //   // setAvgWeight(AvgWeightCalculation(reportItem));
-  //   //   // if (reportItem.WeightMeasureType) {
-  //   //   //   console.log("reportItem", reportItem);
-  //   //   // }
-  // }, [reportItem]);
-
-  const onWeightReportItemDebounced = useCallback(
-    debounce((data) => {
-      onWeightReportItem(data);
-    }, 0),
-    []
-  );
-
-  // useEffect(() => {
-  //   // console.log("reportItemState changed");
-  //   onWeightReportItemDebounced({ ...reportItemState });
-  // }, [reportItemState]);
-
-  // todo to optimize performance in the component
   // todo to apply loading when component loads
   // todo to nerrow down the amount of input by iterating them
 
@@ -160,7 +138,9 @@ const CategoryWeightsAccordionItem = ({
         const temp = { ...prev };
         temp[label] = value;
         if (label !== "grade") {
-          const avgWeightsCalculation = AvgWeightCalculation(temp);
+          const avgWeightsCalculation = AvgWeightCalculation(
+            findNumOfWeights(temp)
+          );
           // console.log("avgWeightsCalculation:", avgWeightsCalculation);
           if (numsOfWeights > 0) {
             setAvgWeight(avgWeightsCalculation);
@@ -189,17 +169,15 @@ const CategoryWeightsAccordionItem = ({
         }
         // * match the grade to his str based on gradeLabels array
         temp["comment"] = gradeLabels[temp["grade"]];
-        console.log("numsOfWeights", numsOfWeights);
+        console.log("numsOfWeights,temp", numsOfWeights, temp);
+
+        onWeightReportItem(temp);
         return temp;
       });
     }, 0),
     [reportItemState]
   );
-  return (
-    <View>
-      <Text>{id}</Text>
-    </View>
-  );
+
   return (
     <View
       style={[
@@ -325,7 +303,7 @@ const CategoryWeightsAccordionItem = ({
               <Radio
                 options={ratingsOptions}
                 optionGap={38}
-                optionText="דירוג:"
+                // optionText="דירוג:"
                 disabled={false}
                 selectedOption={
                   reportItemState?.grade == undefined
@@ -385,9 +363,13 @@ const CategoryWeightsAccordionItem = ({
               //   handleMeasuredWeightChange(value, "WeightMeasured1");
 
               // }}
+
               onChangeFunction={(value) =>
                 handleMeasuredWeightChange(value, "WeightMeasured1")
               }
+              // onBlurFunction={(value) =>
+              //   handleMeasuredWeightChange(value, "WeightMeasured1")
+              // }
             />
           </View>
           <View
