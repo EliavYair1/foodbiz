@@ -14,7 +14,6 @@ import {
 import { Divider } from "react-native-paper";
 import CheckboxItem from "../../../../WorkerNewReport/CheckboxItem/CheckboxItem";
 import fonts from "../../../../../styles/fonts";
-import colors from "../../../../../styles/colors";
 import Input from "../../../../../Components/ui/Input";
 import DatePicker from "../../../../../Components/ui/datePicker";
 import SelectMenu from "../../../../../Components/ui/SelectMenu";
@@ -26,8 +25,31 @@ import { FlatList } from "react-native-gesture-handler";
 import uuid from "uuid-random";
 import Radio from "../../../../../Components/ui/Radio";
 import moment from "moment";
+import colors from "../../../../../styles/colors";
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
+const relevantOptions = [
+  { id: 0, label: "לא רלוונטי", value: "noRelevant" },
+  { id: 1, label: "לא לשקלול", value: "noCalculate" },
+  { id: 2, label: "הצג בתמצית", value: "showOnComment" },
+  { id: 3, label: "אפס קטגוריה", value: "categoryReset" },
+];
+const ratingsOptions = [
+  { label: "0", value: "0" },
+  { label: "1", value: "1" },
+  { label: "2", value: "2" },
+  { label: "3", value: "3" },
+];
+
+const chargeSelections = [
+  "קבלן ההסעדה",
+  "מנהל המשק",
+  "הלקוח",
+  "מנהל המטבח",
+  "בית החולים",
+  "שירותי בריאות כללית",
+  "צוות הקולנוע",
+];
 // * memorizing memoizing the result to prevents unnecessary re-renders
 const areEqual = (prevProps, nextProps) => {
   return (
@@ -47,20 +69,34 @@ const CategoryAccordionItem = ({
   item,
   haveFine,
   onReportChange,
+  accordionHeight,
 }) => {
+  // console.log("render id ", item.id);
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
-  const [reportItemState, setReportItemState] = useState(reportItem);
+  const [reportItemState, setReportItemState] = useState(reportItem || {});
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   const openModal = (index) => {
     setSelectedImageIndex(index);
     setModalVisible(true);
   };
+  // * Simulating your debounce function
+  const debounce = (fn, delay) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        fn(...args);
+      }, delay);
+    };
+  };
+
   // * image picker
-  const pickImage = async () => {
+  const pickImage = useCallback(async () => {
     if (images.length >= 3) {
       alert("You can only select up to 3 images.");
       return;
@@ -74,27 +110,26 @@ const CategoryAccordionItem = ({
         setImages((prevImages) => [...prevImages, selectedImage]);
       }
     }
-  };
+  }, [images]);
 
-  const takePhoto = async () => {
-    if (images.length >= 3) {
-      alert("You can only select up to 3 images.");
-      return;
-    }
+  // const takePhoto = async () => {
+  //   if (images.length >= 3) {
+  //     alert("You can only select up to 3 images.");
+  //     return;
+  //   }
 
-    const result = await ImagePicker.launchCameraAsync();
+  //   const result = await ImagePicker.launchCameraAsync();
 
-    if (!result.cancelled) {
-      const selectedImage = result.uri;
-      if (selectedImage) {
-        setImages((prevImages) => [...prevImages, selectedImage]);
-      }
-    }
-  };
+  //   if (!result.cancelled) {
+  //     const selectedImage = result.uri;
+  //     if (selectedImage) {
+  //       setImages((prevImages) => [...prevImages, selectedImage]);
+  //     }
+  //   }
+  // };
 
-  /*  */
   // * accordion toggler
-  const toggleAccordion = () => {
+  const toggleAccordion = useCallback(() => {
     setOpen(!open);
     if (!open) {
       setAccordionBg(colors.accordionOpen);
@@ -102,16 +137,15 @@ const CategoryAccordionItem = ({
       setAccordionBg(colors.white);
     }
     Animated.timing(heightAnim, {
-      toValue: open ? 0 : 350,
+      toValue: open ? 0 : accordionHeight,
       duration: 250,
       useNativeDriver: false,
     }).start();
-  };
+  }, [open]);
 
-  // todo to reset the grade value to 0 when categoryReset is picked
   // * change handler
   const handleReportChange = useCallback(
-    (value, label) => {
+    debounce((value, label) => {
       setReportItemState((prev) => {
         const temp = { ...prev };
         temp[label] = value;
@@ -127,16 +161,16 @@ const CategoryAccordionItem = ({
           temp["grade"] = "3";
           temp["comment"] = item["grade3"];
         }
-
+        onReportChange(temp);
         return temp;
       });
-    },
+    }, 0),
     [item]
   );
 
-  useEffect(() => {
-    onReportChange({ ...reportItemState });
-  }, [reportItemState]);
+  // useEffect(() => {
+  //   onReportChange({ ...reportItemState });
+  // }, [reportItemState]);
 
   // * adding days for the lastDate selectMenu
   const addDaysToDate = (numberOfDays) => {
@@ -149,18 +183,6 @@ const CategoryAccordionItem = ({
     return newFormattedDate;
   };
 
-  const releventOptions = [
-    { id: 0, label: "לא רלוונטי", value: "noRelevant" },
-    { id: 1, label: "לא לשקלול", value: "noCalculate" },
-    { id: 2, label: "הצג בתמצית", value: "showOnComment" },
-    { id: 3, label: "אפס קטגוריה", value: "categoryReset" },
-  ];
-  const ratingsOptions = [
-    { label: "0", value: "0" },
-    { label: "1", value: "1" },
-    { label: "2", value: "2" },
-    { label: "3", value: "3" },
-  ];
   const selectedDates = [
     `${addDaysToDate(0)}`,
     `עד ה-${addDaysToDate(3)} `,
@@ -169,24 +191,6 @@ const CategoryAccordionItem = ({
     `עד ה-${addDaysToDate(31)} `,
     " נא לשלוח תאריך מדויק לביצוע",
   ];
-  const chargeSelections = [
-    "קבלן ההסעדה",
-    "מנהל המשק",
-    "הלקוח",
-    "מנהל המטבח",
-    "בית החולים",
-    "שירותי בריאות כללית",
-    "צוות הקולנוע",
-  ];
-
-  // ! console log section
-  // console.log("haveFine:", haveFine);
-  // console.log("item", item.name);
-  // console.log(releventOptions);
-  // console.log("reportItemState", reportItemState);
-  // ! console log section end
-
-  // ? todo list
 
   return (
     <View
@@ -241,7 +245,7 @@ const CategoryAccordionItem = ({
 
         <Divider />
         <View style={styles.categoryRelevantCheckboxWrapper}>
-          {releventOptions.map((option) => (
+          {relevantOptions.map((option) => (
             <CheckboxItem
               key={option.id}
               label={option.value}
@@ -421,7 +425,12 @@ const CategoryAccordionItem = ({
             </TouchableOpacity>
             <ScrollView horizontal>
               {images.map((image, index) => (
-                <TouchableOpacity key={uuid()} onPress={() => openModal(index)}>
+                <TouchableOpacity
+                  key={uuid()}
+                  onPress={
+                    () => console.log("open modal") /* openModal(index) */
+                  }
+                >
                   <Image source={{ uri: image }} style={styles.uploadedPhoto} />
                 </TouchableOpacity>
               ))}

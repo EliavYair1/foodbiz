@@ -134,6 +134,7 @@ const CategoryWeightsAccordionItem = ({
   // * change handler
   const handleMeasuredWeightChange = useCallback(
     debounce((value, label) => {
+      console.log("handleMeasuredWeightChange triggered with:", value, label);
       setReportItemState((prev) => {
         const temp = { ...prev };
         temp[label] = value;
@@ -169,15 +170,15 @@ const CategoryWeightsAccordionItem = ({
         }
         // * match the grade to his str based on gradeLabels array
         temp["comment"] = gradeLabels[temp["grade"]];
-        console.log("numsOfWeights,temp", numsOfWeights, temp);
+        console.log("temp:", prev, temp);
 
         onWeightReportItem(temp);
         return temp;
       });
-    }, 0),
+    }, 300),
     [reportItemState]
   );
-
+  console.log("reportItemState:", reportItemState);
   return (
     <View
       style={[
@@ -487,7 +488,7 @@ const CategoryWeightsAccordionItem = ({
           <Text style={styles.inputLabel}>הערות סוקר:</Text>
           <Input
             control={control}
-            name={"remarks"}
+            name={"comment"}
             mode={"flat"}
             label={reportItemState.comment}
             contentStyle={[
@@ -498,8 +499,9 @@ const CategoryWeightsAccordionItem = ({
             activeUnderlineColor={colors.black}
             onChangeFunction={(value) => {
               console.log(value, "is selected");
-              // setValue("remarks", value);
-              // trigger("remarks");
+              handleMeasuredWeightChange(value, "comment");
+              // setValue("comment", value);
+              // trigger("comment");
             }}
           />
         </View>

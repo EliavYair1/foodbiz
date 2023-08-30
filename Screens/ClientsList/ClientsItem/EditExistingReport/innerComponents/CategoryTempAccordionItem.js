@@ -22,6 +22,24 @@ import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
 import Radio from "../../../../../Components/ui/Radio";
+const ratingsOptions = [
+  { label: "0", value: "0" },
+  { label: "1", value: "1" },
+  { label: "2", value: "2" },
+  { label: "3", value: "3" },
+];
+const tempFoodTypeOptions = [
+  { value: "1", label: "טמפרטורת מזון חם בהגשה" },
+  { value: "2", label: "טמפרטורת מזון חם בקבלה" },
+  { value: "3", label: "טמפרטורת מזון חם בארון חימום" },
+  { value: "4", label: "טמפרטורת מזון חם בשילוח" },
+  { value: "5", label: "טמפרטורת מזון חם בבישול" },
+  { value: "6", label: "טמפרטורת מזון קר" },
+  { value: "7", label: "טמפרטורת מזון קר בקבלה" },
+  { value: "8", label: "טמפרטורה מזון לאחר שיחזור המזון" },
+];
+const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
+
 const CategoryTempAccordionItem = ({
   handleRatingCheckboxChange,
   ratingCheckboxItem,
@@ -48,18 +66,38 @@ const CategoryTempAccordionItem = ({
   const [images, setImages] = useState([]);
   const [reportItemState, setReportItemState] = useState(reportItem || {});
   const [selectedOption, setSelectedOption] = useState(reportItemState?.grade);
-  useEffect(() => {
-    setReportItemState((prevReportItemState) => ({
-      ...prevReportItemState,
-      ...reportItem,
-    }));
-  }, [reportItem]);
+  // useEffect(() => {
+  //   setReportItemState((prevReportItemState) => ({
+  //     ...prevReportItemState,
+  //     ...reportItem,
+  //   }));
+  // }, [reportItem]);
   // console.log(reportItemState);
+  // useEffect(() => {
+  //   onTempReportItem({ ...reportItemState });
+  // }, [reportItemState]);
+
+  // useEffect(() => {
+  //   // Initialize reportItemState and compute values
+  //   const initialReportItemState = { ...reportItem };
+  //   // Perform any additional computations here based on initialReportItemState
+  //   setReportItemState(initialReportItemState);
+  // }, [reportItem]);
+  // * Simulating your debounce function
+  const debounce = (fn, delay) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        fn(...args);
+      }, delay);
+    };
+  };
 
   // * image picker
-  const pickImage = async () => {
+  const pickImage = useCallback(async () => {
     if (images.length >= 1) {
-      alert("You can only select up to 3 images.");
+      alert("You can only select up to 1 images.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync();
@@ -71,9 +109,8 @@ const CategoryTempAccordionItem = ({
         setImages((prevImages) => [...prevImages, selectedImage]);
       }
     }
-  };
+  }, [images]);
 
-  const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
   // * change handler
   const handleReportChange = useCallback(
     (value, label) => {
@@ -144,25 +181,15 @@ const CategoryTempAccordionItem = ({
         }
         // * match the grade to his str based on gradeLabels array
         temp["comment"] = gradeLabels[temp["grade"]];
-
+        onTempReportItem(temp);
         return temp;
       });
     },
     [reportItemState]
   );
 
-  useEffect(() => {
-    onTempReportItem({ ...reportItemState });
-  }, [reportItemState]);
-
-  useEffect(() => {
-    // Initialize reportItemState and compute values
-    const initialReportItemState = { ...reportItem };
-    // Perform any additional computations here based on initialReportItemState
-    setReportItemState(initialReportItemState);
-  }, [reportItem]);
   // console.log(selectedOption);
-  const toggleAccordion = () => {
+  const toggleAccordion = useCallback(() => {
     setOpen(!open);
     if (!open) {
       setAccordionBg(colors.accordionOpen);
@@ -174,28 +201,14 @@ const CategoryTempAccordionItem = ({
       duration: 250,
       useNativeDriver: false,
     }).start();
-  };
+  }, [open]);
+
   const temperatureOptions = ["מתחת ל-0", ...Array(81).keys(), "מעל 80"].map(
     (item) => {
       return { value: item + "", label: item + "" };
     }
   );
-  const ratingsOptions = [
-    { label: "0", value: "0" },
-    { label: "1", value: "1" },
-    { label: "2", value: "2" },
-    { label: "3", value: "3" },
-  ];
-  const tempFoodTypeOptions = [
-    { value: "1", label: "טמפרטורת מזון חם בהגשה" },
-    { value: "2", label: "טמפרטורת מזון חם בקבלה" },
-    { value: "3", label: "טמפרטורת מזון חם בארון חימום" },
-    { value: "4", label: "טמפרטורת מזון חם בשילוח" },
-    { value: "5", label: "טמפרטורת מזון חם בבישול" },
-    { value: "6", label: "טמפרטורת מזון קר" },
-    { value: "7", label: "טמפרטורת מזון קר בקבלה" },
-    { value: "8", label: "טמפרטורה מזון לאחר שיחזור המזון" },
-  ];
+
   const selectedTempFoodType = tempFoodTypeOptions.find(
     (option) => option.value == reportItemState.TempFoodType
   );

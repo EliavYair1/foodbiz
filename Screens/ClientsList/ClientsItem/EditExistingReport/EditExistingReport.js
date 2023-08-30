@@ -66,68 +66,16 @@ import { getCurrentReport } from "../../../../store/redux/reducers/getCurrentRep
 import routes from "../../../../Navigation/routes";
 import { getCurrentCategory } from "../../../../store/redux/reducers/getCurrentCategory";
 import GradeCalculator from "./innerComponents/GradeCalculator";
-const imageTextsAndFunctionality = [
-  {
-    id: 0,
-    text: "קבצים",
-    source: require("../../../../assets/icons/iconImgs/folder.png"),
-    iconPress: () => {
-      console.log("folder");
-    },
-  },
-  {
-    id: 1,
-    text: "מפרט",
-    source: require("../../../../assets/icons/iconImgs/paperSheet.png"),
-    iconPress: () => {
-      console.log("paperSheet");
-    },
-  },
-  {
-    id: 2,
-    text: "הגדרות",
-    source: require("../../../../assets/icons/iconImgs/settings.png"),
-    iconPress: () => {
-      console.log("settings");
-    },
-  },
-  {
-    id: 3,
-    text: "קטגוריות",
-    source: require("../../../../assets/icons/iconImgs/categories.png"),
-    iconPress: () => {
-      console.log("categories");
-      setModalVisible(true);
-    },
-  },
-  {
-    id: 4,
-    text: "סיכום",
-
-    source: require("../../../../assets/icons/iconImgs/notebook.png"),
-    iconPress: () => {
-      console.log("notebook");
-    },
-  },
-  {
-    id: 5,
-    text: "צפייה",
-
-    source: require("../../../../assets/icons/iconImgs/eye.png"),
-    iconPress: () => {
-      console.log("eye");
-    },
-  },
-];
+import IconList from "./innerComponents/IconList";
 
 const EditExistingReport = () => {
-  console.log("edit report");
+  // console.log("edit report");
   // ! redux stpre fetching
   const dispatch = useDispatch();
   const currentStation = useSelector((state) => state.currentStation);
   const categories = useSelector((state) => state.categories);
 
-  const currentCategoryId = useSelector((state) => state.currentCategory);
+  const currentSubCategoryId = useSelector((state) => state.currentCategory);
   const currentCategories = useSelector((state) => state.currentCategories);
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
@@ -141,7 +89,6 @@ const EditExistingReport = () => {
   const globalStateCategories = memoRizedCats
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
     : null;
-  // console.log(globalStateCategories);
   // * converting the chosen categories to strings
   const matchedNames = globalStateCategories
     .filter((obj) =>
@@ -149,11 +96,11 @@ const EditExistingReport = () => {
     )
     .map((obj) => obj.name);
 
-  const passedDownCategoryId = currentCategoryId.currentCategory;
+  const passedDownCategoryId = currentSubCategoryId.currentCategory;
   // ! redux stpre fetching end
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const findParentAndChildCategories = useMemo(() => {
-    // console.log("before", currentCategoryIndex);
+    console.log("before", currentCategoryIndex);
     // console.log();
     let parentCategory = false;
     let indexSubcategory = false;
@@ -170,8 +117,7 @@ const EditExistingReport = () => {
         }
       });
     }
-    // console.log("parent", categories.categories[parentCategory]);
-
+    console.log("after", parentCategory, indexSubcategory);
     return {
       parent: categories.categories[parentCategory],
       child: categories.categories[parentCategory].categories[indexSubcategory],
@@ -216,12 +162,6 @@ const EditExistingReport = () => {
     const globalStateCategories = memoRizedCats
       ? Object.values(memoRizedCats).flatMap((category) => category.categories)
       : null;
-    // console.log("global:", globalStateCategories);
-    // let newCheckboxStatus = {
-    // foodSafetyReviewCbStatus: [],
-    // culinaryReviewCbStatus: [],
-    // nutritionReviewCbStatus: [],
-    // };
     let newCategoryNames = {
       1: [],
       2: [],
@@ -259,6 +199,7 @@ const EditExistingReport = () => {
   const [categorySubHeader, setCategorySubHeader] = useState(
     findParentAndChildCategories.child.name
   );
+
   // * categories items
   const [CategoriesItems, setCategoriesItems] = useState(
     findParentAndChildCategories.child.items
@@ -296,61 +237,102 @@ const EditExistingReport = () => {
   );
 
   const categoryChange = () => {
-    setCategoryHeader(findParentAndChildCategories.parent.name);
-    setCategorySubHeader(findParentAndChildCategories.child.name);
-    setCategoriesItems(findParentAndChildCategories.child.items);
-    setCategoryType(findParentAndChildCategories.child.type);
+    console.log("categorychange :", currentCategoryIndex);
+    const updatedCategories = findParentAndChildCategories;
+    setCategoryHeader(updatedCategories.parent.name);
+    setCategorySubHeader(updatedCategories.child.name);
+    setCategoriesItems(updatedCategories.child.items);
+    setCategoryType(updatedCategories.child.type);
+    setCurrentReportItems(findRelevantReportData);
+    setCurrentReportItemsForGrade(findRelevantReportData);
+    setCategoryNames(findCategoriesNames);
   };
 
+  // ? todo list
+  // todo bug issues when initiating the next/prev category :
+  // todo 1 : when passing to the next or prev categories it displaying the previous category instead of the current. //solved
+  // todo 2 : summeryAndNotes : in the prev it shows the current category instead of the prev. //solved
+  // todo 3 : when logging it shows on first render the corrent which is the current category but when clicking ...
+  // todo 3 : the next/prev it shows the last log which it should show the current.
+  // todo 4 : when clickig on next/prev and getting to the temp/weights compts it skips and move to the next general category (check the findDataForFlatlist function logic).
+  // todo 5 : not sure if the right CategoriesItems/currentReportItems relevent data is passed correctly (to check the categoryChange function).
+  // ! todo list end
+
+  // * handling changes in the report finding , replacing and returning the new report item
+  const handleReportItemChange = useCallback((newReportItem, idx = false) => {
+    setCurrentReportItemsForGrade((prev) => {
+      if (idx) {
+        const updatedReportItems = prev.map((reportItem, currentIndex) => {
+          if (currentIndex === idx) {
+            return newReportItem;
+          }
+          return reportItem;
+        });
+        return updatedReportItems;
+      } else {
+        const temp = [...prev];
+        temp.splice(
+          temp.findIndex((element) => {
+            return element.id === newReportItem.id;
+          }),
+          1
+        );
+        temp.push(newReportItem);
+        return temp;
+      }
+    });
+  }, []);
+
   // * mapping over CategoriesItems and displaying the items
-  // const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
-  //   let reportItem = currentReportItems.find(
-  //     (element) => element.id == item.id
-  //   );
-  //   const timeOfReport = currentReport.getData("timeOfReport");
-  //   return {
-  //     id: item.id,
-  //     component: (
-  //       <CategoryAccordionItem
-  //         reportItem={reportItem ?? false}
-  //         item={item}
-  //         haveFine={haveFine}
-  //         control={control}
-  //         setValue={setValue}
-  //         trigger={trigger}
-  //         errors={errors}
-  //         dateSelected={timeOfReport}
-  //         onReportChange={handleReportItemChange}
-  //         accordionHeight={350}
-  //       />
-  //     ),
-  //   };
-  // });
+  const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
+    let reportItem = currentReportItems.find(
+      (element) => element.id == item.id
+    );
 
-  // const accordionTempItemsLength = 10;
+    const timeOfReport = currentReport.getData("timeOfReport");
+    return {
+      id: item.id,
+      component: (
+        <CategoryAccordionItem
+          reportItem={reportItem ?? false}
+          item={item}
+          haveFine={haveFine}
+          control={control}
+          setValue={setValue}
+          trigger={trigger}
+          errors={errors}
+          dateSelected={timeOfReport}
+          onReportChange={handleReportItemChange}
+          accordionHeight={350}
+        />
+      ),
+    };
+  });
 
-  // const AccordionCategoriesTemperatureList = Array.from({
-  //   length: accordionTempItemsLength,
-  // }).map((_, i) => ({
-  //   id: i,
-  //   component: (
-  //     <CategoryTempAccordionItem
-  //       reportItem={currentReportItems[i] ?? false}
-  //       control={control}
-  //       setValue={setValue}
-  //       trigger={trigger}
-  //       // temperatureOptions={[]}
-  //       errors={errors}
-  //       accordionHeight={140}
-  //       onTempReportItem={(reportItem) => {
-  //         if (reportItem.TempFoodName) {
-  //           console.log("item:", i, reportItem);
-  //           handleReportItemChange(reportItem, i);
-  //         }
-  //       }}
-  //     />
-  //   ),
-  // }));
+  const accordionTempItemsLength = 10;
+
+  const AccordionCategoriesTemperatureList = Array.from({
+    length: accordionTempItemsLength,
+  }).map((_, i) => ({
+    id: i,
+    component: (
+      <CategoryTempAccordionItem
+        reportItem={currentReportItems[i] ?? false}
+        control={control}
+        setValue={setValue}
+        trigger={trigger}
+        // temperatureOptions={[]}
+        errors={errors}
+        accordionHeight={140}
+        onTempReportItem={(reportItem) => {
+          if (reportItem.TempFoodName) {
+            console.log("item:", i, reportItem);
+            handleReportItemChange(reportItem, i);
+          }
+        }}
+      />
+    ),
+  }));
 
   const accordionWeightsItemsLength = 10;
 
@@ -376,12 +358,25 @@ const EditExistingReport = () => {
       />
     ),
   }));
+  // todo find the right id and then determain if the id is x then display y.
+  // * looking into categoryNames looking for the id of the subcategory
+  // function findItemById(data, id) {
+  //   const item = Object.values(data)
+  //     .flatMap((category) => category)
+  //     .find((item) => item.id == id);
+
+  //   return item || null;
+  // }
+  // console.log("hello", findItemById(categoryNames, 1).id == 1);
+  // * checking if currentReportItems isnt empty then looking the right accordion compt to render based on the currentSubCategoryId
 
   const findDataForFlatlist = useMemo(() => {
     if (currentReportItems.length > 0) {
-      if (currentCategoryId.currentCategory == 1) {
+      if (currentCategories.currentCategories[currentCategoryIndex] == 1) {
         return AccordionCategoriesTemperatureList;
-      } else if (currentCategoryId.currentCategory == 2) {
+      } else if (
+        currentCategories.currentCategories[currentCategoryIndex] == 2
+      ) {
         return AccordionCategoriesWeightsList;
       } else {
         return AccordionCategoriesGeneralList;
@@ -556,19 +551,6 @@ const EditExistingReport = () => {
     }
   };
 
-  const renderImageTextItem = ({ item }) => {
-    return (
-      <View style={{ marginRight: 10 }}>
-        <ImageText
-          imageSource={item.source}
-          ImageText={item.text}
-          id={item.id}
-          onIconPress={item.iconPress}
-        />
-      </View>
-    );
-  };
-
   // * form submit function
   const onSubmitForm = () => {
     // console.log("form values:", getValues());
@@ -605,31 +587,6 @@ const EditExistingReport = () => {
   // useEffect(() => {
   //   getRelevantReportData(categoriesDataFromReport);
   // }, [currentCategoryIndex]);
-
-  // * handling changes in the report finding , replacing and returning the new report item
-  const handleReportItemChange = useCallback((newReportItem, idx = false) => {
-    setCurrentReportItemsForGrade((prev) => {
-      if (idx) {
-        const updatedReportItems = prev.map((reportItem, currentIndex) => {
-          if (currentIndex === idx) {
-            return newReportItem;
-          }
-          return reportItem;
-        });
-        return updatedReportItems;
-      } else {
-        const temp = [...prev];
-        temp.splice(
-          temp.findIndex((element) => {
-            return element.id === newReportItem.id;
-          }),
-          1
-        );
-        temp.push(newReportItem);
-        return temp;
-      }
-    });
-  }, []);
 
   // ? categories scores calculation
   // // * Major category grade calculation
@@ -928,6 +885,7 @@ const EditExistingReport = () => {
   // * pagination's between categories names : Prev
   const prevCategory = async () => {
     debounce(saveReport(), 300);
+
     try {
       if (currentCategoryIndex === 0) {
         console.log(
@@ -936,8 +894,10 @@ const EditExistingReport = () => {
         );
         return;
       }
-
       setCurrentCategoryIndex((prevIndex) => prevIndex - 1);
+      setTimeout(() => {
+        categoryChange();
+      }, 500);
       console.log("moving to the prev category");
     } catch (error) {
       console.error("Error in nextCategory:", error);
@@ -958,7 +918,9 @@ const EditExistingReport = () => {
       }
 
       setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
-
+      setTimeout(() => {
+        categoryChange();
+      }, 500);
       console.log("Moving to the next category");
       // dispatch(getCurrentCategory(currentCategories.currentCategories[1]));
       // navigateToRoute(routes.ONBOARDING.EditExistingReport);
@@ -966,11 +928,16 @@ const EditExistingReport = () => {
       console.error("Error in nextCategory:", error);
     }
   };
-
+  // console.log(currentCategoryIndex);
   // ! drawer logic end
 
   // ? console log section
-  // useEffect(() => {}, []);
+  // console.log("categoryNames", categoryNames);
+  // console.log(
+  //   `categorySubHeader: ${categorySubHeader},`,
+  //   `id: ${currentCategories.currentCategories[currentCategoryIndex]}`
+  // );
+  // console.log("child name", findParentAndChildCategories.child.name);
   // ! console log end
 
   // ? arrays for flatList
@@ -979,27 +946,24 @@ const EditExistingReport = () => {
   // todo need to verify
   // useEffect(() => {
   //   if (currentReportItems.length > 0) {
-  //     if (currentCategoryId.currentCategory == 1) {
+  //     if (currentSubCategoryId.currentCategory == 1) {
   //       setDataForFlatListToDisplay(AccordionCategoriesTemperatureList);
-  //     } else if (currentCategoryId.currentCategory == 2) {
+  //     } else if (currentSubCategoryId.currentCategory == 2) {
   //       setDataForFlatListToDisplay(AccordionCategoriesWeightsList);
   //     } else {
   //       setDataForFlatListToDisplay(AccordionCategoriesGeneralList);
   //     }
   //   }
-  // }, [currentCategoryId, currentReportItems]);
+  // }, [currentSubCategoryId, currentReportItems]);
 
   // todo optimize memorized performance
   // * define a function to select the appropriate array based on the category ID
 
   const renderItem = ({ item }) => {
-    console.log("Rendering item:", item.id);
+    // console.log("Rendering item:", item.id);
     return <CategoryAccordion item={item} />;
   };
-  // console.log(accordionWeightsItemsLength);
-  // ! arrays for flatList
-  // todo list
-  // todo to create a function for when category changes
+
   return (
     <>
       <ScreenWrapper
@@ -1026,16 +990,13 @@ const EditExistingReport = () => {
               {categoryHeader}
               {" > "}
               {categorySubHeader}
+              {/* temp solution */}
+              {/* {matchedNames[currentCategoryIndex]} */}
             </Text>
           </View>
 
           <View style={styles.imageTextList}>
-            <FlatList
-              data={imageTextsAndFunctionality}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={renderImageTextItem}
-              horizontal={true}
-            />
+            <IconList onCategoriesIconPress={() => setModalVisible(true)} />
           </View>
         </View>
 
@@ -1157,7 +1118,9 @@ const EditExistingReport = () => {
 
                     <Text style={styles.categoryDirButton}>
                       הקטגוריה הקודמת:
-                      {matchedNames[currentCategoryIndex - 1]}
+                      {currentCategoryIndex == 0
+                        ? ""
+                        : matchedNames[currentCategoryIndex - 1]}
                     </Text>
                   </TouchableOpacity>
                 )}
