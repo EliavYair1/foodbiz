@@ -3,7 +3,6 @@ import { View, Text } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import ImageText from "./ImageText";
 const IconList = ({ onCategoriesIconPress }) => {
-  console.log("IconList rendered");
   const imageTextsAndFunctionality = [
     {
       id: 0,

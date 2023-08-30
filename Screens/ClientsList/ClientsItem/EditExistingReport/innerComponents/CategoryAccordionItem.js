@@ -71,7 +71,7 @@ const CategoryAccordionItem = ({
   onReportChange,
   accordionHeight,
 }) => {
-  // console.log("render id ", item.id);
+  console.log("render id ", item.id);
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);

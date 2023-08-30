@@ -64,6 +64,7 @@ import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategor
 import { getCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
 import { getCurrentReport } from "../../store/redux/reducers/getCurrentReport";
 import "@env";
+import IconList from "../ClientsList/ClientsItem/EditExistingReport/innerComponents/IconList";
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
@@ -619,71 +620,6 @@ const WorkerNewReport = () => {
           return result;
         }, [])
       : [];
-  const imageTextsAndFunctionality = [
-    {
-      id: 0,
-      text: "קבצים",
-      source: require("../../assets/icons/iconImgs/folder.png"),
-      iconPress: () => {
-        console.log("folder");
-      },
-    },
-    {
-      id: 1,
-      text: "מפרט",
-      source: require("../../assets/icons/iconImgs/paperSheet.png"),
-      iconPress: () => {
-        console.log("paperSheet");
-      },
-    },
-    {
-      id: 2,
-      text: "הגדרות",
-      source: require("../../assets/icons/iconImgs/settings.png"),
-      iconPress: () => {
-        console.log("settings");
-      },
-    },
-    {
-      id: 3,
-      text: "קטגוריות",
-      source: require("../../assets/icons/iconImgs/categories.png"),
-      iconPress: () => {
-        console.log("categories");
-        navigateToRoute(routes.ONBOARDING.EditExistingReport);
-      },
-    },
-    {
-      id: 4,
-      text: "סיכום",
-
-      source: require("../../assets/icons/iconImgs/notebook.png"),
-      iconPress: () => {
-        console.log("notebook");
-      },
-    },
-    {
-      id: 5,
-      text: "צפייה",
-
-      source: require("../../assets/icons/iconImgs/eye.png"),
-      iconPress: () => {
-        console.log("eye");
-      },
-    },
-  ];
-  const renderImageTextItem = ({ item }) => {
-    return (
-      <View style={{ marginRight: 10 }}>
-        <ImageText
-          imageSource={item.source}
-          ImageText={item.text}
-          id={item.id}
-          onIconPress={item.iconPress}
-        />
-      </View>
-    );
-  };
 
   // * paginations between categories names : Prev
   const handlePrevCategory = () => {
@@ -1396,11 +1332,10 @@ categorys[]: 5
               </Text>
               {currentReport && (
                 <View style={styles.imageTextList}>
-                  <FlatList
-                    data={imageTextsAndFunctionality}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderImageTextItem}
-                    horizontal={true}
+                  <IconList
+                    onCategoriesIconPress={() => {
+                      navigateToRoute(routes.ONBOARDING.EditExistingReport);
+                    }}
                   />
                 </View>
               )}

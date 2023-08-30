@@ -69,7 +69,7 @@ import GradeCalculator from "./innerComponents/GradeCalculator";
 import IconList from "./innerComponents/IconList";
 
 const EditExistingReport = () => {
-  // console.log("edit report");
+  console.log("EditExistingReport");
   // ! redux stpre fetching
   const dispatch = useDispatch();
   const currentStation = useSelector((state) => state.currentStation);
@@ -100,7 +100,6 @@ const EditExistingReport = () => {
   // ! redux stpre fetching end
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const findParentAndChildCategories = useMemo(() => {
-    console.log("before", currentCategoryIndex);
     // console.log();
     let parentCategory = false;
     let indexSubcategory = false;
@@ -117,7 +116,6 @@ const EditExistingReport = () => {
         }
       });
     }
-    console.log("after", parentCategory, indexSubcategory);
     return {
       parent: categories.categories[parentCategory],
       child: categories.categories[parentCategory].categories[indexSubcategory],
@@ -214,7 +212,7 @@ const EditExistingReport = () => {
         category.id == currentCategories.currentCategories[currentCategoryIndex]
     );
     return relevantData.items;
-  }, []);
+  }, [currentCategoryIndex]);
   // console.log("findRelevantReportData:", findRelevantReportData);
   const [currentReportItems, setCurrentReportItems] = useState(
     findRelevantReportData
@@ -235,18 +233,37 @@ const EditExistingReport = () => {
   const haveCategoriesNameForCriticalItems = currentReport.getData(
     "haveCategoriesNameForCriticalItems"
   );
+  // console.log("CategoriesItems", CategoriesItems);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  useEffect(() => {
+    if (!isFirstLoad) {
+      console.log("1");
+      const updatedCategories = findParentAndChildCategories;
+      setCategoryHeader(updatedCategories.parent.name);
+      console.log("2");
+      setCategorySubHeader(updatedCategories.child.name);
+      console.log("3");
+      setCategoriesItems(updatedCategories.child.items); // 1
+      console.log("4");
+      setCategoryType(updatedCategories.child.type);
+      console.log("5");
+      setCurrentReportItems(findRelevantReportData);
+      console.log("6");
+      setCurrentReportItemsForGrade(findRelevantReportData);
+      console.log("7");
+      setCategoryNames(findCategoriesNames);
+      console.log("8");
+    } else {
+      setIsFirstLoad(false);
+    }
+  }, [currentCategoryIndex]);
 
-  const categoryChange = () => {
-    console.log("categorychange :", currentCategoryIndex);
-    const updatedCategories = findParentAndChildCategories;
-    setCategoryHeader(updatedCategories.parent.name);
-    setCategorySubHeader(updatedCategories.child.name);
-    setCategoriesItems(updatedCategories.child.items);
-    setCategoryType(updatedCategories.child.type);
-    setCurrentReportItems(findRelevantReportData);
-    setCurrentReportItemsForGrade(findRelevantReportData);
-    setCategoryNames(findCategoriesNames);
-  };
+  useEffect(() => {
+    if (!isFirstLoad) {
+      setDataForFlatListToDisplay(findDataForFlatlist); // 2
+      console.log("9");
+    }
+  }, [CategoriesItems]);
 
   // ? todo list
   // todo bug issues when initiating the next/prev category :
@@ -284,31 +301,34 @@ const EditExistingReport = () => {
   }, []);
 
   // * mapping over CategoriesItems and displaying the items
-  const AccordionCategoriesGeneralList = CategoriesItems.map((item) => {
-    let reportItem = currentReportItems.find(
-      (element) => element.id == item.id
-    );
-
-    const timeOfReport = currentReport.getData("timeOfReport");
-    return {
-      id: item.id,
-      component: (
-        <CategoryAccordionItem
-          reportItem={reportItem ?? false}
-          item={item}
-          haveFine={haveFine}
-          control={control}
-          setValue={setValue}
-          trigger={trigger}
-          errors={errors}
-          dateSelected={timeOfReport}
-          onReportChange={handleReportItemChange}
-          accordionHeight={350}
-        />
-      ),
-    };
-  });
-
+  // 3
+  const AccordionCategoriesGeneralList = useMemo(() => {
+    console.log("10");
+    return CategoriesItems.map((item) => {
+      let reportItem = currentReportItems.find(
+        (element) => element.id == item.id
+      );
+      const timeOfReport = currentReport.getData("timeOfReport");
+      return {
+        id: item.id,
+        component: (
+          <CategoryAccordionItem
+            reportItem={reportItem ?? false}
+            item={item}
+            haveFine={haveFine}
+            control={control}
+            setValue={setValue}
+            trigger={trigger}
+            errors={errors}
+            dateSelected={timeOfReport}
+            onReportChange={handleReportItemChange}
+            accordionHeight={350}
+          />
+        ),
+      };
+    });
+  }, [CategoriesItems]);
+  // console.log("AccordionCategoriesGeneralList", AccordionCategoriesGeneralList);
   const accordionTempItemsLength = 10;
 
   const AccordionCategoriesTemperatureList = Array.from({
@@ -369,9 +389,11 @@ const EditExistingReport = () => {
   // }
   // console.log("hello", findItemById(categoryNames, 1).id == 1);
   // * checking if currentReportItems isnt empty then looking the right accordion compt to render based on the currentSubCategoryId
-
+  // console.log("categoryNames" ,categoryNames);
   const findDataForFlatlist = useMemo(() => {
+    console.log("11");
     if (currentReportItems.length > 0) {
+      // console.log("current categories", currentCategories.currentCategories);
       if (currentCategories.currentCategories[currentCategoryIndex] == 1) {
         return AccordionCategoriesTemperatureList;
       } else if (
@@ -383,7 +405,7 @@ const EditExistingReport = () => {
       }
     }
     return [];
-  }, []);
+  }, [CategoriesItems]);
 
   const [dataForFlatListToDisplay, setDataForFlatListToDisplay] =
     useState(findDataForFlatlist);
@@ -895,14 +917,13 @@ const EditExistingReport = () => {
         return;
       }
       setCurrentCategoryIndex((prevIndex) => prevIndex - 1);
-      setTimeout(() => {
-        categoryChange();
-      }, 500);
+
       console.log("moving to the prev category");
     } catch (error) {
       console.error("Error in nextCategory:", error);
     }
   };
+
   // * pagination's between categories names : Next
   const nextCategory = async () => {
     debounce(saveReport(), 300);
@@ -918,9 +939,7 @@ const EditExistingReport = () => {
       }
 
       setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
-      setTimeout(() => {
-        categoryChange();
-      }, 500);
+
       console.log("Moving to the next category");
       // dispatch(getCurrentCategory(currentCategories.currentCategories[1]));
       // navigateToRoute(routes.ONBOARDING.EditExistingReport);
