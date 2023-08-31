@@ -14,6 +14,8 @@ import { setClients } from "../../store/redux/reducers/clientSlice";
 import Loader from "../../utiles/Loader";
 import colors from "../../styles/colors";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
+import { setUser } from "../../store/redux/reducers/userSlice";
+
 const Home = () => {
   const { fetchData } = FetchDataService();
   const { navigateToRoute } = useScreenNavigator();
@@ -42,6 +44,9 @@ const Home = () => {
           });
           dispatch(setClients({ clients: clients }));
           // console.log("clients[Home]:", clients);
+
+          dispatch(setUser(user_id));
+
           navigateToRoute(routes.ONBOARDING.ClientsList);
           // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
         } else {

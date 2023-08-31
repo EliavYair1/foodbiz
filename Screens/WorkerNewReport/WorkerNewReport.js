@@ -65,6 +65,8 @@ import { getCurrentCategories } from "../../store/redux/reducers/getCurrentCateg
 import { getCurrentReport } from "../../store/redux/reducers/getCurrentReport";
 import "@env";
 import IconList from "../ClientsList/ClientsItem/EditExistingReport/innerComponents/IconList";
+import { retrieveData } from "../../Services/StorageService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
@@ -81,9 +83,15 @@ const WorkerNewReport = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
+  const userId = useSelector((state) => state.user);
+  // todo to take the userId as the workerid when creating a new reoport
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
-  const [formData, setFormData] = useState({ clientId: currentClient?.id });
+  const [formData, setFormData] = useState({
+    clientId: currentClient?.id,
+    id: userId,
+    haveNewGeneralCommentsVersion: 1,
+  });
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
@@ -107,6 +115,7 @@ const WorkerNewReport = () => {
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState([]);
   const [culinaryReviewTexts, setCulinaryReviewTexts] = useState([]);
   const [nutritionReviewTexts, setNutritionReviewTexts] = useState([]);
+
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
     previousReports: yup.string().required("previous report is required"),
@@ -147,7 +156,6 @@ const WorkerNewReport = () => {
         );
       }),
   });
-
   const {
     control,
     handleSubmit,
@@ -159,7 +167,7 @@ const WorkerNewReport = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-
+  // console.log("errors", errors);
   useEffect(() => {
     schema
       .validate(formData)
@@ -193,10 +201,10 @@ const WorkerNewReport = () => {
     const reportTime = data.find((item) => item.id === reportTimeId);
     return reportTime ? reportTime.name : "";
   };
-  //  * edit mode current report initialization
+
+  //  * edit mode existing current report initialization
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
-    // todo to use getData class method
     if (currentReport) {
       // const { data } = currentReport;
       setSwitchStates({
@@ -305,9 +313,9 @@ const WorkerNewReport = () => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       oldReportId: selectedReport.getData("id"),
-      workerId: selectedReport.getData("workerId"),
+      // workerId: selectedReport.getData("workerId"),
     }));
-    setValue("workerId", selectedReport.getData("workerId"));
+    // setValue("workerId", selectedReport.getData("workerId"));
     setValue("oldReportId", selectedReport.getData("id"));
     trigger("clientStationId");
     trigger("oldReportId");
@@ -342,6 +350,7 @@ const WorkerNewReport = () => {
     const globalStateCategories = memoRizedCats
       ? Object.values(memoRizedCats).flatMap((category) => category.categories)
       : null;
+
     let newCheckboxStatus = {
       foodSafetyReviewCbStatus: [],
       culinaryReviewCbStatus: [],
@@ -384,7 +393,6 @@ const WorkerNewReport = () => {
     trigger("categories");
     setCheckboxStatus(newCheckboxStatus);
   };
-
   // * get the array of categories from the report and updates the state
   const handleCategoriesCheckboxesToggle = (category, checked, label) => {
     // console.log("handleCategoriesCheckboxesToggle:", category, checked);
@@ -422,7 +430,6 @@ const WorkerNewReport = () => {
     setValue("categories", categories);
     trigger("categories");
   }, [checkboxStatus]);
-
   // * checking if the report parameters match to their state true / false
   const handleSwitchStateChange = (selectedReport) => {
     const newSwitchStates = {
@@ -595,13 +602,14 @@ const WorkerNewReport = () => {
 
       try {
         const response = await postNewReport(formData);
+        console.log("onSubmitForm response", response);
       } catch (error) {
         console.error("Error posting data:", error);
       }
     }
   };
-  // * Drawer
 
+  // * Drawer
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
   };
@@ -648,37 +656,6 @@ const WorkerNewReport = () => {
     dispatch(getCurrentCategory(formData.categories[0]));
     navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
-
-  // console.log(formData.categories);
-
-  // todo to change the way i save the checkboxes statuses in the state after i pick a report and make another change in one of the checkboxes
-  // todo to update the global state of the chosen categories.
-  // todo to send post request to the api : /api/duplicateReport.php
-
-  /* {
-oldReportId: 18503
-clientId: 34
-haveNewGeneralCommentsVersion: 1
-clientStationId: 66
-workerId: 23
-accompany: ללא ליווי
-haveFine: 0 
-haveAmountOfItems: 0
-haveSafetyGrade: 1
-haveCulinaryGrade: 1
-haveNutritionGrade: 1
-haveCategoriesNameForCriticalItems: 0
-reportTime: 2
-newGeneralCommentTopText: ביקורת בתחנת פיליפס חיפה.
-התנור בתחנה לא עבד עד השעה 10:30, דבר שיצר קצת לחץ בתחנה.
-כמות סועדים קטנה ביחס לגודל של חדר האוכל, מה שנותן תחושה לא נעימה.
-יש לחשוב על תחימת חלק מחדר האוכל לשיפור  ההרגשה.
-קבלן ההסעדה לא מאשר למטבח מוצרים של IQF מה שיכול מאד לעזור לצוות לפי טענתו.
-
-timeOfReport: 22/06/2023
-categorys[]: 5
-} */
-  // console.log(getValues().clientStationId);
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {
@@ -871,7 +848,7 @@ categorys[]: 5
                 activeOutlineColor={colors.blue}
                 // label={accompanySelected ? accompanySelected : "ללא  מלווה"}
                 // label={null}
-                defaultValue={""}
+                defaultValue={formData.accompany}
                 // placeholder={" "}
                 outlineColor={"rgba(12, 20, 48, 0.2)"}
                 onChangeFunction={(value) => {
@@ -927,11 +904,13 @@ categorys[]: 5
               errorMessage={errors.reportTime && errors.reportTime.message}
               onChange={(value) => {
                 handleFormChange("reportTime", value.id);
-                setCurrentReportTime(value.name);
+                setCurrentReportTime(value.id);
+                setValue("reportTime");
+                trigger("reportTime");
                 console.log("reportTime:", value.id);
               }}
               propertyName={"name"}
-              defaultValue={currentReportTime}
+              // defaultValue={currentReportTime}
               displayedValue={currentReportTime}
               returnObject={true}
             />
@@ -1264,7 +1243,7 @@ categorys[]: 5
       ],
     },
   ];
-
+  // console.log(getValues().categories[0]);
   // * accordion item
   const renderAccordion = ({ item }) => (
     <Accordion
@@ -1510,7 +1489,7 @@ categorys[]: 5
   );
 };
 
-export default WorkerNewReport;
+export default React.memo(WorkerNewReport);
 
 const styles = StyleSheet.create({
   container: {

@@ -233,6 +233,7 @@ const EditExistingReport = () => {
   const haveCategoriesNameForCriticalItems = currentReport.getData(
     "haveCategoriesNameForCriticalItems"
   );
+
   // console.log("CategoriesItems", CategoriesItems);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   useEffect(() => {
@@ -267,10 +268,6 @@ const EditExistingReport = () => {
 
   // ? todo list
   // todo bug issues when initiating the next/prev category :
-  // todo 1 : when passing to the next or prev categories it displaying the previous category instead of the current. //solved
-  // todo 2 : summeryAndNotes : in the prev it shows the current category instead of the prev. //solved
-  // todo 3 : when logging it shows on first render the corrent which is the current category but when clicking ...
-  // todo 3 : the next/prev it shows the last log which it should show the current.
   // todo 4 : when clickig on next/prev and getting to the temp/weights compts it skips and move to the next general category (check the findDataForFlatlist function logic).
   // todo 5 : not sure if the right CategoriesItems/currentReportItems relevent data is passed correctly (to check the categoryChange function).
   // ! todo list end
@@ -378,16 +375,7 @@ const EditExistingReport = () => {
       />
     ),
   }));
-  // todo find the right id and then determain if the id is x then display y.
-  // * looking into categoryNames looking for the id of the subcategory
-  // function findItemById(data, id) {
-  //   const item = Object.values(data)
-  //     .flatMap((category) => category)
-  //     .find((item) => item.id == id);
 
-  //   return item || null;
-  // }
-  // console.log("hello", findItemById(categoryNames, 1).id == 1);
   // * checking if currentReportItems isnt empty then looking the right accordion compt to render based on the currentSubCategoryId
   // console.log("categoryNames" ,categoryNames);
   const findDataForFlatlist = useMemo(() => {
