@@ -11,6 +11,8 @@ import {
   Alert,
   ActivityIndicator,
   SafeAreaView,
+  Dimensions,
+  Platform,
 } from "react-native";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
@@ -67,12 +69,17 @@ import "@env";
 import IconList from "../ClientsList/ClientsItem/EditExistingReport/innerComponents/IconList";
 import { retrieveData } from "../../Services/StorageService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import GoBackNavigator from "../../utiles/GoBackNavigator";
+import Header from "../../Components/ui/Header";
+
+const windowWidth = Dimensions.get("window").width;
+const windowHeight = Dimensions.get("window").height;
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
+  const { navigateToRoute } = useScreenNavigator();
   const [colorSelected, setColorSelected] = useState(false);
-  const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const clients = useSelector((state) => state.clients);
   const categories = useSelector((state) => state.categories);
@@ -84,7 +91,6 @@ const WorkerNewReport = () => {
     (state) => state.currentReport.currentReport
   );
   const userId = useSelector((state) => state.user);
-  // todo to take the userId as the workerid when creating a new reoport
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({
@@ -104,9 +110,9 @@ const WorkerNewReport = () => {
   const [switchStates, setSwitchStates] = useState({
     haveFine: false,
     haveAmountOfItems: false,
-    haveSafetyGrade: false,
-    haveCulinaryGrade: false,
-    haveNutritionGrade: false,
+    haveSafetyGrade: true,
+    haveCulinaryGrade: true,
+    haveNutritionGrade: true,
     haveCategoriesNameForCriticalItems: false,
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
@@ -122,7 +128,7 @@ const WorkerNewReport = () => {
     accompany: yup.string().required("accompany is required"),
     timeOfReport: yup.string().required("date is required"),
     reportTime: yup.string(),
-    categories: yup
+    categorys: yup
       .array()
       .of(yup.number())
       .test("please choose at least one category", (value) => {
@@ -383,16 +389,17 @@ const WorkerNewReport = () => {
     // console.log(typeof categories);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      categories:
+      categorys:
         categories.length > 0 || Object.keys(categories).length > 0
           ? categories
           : parsedSelectedReportCategory,
     }));
 
-    setValue("categories", categories);
-    trigger("categories");
+    setValue("categorys", categories);
+    trigger("categorys");
     setCheckboxStatus(newCheckboxStatus);
   };
+  console.log(formData);
   // * get the array of categories from the report and updates the state
   const handleCategoriesCheckboxesToggle = (category, checked, label) => {
     // console.log("handleCategoriesCheckboxesToggle:", category, checked);
@@ -409,7 +416,7 @@ const WorkerNewReport = () => {
       } else if (!checked && index !== -1) {
         updatedCategoryStatus.splice(index, 1);
       }
-      handleFormChange(category, updatedCategoryStatus);
+      // handleFormChange(category, updatedCategoryStatus);
       return { ...prevStatus, [category]: updatedCategoryStatus };
     });
   };
@@ -424,12 +431,13 @@ const WorkerNewReport = () => {
     // console.log("categories:", categories);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      categories,
+      categorys: categories,
     }));
 
-    setValue("categories", categories);
-    trigger("categories");
+    setValue("categorys", categories);
+    trigger("categorys");
   }, [checkboxStatus]);
+
   // * checking if the report parameters match to their state true / false
   const handleSwitchStateChange = (selectedReport) => {
     const newSwitchStates = {
@@ -506,9 +514,9 @@ const WorkerNewReport = () => {
       let newSwitchStates = {
         haveFine: false,
         haveAmountOfItems: false,
-        haveSafetyGrade: false,
-        haveCulinaryGrade: false,
-        haveNutritionGrade: false,
+        haveSafetyGrade: true,
+        haveCulinaryGrade: true,
+        haveNutritionGrade: true,
         haveCategoriesNameForCriticalItems: false,
       };
 
@@ -609,6 +617,8 @@ const WorkerNewReport = () => {
     }
   };
 
+  // todo to check why the form.categories dosent show on first render
+
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
@@ -630,14 +640,14 @@ const WorkerNewReport = () => {
       : [];
 
   // * paginations between categories names : Prev
-  const handlePrevCategory = () => {
-    setCurrentCategoryIndex((prevIndex) => {
-      const newIndex = prevIndex > 0 ? prevIndex - 1 : prevIndex;
-      const currentItem = checkedCategoryNameById[newIndex];
-      // dispatch(setCurrentCategory(currentItem));
-      return newIndex;
-    });
-  };
+  // const handlePrevCategory = () => {
+  //   setCurrentCategoryIndex((prevIndex) => {
+  //     const newIndex = prevIndex > 0 ? prevIndex - 1 : prevIndex;
+  //     const currentItem = checkedCategoryNameById[newIndex];
+  //     // dispatch(setCurrentCategory(currentItem));
+  //     return newIndex;
+  //   });
+  // };
 
   // * paginations between categories names : Next
   const handleNextCategory = () => {
@@ -939,9 +949,9 @@ const WorkerNewReport = () => {
           id: 0,
           boxItem: (
             <>
-              {errors.categories && errors.categories.message && (
+              {errors.categorys && errors.categorys.message && (
                 <HelperText type="error" style={{ marginBottom: 10 }}>
-                  {errors.categories.message}
+                  {errors.categorys.message}
                 </HelperText>
               )}
             </>
@@ -1243,7 +1253,7 @@ const WorkerNewReport = () => {
       ],
     },
   ];
-  // console.log(getValues().categories[0]);
+
   // * accordion item
   const renderAccordion = ({ item }) => (
     <Accordion
@@ -1278,11 +1288,6 @@ const WorkerNewReport = () => {
       })
     : NewReportAccordionContent;
 
-  // console.log(checkedCategoryNameById);
-  // if (!checkedCategoryNameById) {
-  //   return ;
-  // }
-  // console.log(formData.categories);
   return (
     <>
       {isLoading ? (
@@ -1291,33 +1296,25 @@ const WorkerNewReport = () => {
         <ScreenWrapper
           newReportBackGroundImg={true}
           isConnectedUser
-          wrapperStyle={styles.container}
+          wrapperStyle={[styles.container, {}]}
           edges={[]}
         >
           <View style={styles.headerWrapper}>
-            <View style={styles.navigationWrapper}>
-              <TouchableOpacity onPress={navigateTogoBack}>
-                <Image source={rightDirectionIcon} style={styles.icon} />
-              </TouchableOpacity>
-              <Text style={styles.navigationText}>חזרה לרשימת הלקוחות</Text>
-            </View>
+            <GoBackNavigator text={"חזרה לרשימת הלקוחות"} />
             <View
               style={{ flexDirection: "row", justifyContent: "space-between" }}
             >
-              <Text style={styles.header}>
-                {currentReport
-                  ? `עריכת דוח עבור ${currentReport.data.station_name}`
-                  : `יצירת דוח חדש עבור ${currentClient.getCompany()}`}
-              </Text>
-              {currentReport && (
-                <View style={styles.imageTextList}>
-                  <IconList
-                    onCategoriesIconPress={() => {
-                      navigateToRoute(routes.ONBOARDING.EditExistingReport);
-                    }}
-                  />
-                </View>
-              )}
+              <Header
+                HeaderText={
+                  currentReport
+                    ? `עריכת דוח עבור ${currentReport.data.station_name}`
+                    : `יצירת דוח חדש עבור ${currentClient.getCompany()}`
+                }
+                iconList={currentReport}
+                onCategoriesIconPress={() => {
+                  navigateToRoute(routes.ONBOARDING.EditExistingReport);
+                }}
+              />
             </View>
 
             <FlatList
@@ -1329,10 +1326,12 @@ const WorkerNewReport = () => {
           {currentReport ? (
             <SafeAreaView
               style={{
-                width: "100%",
-                justifyContent: "center",
-                alignItems: "center",
-                marginBottom: 50,
+                // width: "100%",
+                // flex: 1,
+                // width: windowWidth,
+                // justifyContent: "center",
+                // alignItems: "center",
+                marginBottom: Platform.OS === "ios" ? 50 : 100,
               }}
             >
               <Drawer
@@ -1346,6 +1345,8 @@ const WorkerNewReport = () => {
                       padding: 16,
                       height: 76,
                       zIndex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     <View
@@ -1355,48 +1356,55 @@ const WorkerNewReport = () => {
                         flexDirection: "row",
                       }}
                     >
-                      {/* <TouchableOpacity
-                    onPress={handlePrevCategory}
-                    style={{
-                      alignSelf: "center",
-                      // justifyContent: "flex-end",
-                      // marginLeft: "auto",
-                      flexDirection: "row",
-                      gap: 5,
-                      alignItems: "center",
-                    }}
-                  >
-                    <Image
-                      source={accordionCloseIcon}
-                      style={{
-                        width: 20,
-                        height: 20,
-                        transform: [{ rotate: "180deg" }],
-                      }}
-                    />
-                    <Text style={styles.categoryDirButton}>
-                      הקטגוריה הקודמת:{" "}
-                      {checkedCategoryNameById[currentCategoryIndex - 1]?.name}
-                    </Text>
-                  </TouchableOpacity> */}
+                      <TouchableOpacity
+                        // onPress={handlePrevCategory}
+                        style={{
+                          alignSelf: "center",
+                          // justifyContent: "flex-end",
+                          // marginLeft: "auto",
+                          flexDirection: "row",
+                          gap: 5,
+                          alignItems: "center",
+                          width: "30%",
+                        }}
+                      >
+                        {/* <Image
+                          source={accordionCloseIcon}
+                          style={{
+                            width: 20,
+                            height: 20,
+                            transform: [{ rotate: "180deg" }],
+                          }}
+                        />
+                        <Text style={styles.categoryDirButton}>
+                          הקטגוריה הקודמת:{" "}
+                          {
+                            checkedCategoryNameById[currentCategoryIndex - 1]
+                              ?.name
+                          }
+                        </Text> */}
+                      </TouchableOpacity>
                       <View
                         style={{
                           flexDirection: "row",
                           justifyContent: "center",
                           alignItems: "center",
+                          alignSelf: "center",
                           textAlign: "center",
-                          marginLeft:
-                            formData &&
-                            formData.categories &&
-                            formData.categories[0]
-                              ? "auto"
-                              : 0,
-                          marginRight:
-                            formData &&
-                            formData.categories &&
-                            formData.categories[0]
-                              ? -150
-                              : 0,
+                          width: "40%",
+
+                          // marginLeft:
+                          //   formData &&
+                          //   formData.categories &&
+                          //   formData.categories[0]
+                          //     ? "auto"
+                          //     : 0,
+                          // marginRight:
+                          //   formData &&
+                          //   formData.categories &&
+                          //   formData.categories[0]
+                          //     ? -150
+                          //     : 0,
                           gap: 12,
                         }}
                       >
@@ -1423,11 +1431,12 @@ const WorkerNewReport = () => {
                             onPress={handleNextCategory}
                             style={{
                               alignSelf: "center",
-                              // justifyContent: "flex-end",
+                              justifyContent: "flex-end",
                               flexDirection: "row",
                               gap: 5,
                               alignItems: "center",
                               marginLeft: "auto",
+                              width: "30%",
                             }}
                           >
                             <Text style={styles.categoryDirButton}>
@@ -1450,6 +1459,7 @@ const WorkerNewReport = () => {
                 }
                 height={0}
                 onToggle={handleDrawerToggle}
+                contentStyling={{ padding: 0 }}
               />
             </SafeAreaView>
           ) : (

@@ -153,7 +153,16 @@ const CategoryAccordionItem = ({
         // * Update comment and showOnComment based on the grade number value
         if (label === "grade") {
           temp["comment"] = item["grade" + value];
-          temp["showOnComment"] = value === 0 || value === 1;
+
+          relevantOptions.forEach((option) => {
+            temp[option.value] =
+              prev[option.value] || prev[option.value] == 1 ? 1 : 0;
+          });
+          temp["charge"] =
+            temp["charge"] != "" ? temp["charge"] : chargeSelections[0];
+          temp["lastDate"] =
+            temp["lastDate"] != "" ? temp["lastDate"] : selectedDates[0];
+          temp["showOnComment"] = value == 0 || value == 1 ? 1 : 0;
         }
 
         // * Set grade and comment for noRelevant case
@@ -161,7 +170,9 @@ const CategoryAccordionItem = ({
           temp["grade"] = "3";
           temp["comment"] = item["grade3"];
         }
+
         onReportChange(temp);
+
         return temp;
       });
     }, 0),
@@ -316,7 +327,7 @@ const CategoryAccordionItem = ({
               disabled={reportItemState.grade == 3}
               displayedValue={reportItemState.charge}
               optionsLocation={100}
-              defaultText={"בחירה"}
+              defaultText={chargeSelections[0]}
               centeredViewStyling={{ marginLeft: 120 }}
               onChange={(value) => {
                 console.log(value, "is selected");

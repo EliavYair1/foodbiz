@@ -53,5 +53,6 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
     paddingHorizontal: 16,
+    // justifyContent: "center",
   },
 });

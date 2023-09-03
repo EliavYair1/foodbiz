@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoPicker from "expo-image-picker";
 
-const useMediaPicker = (handleInputChange) => {
+const useMediaPicker = (handleInputChange = false) => {
   const [media, setMedia] = useState(null);
   const [error, setError] = useState(null);
 

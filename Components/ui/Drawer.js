@@ -28,7 +28,7 @@ import fonts from "../../styles/fonts";
 import { FlatList } from "react-native-gesture-handler";
 
 const Drawer = (
-  { content, height, onToggle, onClose = false, header },
+  { content, height, onToggle, onClose = false, header, contentStyling },
   ref
 ) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -85,7 +85,7 @@ const Drawer = (
           />
           <Animated.View style={[styles.drawer, drawerStyle]} ref={ref}>
             {header}
-            <View style={{ padding: 16, width: "100%" }}>
+            <View style={[{ width: "100%" }, contentStyling ?? ""]}>
               {Array.isArray(content) ? (
                 <FlatList
                   data={content}
@@ -106,7 +106,7 @@ const Drawer = (
           />
           <Animated.View style={[styles.drawer, drawerStyle]} ref={ref}>
             {header}
-            <View style={{ padding: 16, width: "100%" }}>
+            <View style={[{ width: "100%" }, contentStyling ?? ""]}>
               {Array.isArray(content) ? (
                 <FlatList
                   data={content}

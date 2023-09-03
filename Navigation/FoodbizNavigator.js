@@ -5,6 +5,7 @@ import Home from "../Screens/Home/Home";
 import WorkerNewReport from "../Screens/WorkerNewReport/WorkerNewReport";
 import EditExistingReport from "../Screens/ClientsList/ClientsItem/EditExistingReport/EditExistingReport";
 import React from "react";
+import SummeryScreen from "../Screens/ClientsList/ClientsItem/EditExistingReport/SummeryScreen/SummeryScreen";
 const Stack = createStackNavigator();
 const FoodbizNavigator = () => {
   return (
@@ -33,6 +34,11 @@ const FoodbizNavigator = () => {
         name="EditExistingReport"
         options={{ headerShown: false }}
         component={EditExistingReport}
+      />
+      <Stack.Screen
+        name="SummeryScreen"
+        options={{ headerShown: false }}
+        component={SummeryScreen}
       />
     </Stack.Navigator>
   );

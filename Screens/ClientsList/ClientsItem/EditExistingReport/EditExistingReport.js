@@ -67,7 +67,8 @@ import routes from "../../../../Navigation/routes";
 import { getCurrentCategory } from "../../../../store/redux/reducers/getCurrentCategory";
 import GradeCalculator from "./innerComponents/GradeCalculator";
 import IconList from "./innerComponents/IconList";
-
+import GoBackNavigator from "../../../../utiles/GoBackNavigator";
+import Header from "../../../../Components/ui/Header";
 const EditExistingReport = () => {
   console.log("EditExistingReport");
   // ! redux stpre fetching
@@ -124,7 +125,6 @@ const EditExistingReport = () => {
   // console.log(findParentAndChildCategories);
   const drawerRef = useRef(null);
   const richText = useRef();
-  const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
   const [categoryGrade, setCategoryGrade] = useState(0);
   const [majorCategoryGrade, setMajorCategoryGrade] = useState(0);
   const [reportGrade, setReportGrade] = useState(0);
@@ -881,6 +881,7 @@ const EditExistingReport = () => {
       if (response.status == 200) {
         console.log("the report is saved:", `status: ${response.status}`);
         let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
+        console.log("updatedValues:", updatedValues);
         currentReport.setData("data", updatedValues);
         currentReport.setData("newGeneralCommentTopText", content);
         dispatch(getCurrentReport(currentReport));
@@ -977,34 +978,21 @@ const EditExistingReport = () => {
         isConnectedUser
         wrapperStyle={{ backgroundColor: colors.white }}
       >
-        <View style={styles.goBackWrapper}>
-          <TouchableOpacity onPress={navigateTogoBack}>
-            <Image
-              source={require("../../../../assets/imgs/rightDirIcon.png")}
-              style={styles.goBackIcon}
-            />
-          </TouchableOpacity>
-          <Text style={styles.goBackText}>חזרה לרשימת הלקוחות</Text>
-        </View>
-
+        <GoBackNavigator
+          text={"חזרה לרשימת הלקוחות"}
+          containerStyling={{
+            marginBottom: 16,
+            marginTop: 16,
+          }}
+        />
         <View style={styles.headerWrapper}>
-          <View style={styles.headerContainer}>
-            <Text style={styles.header}>
-              עריכת דוח עבור {currentClient.getCompany()} - {currentStation}
-            </Text>
-
-            <Text style={styles.subheader}>
-              {categoryHeader}
-              {" > "}
-              {categorySubHeader}
-              {/* temp solution */}
-              {/* {matchedNames[currentCategoryIndex]} */}
-            </Text>
-          </View>
-
-          <View style={styles.imageTextList}>
-            <IconList onCategoriesIconPress={() => setModalVisible(true)} />
-          </View>
+          <Header
+            HeaderText={`עריכת דוח עבור ${currentClient.getCompany()} - ${currentStation} `}
+            subHeader={true}
+            subHeaderText={`${categoryHeader} >${categorySubHeader}`}
+            iconList={true}
+            onCategoriesIconPress={() => setModalVisible(true)}
+          />
         </View>
 
         <View style={styles.categoryContainer}>
@@ -1030,9 +1018,14 @@ const EditExistingReport = () => {
             categoryNames={categoryNames}
             parsedCategoriesDataFromReport={parsedCategoriesDataFromReport}
             currentReportItemsForGrade={currentReportItemsForGrade}
-            passedDownCategoryId={passedDownCategoryId}
+            passedDownCategoryId={
+              currentCategories.currentCategories[currentCategoryIndex]
+            }
             CategoriesItems={CategoriesItems}
             currentReport={currentReport}
+            onCategoryGradeChange={(value) => {
+              setCategoryGrade(value);
+            }}
           />
 
           <View
@@ -1468,6 +1461,7 @@ const EditExistingReport = () => {
           onToggle={handleDrawerToggle}
           ref={drawerRef}
           closeDrawer={closeDrawer}
+          contentStyling={{ padding: 16 }}
         />
       </View>
     </>

@@ -10,6 +10,7 @@ const GradeCalculator = ({
   passedDownCategoryId,
   CategoriesItems,
   currentReport,
+  onCategoryGradeChange,
 }) => {
   const [categoryGrade, setCategoryGrade] = useState(0);
   const [majorCategoryGrade, setMajorCategoryGrade] = useState(0);
@@ -100,6 +101,7 @@ const GradeCalculator = ({
             100
         )
       );
+
       // console.log(itemsTotal, itemsTotal1, itemsTotal2, itemsTotal3);
     }
   };
@@ -141,6 +143,7 @@ const GradeCalculator = ({
 
   useEffect(() => {
     calculateMajorCategoryGrade();
+    onCategoryGradeChange(categoryGrade);
   }, [categoryGrade]);
 
   useEffect(() => {

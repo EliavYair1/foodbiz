@@ -7,6 +7,7 @@ const SummaryAndNote = ({
   summaryAndNoteContent = false,
   height,
   verticalSpace = false,
+  headerStyling = false,
 }) => {
   //   const [contentHeight, setContentHeight] = useState(0);
   const contentRef = useRef(null);
@@ -20,7 +21,7 @@ const SummaryAndNote = ({
   return (
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
-        <Text style={styles.headerStyle}>{header}</Text>
+        <Text style={[styles.headerStyle, headerStyling ?? ""]}>{header}</Text>
       </View>
 
       <View

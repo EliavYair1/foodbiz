@@ -27,6 +27,8 @@ import routes from "../../Navigation/routes";
 import { setUser } from "../../store/redux/reducers/userSlice";
 
 import uuid from "uuid-random";
+const windowWidth = Dimensions.get("screen").width;
+const windowHeight = Dimensions.get("window").height;
 const ClientsList = () => {
   const clients = useSelector((state) => state.clients);
   const user = useSelector((state) => state.user);
@@ -89,22 +91,23 @@ const ClientsList = () => {
           filterFunction={ClientCompanyFilterFunction}
         />
         <Loader size={"large"} color={colors.red} visible={loading} />
-
-        <FlatList
-          ref={flatListRef}
-          style={{ flexGrow: 0, width: "100%" }}
-          data={filteredClients}
-          renderItem={({ item }) => {
-            return (
-              <ClientItem
-                logo={item.getData("logo")}
-                client={item}
-                tablePadding={tablePadding}
-              />
-            );
-          }}
-          keyExtractor={(item) => uuid()}
-        />
+        <View style={{ maxWidth: windowWidth }}>
+          <FlatList
+            ref={flatListRef}
+            style={{ flexGrow: 0 }}
+            data={filteredClients}
+            renderItem={({ item }) => {
+              return (
+                <ClientItem
+                  logo={item.getData("logo")}
+                  client={item}
+                  tablePadding={tablePadding}
+                />
+              );
+            }}
+            keyExtractor={(item) => uuid()}
+          />
+        </View>
       </View>
 
       <TouchableOpacity

@@ -6,6 +6,7 @@ import {
   Animated,
   Share,
   Image,
+  Dimensions,
 } from "react-native";
 import React, {
   useState,
@@ -33,7 +34,7 @@ import { useDispatch } from "react-redux";
 import { getCurrentClient } from "../../../store/redux/reducers/currentClientSlice";
 import { getCurrentStation } from "../../../store/redux/reducers/getCurrentStation";
 import { getCurrentReport } from "../../../store/redux/reducers/getCurrentReport";
-
+const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   const contentRef = useRef();
   const [open, setOpen] = useState(false);
@@ -189,6 +190,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           },
           action: () => {
             console.log("Trash_icon");
+            navigateToRoute(routes.ONBOARDING.SummeryScreen);
           },
         },
         {
@@ -296,7 +298,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   return (
     <>
       <TouchableOpacity
-        style={styles.itemContainer}
+        style={[styles.itemContainer, { maxWidth: windowWidth - 20 }]}
         onPress={handleAccordionOpening}
       >
         <View

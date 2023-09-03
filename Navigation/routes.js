@@ -5,6 +5,7 @@ const routes = Object.freeze({
     ClientsList: "ClientsList",
     WorkerNewReport: "WorkerNewReport",
     EditExistingReport: "EditExistingReport",
+    SummeryScreen: "SummeryScreen",
   },
 });
 export default routes;
