@@ -97,6 +97,12 @@ const WorkerNewReport = () => {
     clientId: currentClient?.id,
     id: userId,
     haveNewGeneralCommentsVersion: 1,
+    haveFine: 0,
+    haveAmountOfItems: 0,
+    haveSafetyGrade: 1,
+    haveCulinaryGrade: 1,
+    haveNutritionGrade: 1,
+    haveCategoriesNameForCriticalItems: 0,
   });
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
@@ -108,12 +114,12 @@ const WorkerNewReport = () => {
   const [accompanySelected, setAccompanySelected] = useState(null);
   const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
   const [switchStates, setSwitchStates] = useState({
-    haveFine: false,
-    haveAmountOfItems: false,
-    haveSafetyGrade: true,
-    haveCulinaryGrade: true,
-    haveNutritionGrade: true,
-    haveCategoriesNameForCriticalItems: false,
+    haveFine: 0,
+    haveAmountOfItems: 0,
+    haveSafetyGrade: 1,
+    haveCulinaryGrade: 1,
+    haveNutritionGrade: 1,
+    haveCategoriesNameForCriticalItems: 0,
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
 
@@ -214,13 +220,13 @@ const WorkerNewReport = () => {
     if (currentReport) {
       // const { data } = currentReport;
       setSwitchStates({
-        haveFine: currentReport.getData("haveFine") === "1",
-        haveAmountOfItems: currentReport.getData("haveAmountOfItems") === "1",
-        haveSafetyGrade: currentReport.getData("haveSafetyGrade") === "1",
-        haveCulinaryGrade: currentReport.getData("haveCulinaryGrade") === "1",
-        haveNutritionGrade: currentReport.getData("haveNutritionGrade") === "1",
+        haveFine: currentReport.getData("haveFine") == "1",
+        haveAmountOfItems: currentReport.getData("haveAmountOfItems") == "1",
+        haveSafetyGrade: currentReport.getData("haveSafetyGrade") == "1",
+        haveCulinaryGrade: currentReport.getData("haveCulinaryGrade") == "1",
+        haveNutritionGrade: currentReport.getData("haveNutritionGrade") == "1",
         haveCategoriesNameForCriticalItems:
-          currentReport.getData("haveCategoriesNameForCriticalItems") === "1",
+          currentReport.getData("haveCategoriesNameForCriticalItems") == "1",
       });
       setSelectedStation(currentReport.getData("station_name"));
       setAccompanySelected(currentReport.getData("accompany"));
@@ -399,7 +405,7 @@ const WorkerNewReport = () => {
     trigger("categorys");
     setCheckboxStatus(newCheckboxStatus);
   };
-  console.log(formData);
+
   // * get the array of categories from the report and updates the state
   const handleCategoriesCheckboxesToggle = (category, checked, label) => {
     // console.log("handleCategoriesCheckboxesToggle:", category, checked);
@@ -441,19 +447,18 @@ const WorkerNewReport = () => {
   // * checking if the report parameters match to their state true / false
   const handleSwitchStateChange = (selectedReport) => {
     const newSwitchStates = {
-      haveFine: selectedReport.getData("haveFine") == 0 ? false : true,
+      haveFine: selectedReport.getData("haveFine") == 0 ? 0 : 1,
       haveAmountOfItems:
-        selectedReport.getData("haveAmountOfItems") == 0 ? false : true,
-      haveSafetyGrade:
-        selectedReport.getData("haveSafetyGrade") == 0 ? false : true,
+        selectedReport.getData("haveAmountOfItems") == 0 ? 0 : 1,
+      haveSafetyGrade: selectedReport.getData("haveSafetyGrade") == 0 ? 0 : 1,
       haveCulinaryGrade:
-        selectedReport.getData("haveCulinaryGrade") == 0 ? false : true,
+        selectedReport.getData("haveCulinaryGrade") == 0 ? 0 : 1,
       haveNutritionGrade:
-        selectedReport.getData("haveNutritionGrade") == 0 ? false : true,
+        selectedReport.getData("haveNutritionGrade") == 0 ? 0 : 1,
       haveCategoriesNameForCriticalItems:
         selectedReport.getData("haveCategoriesNameForCriticalItems") == 0
-          ? false
-          : true,
+          ? 0
+          : 1,
     };
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -498,9 +503,14 @@ const WorkerNewReport = () => {
     setValue("reportTime", reportTimeDisplayed);
     trigger("reportTime");
   };
-
   // * general handle form change
   const handleFormChange = debounce((name, value) => {
+    // console.log(
+    //   "handleFormChange called with name:",
+    //   name,
+    //   "and value:",
+    //   value
+    // );
     setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
     setIsSchemaValid(true);
 
@@ -512,17 +522,19 @@ const WorkerNewReport = () => {
       };
 
       let newSwitchStates = {
-        haveFine: false,
-        haveAmountOfItems: false,
-        haveSafetyGrade: true,
-        haveCulinaryGrade: true,
-        haveNutritionGrade: true,
-        haveCategoriesNameForCriticalItems: false,
+        haveFine: 0,
+        haveAmountOfItems: 0,
+        haveSafetyGrade: 1,
+        haveCulinaryGrade: 1,
+        haveNutritionGrade: 1,
+        haveCategoriesNameForCriticalItems: 0,
       };
 
       if (value === "דוח חדש") {
+        // console.log("Setting newSwitchStates and formData");
         setCheckboxStatus(newCheckboxStatus);
         setSwitchStates(newSwitchStates);
+
         setFormData((prevFormData) => ({
           ...prevFormData,
           oldReportId: "0",
@@ -552,7 +564,11 @@ const WorkerNewReport = () => {
       }
     }
   }, 300);
+  // todo to return error for date picker
+  // todo to  api/deleteReport.php
 
+  // console.log("switches", switchStates);
+  // console.log("formData", formData);
   // * toggle switch function
   const toggleSwitch = (id) => {
     setSwitchStates((prevState) => {
@@ -630,9 +646,9 @@ const WorkerNewReport = () => {
     : null;
   // * comparing between the categories names to the ids in the forms to display it in the drawer
   const checkedCategoryNameById =
-    globalCategories && formData.categories
+    globalCategories && formData.categorys
       ? globalCategories?.reduce((result, item) => {
-          if (formData?.categories?.includes(parseInt(item.id, 10))) {
+          if (formData?.categorys?.includes(parseInt(item.id, 10))) {
             result.push(item);
           }
           return result;
@@ -661,9 +677,9 @@ const WorkerNewReport = () => {
     //   // console.log(currentItem);
     //   return newIndex;
     // });
-    dispatch(getCurrentCategories(formData.categories));
+    dispatch(getCurrentCategories(formData.categorys));
     dispatch(getCurrentReport(currentReport));
-    dispatch(getCurrentCategory(formData.categories[0]));
+    dispatch(getCurrentCategory(formData.categorys[0]));
     navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
   // * accordion FlatList array of Content
@@ -1288,6 +1304,8 @@ const WorkerNewReport = () => {
       })
     : NewReportAccordionContent;
 
+  // console.log(checkedCategoryNameById[currentCategoryIndex]
+  //   .name);
   return (
     <>
       {isLoading ? (
@@ -1326,7 +1344,7 @@ const WorkerNewReport = () => {
           {currentReport ? (
             <SafeAreaView
               style={{
-                // width: "100%",
+                width: "100%",
                 // flex: 1,
                 // width: windowWidth,
                 // justifyContent: "center",
@@ -1359,7 +1377,7 @@ const WorkerNewReport = () => {
                       <TouchableOpacity
                         // onPress={handlePrevCategory}
                         style={{
-                          alignSelf: "center",
+                          // alignSelf: "center",
                           // justifyContent: "flex-end",
                           // marginLeft: "auto",
                           flexDirection: "row",
@@ -1393,7 +1411,8 @@ const WorkerNewReport = () => {
                           textAlign: "center",
                           width: "40%",
 
-                          // marginLeft:
+                          //
+
                           //   formData &&
                           //   formData.categories &&
                           //   formData.categories[0]
@@ -1425,24 +1444,22 @@ const WorkerNewReport = () => {
                         </Text>
                       </View>
                       {formData &&
-                        formData.categories &&
-                        formData.categories[0] && (
+                        formData.categorys &&
+                        formData.categorys[0] && (
                           <TouchableOpacity
                             onPress={handleNextCategory}
                             style={{
-                              alignSelf: "center",
-                              justifyContent: "flex-end",
+                              alignSelf: "flex-end",
+                              justifyContent: "center",
                               flexDirection: "row",
                               gap: 5,
                               alignItems: "center",
-                              marginLeft: "auto",
+                              // marginLeft: "auto",
                               width: "30%",
                             }}
                           >
                             <Text style={styles.categoryDirButton}>
                               הקטגוריה הבאה:{" "}
-                              {/* {checkedCategoryNameById[currentCategoryIndex + 1]?.name} */}
-                              {/* {formData.categories[0]} */}
                               {
                                 checkedCategoryNameById[currentCategoryIndex]
                                   .name

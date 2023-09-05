@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   Platform,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import ScreenWrapper from "../../../../../utiles/ScreenWrapper";
@@ -14,20 +15,40 @@ import Header from "../../../../../Components/ui/Header";
 import { LinearGradient } from "expo-linear-gradient";
 import Drawer from "../../../../../Components/ui/Drawer";
 import FileIcon from "../../../../../assets/icons/iconImgs/FileIcon.png";
-import uploadIcon1 from "../../../../../assets/imgs/plusIconDark.png";
-import uploadIcon2 from "../../../../../assets/imgs/libraryIcon.png";
-import uploadIcon3 from "../../../../../assets/imgs/CameraIcon.png";
 import colors from "../../../../../styles/colors";
 import fonts from "../../../../../styles/fonts";
 import SummaryAndNote from "../innerComponents/SummaryAndNote";
 import Button from "../../../../../Components/ui/Button";
 import { FlatList } from "react-native-gesture-handler";
 import ButtonGroup from "./ButtonGroupNew";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useForm } from "react-hook-form";
+import ReportCard from "./ReportCard";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [summaryFormData, setsummaryFormData] = useState([]);
+  const [isSchemaValid, setIsSchemaValid] = useState(false);
   const drawerRef = useRef();
-
+  const schema = yup.object().shape({
+    clientStationId: yup.string().required("station is required"),
+    previousReports: yup.string().required("previous report is required"),
+    accompany: yup.string().required("accompany is required"),
+    timeOfReport: yup.string().required("date is required"),
+    cameraPhoto: yup.string(),
+  });
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+    setValue,
+    watch,
+    trigger,
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
   //   ? drawer logic
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
@@ -42,9 +63,15 @@ const SummeryScreen = () => {
   };
   // handling the form changes
   const handleFormChange = (name, value) => {
-    setFormData({ ...formData, [name]: value });
+    // setFormData({ ...summaryFormData, [name]: value });
     setIsSchemaValid(true);
   };
+  // todo list
+  // * positive feedback coming from current report
+  // * file1 and file2 current report to use expo document picker you have to choose only one choice or pick image or take pic ect...
+  // * grades coming from the grades from edit report
+  //*  send to manger button will send the form with all the info as a request
+  // * summery and nots drawer its the same info coming from the edit report
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
@@ -59,38 +86,58 @@ const SummeryScreen = () => {
           onCategoriesIconPress={() => console.log("categories pressed")}
         />
       </View>
+      <View style={{ flex: 1 }}>
+        <SummaryAndNote
+          header={"פידבק חיובי"}
+          height={160}
+          verticalSpace={16}
+          summaryAndNoteContent={<Text>hello</Text>}
+        />
+        <View style={{}}>
+          <ButtonGroup
+            headerText={"העלאת קבצים 1"}
+            firstButtonFunc={() => {
+              console.log("button 2 pressed");
+            }}
+            handleFormChange={handleFormChange}
+            errors={errors}
+          />
+          <ButtonGroup
+            headerText={"העלאת קבצים 2"}
+            firstButtonFunc={() => {
+              console.log("button 4 pressed");
+            }}
+            handleFormChange={handleFormChange}
+            errors={errors}
+          />
+        </View>
 
-      <SummaryAndNote
-        header={"פידבק חיובי"}
-        height={160}
-        verticalSpace={16}
-        summaryAndNoteContent={<Text>hello</Text>}
-      />
-
-      <ButtonGroup
-        headerText={"העלאת קבצים 1"}
-        firstButtonFunc={() => {
-          console.log("button 2 pressed");
-        }}
-        handleFormChange={handleFormChange}
-      />
-      <ButtonGroup
-        headerText={"העלאת קבצים 2"}
-        firstButtonFunc={() => {
-          console.log("button 4 pressed");
-        }}
-        handleFormChange={handleFormChange}
-      />
-      <SummaryAndNote
-        header={"ציונים בדוח"}
-        height={160}
-        verticalSpace={16}
-        summaryAndNoteContent={<Text>hello</Text>}
-      />
+        <SummaryAndNote
+          header={"ציונים בדוח"}
+          height={248}
+          verticalSpace={16}
+          summaryAndNoteContent={<ReportCard />}
+        />
+        <TouchableOpacity
+          onPress={() => {
+            console.log(" נשלח למנהל");
+          }}
+          style={styles.sendToManagerButton}
+        >
+          <LinearGradient
+            colors={["#5368B4", "#2A3E8B"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradientBackground}
+          >
+            <Text style={styles.sendToManagerButtonText}>שלח לאישור מנהל</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
 
       <SafeAreaView
         style={{
-          flex: 1,
+          // flex: 1,
           width: windowWidth,
           marginBottom: Platform.OS === "ios" ? 50 : 100,
           alignSelf: "center",
@@ -151,4 +198,30 @@ const SummeryScreen = () => {
 
 export default SummeryScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  sendToManagerButton: {
+    // height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+
+    alignSelf: "center",
+    elevation: 5,
+    shadowColor: "rgba(181, 195, 245, 0.91)",
+    shadowOffset: { width: 0, height: 7 },
+    shadowRadius: 8,
+  },
+  sendToManagerButtonText: {
+    color: "white",
+    fontFamily: fonts.ABold,
+    fontSize: 24,
+  },
+  gradientBackground: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderRadius: 8,
+    width: 537,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+});

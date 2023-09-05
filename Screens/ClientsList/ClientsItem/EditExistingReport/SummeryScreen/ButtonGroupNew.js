@@ -8,13 +8,14 @@ import fonts from "../../../../../styles/fonts";
 import colors from "../../../../../styles/colors";
 import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import { Camera } from "expo-camera";
-
+import { Controller } from "react-hook-form";
 const ButtonGroup = ({
   headerText,
   firstButtonFunc,
   secondButtonFunc,
   //   thirdButtonFuc,
   handleFormChange,
+  errors,
 }) => {
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
@@ -29,10 +30,12 @@ const ButtonGroup = ({
   const handleTakePhoto = async () => {
     if (hasPermission) {
       const { uri } = await camera.takePictureAsync();
-      setCameraCaptureImageUrl(uri);
+      // setCameraCaptureImageUrl(uri);
+      console.log("image captured...");
       handleFormChange("cameraPhoto", uri);
     }
   };
+  // console.log(CameraCaptureImageUrl);
   const [media, pickMedia, mediaError] = useMediaPicker(handleFormChange);
   // handling image pick
   const handleImagePick = () => {
@@ -78,13 +81,13 @@ const ButtonGroup = ({
             justifyContent: "center",
           }}
         >
-          {CameraCaptureImageUrl && (
+          {/* {CameraCaptureImageUrl && (
             <Image
               source={{ uri: CameraCaptureImageUrl }}
-              style={{ width: 100, height: 100 }}
+              style={{ width: 100, height: 100, marginBottom: 10 }}
             />
-          )}
-          <Camera
+          )} */}
+          {/* <Camera
             style={{
               borderRadius: 8,
               backgroundColor: "transparent",
@@ -92,23 +95,23 @@ const ButtonGroup = ({
             }}
             type={Camera.Constants.Type.back}
             ref={(ref) => (camera = ref)}
-          >
-            <Button
-              buttonStyle={styles.button}
-              icon={true}
-              buttonFunction={handleTakePhoto}
-              iconPath={uploadIcon3}
-              iconStyle={styles.IconStyle}
-              buttonTextStyle={styles.buttonText}
-              buttonText={"מצלמה"}
-              buttonWidth={260}
-              //   errorMessage={
-              // !CameraCaptureImageUrl
-              // ? errors.cameraPhoto && errors.cameraPhoto.message
-              // : null
-              //   }
-            />
-          </Camera>
+          > */}
+          <Button
+            buttonStyle={styles.button}
+            icon={true}
+            buttonFunction={handleTakePhoto}
+            iconPath={uploadIcon3}
+            iconStyle={styles.IconStyle}
+            buttonTextStyle={styles.buttonText}
+            buttonText={"מצלמה"}
+            buttonWidth={260}
+            errorMessage={
+              !CameraCaptureImageUrl
+                ? errors.cameraPhoto && errors.cameraPhoto.message
+                : null
+            }
+          />
+          {/* </Camera> */}
         </View>
       </View>
     </View>

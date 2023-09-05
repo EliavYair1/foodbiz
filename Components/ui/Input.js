@@ -24,7 +24,7 @@ const Input = ({
   activeOutlineColor,
   placeholder = false,
   disabled = false,
-  defaultValue = "",
+  defaultValue,
   numeric = false,
   onBlurFunction = false,
 }) => {

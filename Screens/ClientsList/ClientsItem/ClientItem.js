@@ -7,6 +7,7 @@ import {
   Share,
   Image,
   Dimensions,
+  Alert,
 } from "react-native";
 import React, {
   useState,
@@ -30,10 +31,12 @@ import "@env";
 import * as WebBrowser from "expo-web-browser";
 import useScreenNavigator from "../../../Hooks/useScreenNavigator";
 import routes from "../../../Navigation/routes";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getCurrentClient } from "../../../store/redux/reducers/currentClientSlice";
 import { getCurrentStation } from "../../../store/redux/reducers/getCurrentStation";
 import { getCurrentReport } from "../../../store/redux/reducers/getCurrentReport";
+import axios from "axios";
+import Loader from "../../../utiles/Loader";
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   const contentRef = useRef();
@@ -44,8 +47,9 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const { navigateToRoute } = useScreenNavigator();
   const users = client.getUsers();
   const [filteredData, setFilteredData] = useState(users);
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
-
+  const userId = useSelector((state) => state.user);
   // tabs handler
   const handleTabPress = useCallback((tab) => {
     setActiveTab(tab);
@@ -77,6 +81,32 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       return colors.statusSentForApproval;
     } else {
       return colors.statusReturnWithRemarks;
+    }
+  };
+  // console.log(currentReport.getData("id"));
+  // console.log(userId);
+  // todo to apply delete post.
+  const DeleteReport = async (userId, reportId) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post(
+        `${process.env.API_BASE_URL}api/deleteReport.php`,
+        {
+          userId: userId,
+          reportId: reportId,
+        }
+      );
+
+      if (response.status == 200 || response.status == 201) {
+        setIsLoading(false);
+        Alert.alert("Success", "Post deleted successfully");
+      } else {
+        setIsLoading(false);
+        Alert.alert("Error", "Failed to delete post");
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Error deleting post:", error);
     }
   };
 
@@ -119,13 +149,13 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     {
       id: 5,
       label: "ציון",
-      width: "5%",
+      width: "7.5%",
       data: "grade",
     },
     {
       id: 6,
       label: "סטטוס",
-      width: "12.5%",
+      width: "10%",
       data: "reportStatuses",
       backgroundColor: (color) => statusBgColor(color),
     },
@@ -188,8 +218,11 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           isActive: (report) => {
             return report.data.status == 1;
           },
-          action: () => {
+          action: (report) => {
             console.log("Trash_icon");
+            // console.log(report.getData("id"));
+            // todo
+            // DeleteReport(userId, report.getData("id"));
             navigateToRoute(routes.ONBOARDING.SummeryScreen);
           },
         },
@@ -425,7 +458,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
             onSearch={handleSearch}
             filterFunction={usersFilterFunction}
           />
-          {handleDisplayedTab}
+          {isLoading ? <Loader visible={isLoading} /> : handleDisplayedTab}
         </View>
       </Animated.View>
     </>

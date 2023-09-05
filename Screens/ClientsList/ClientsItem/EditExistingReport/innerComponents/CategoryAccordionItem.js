@@ -10,6 +10,7 @@ import {
   ScrollView,
   Modal,
   Dimensions,
+  Alert,
 } from "react-native";
 import { Divider } from "react-native-paper";
 import CheckboxItem from "../../../../WorkerNewReport/CheckboxItem/CheckboxItem";
@@ -26,6 +27,9 @@ import uuid from "uuid-random";
 import Radio from "../../../../../Components/ui/Radio";
 import moment from "moment";
 import colors from "../../../../../styles/colors";
+import "@env";
+import * as FileSystem from "expo-file-system";
+import axios from "axios";
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
 const relevantOptions = [
@@ -94,6 +98,8 @@ const CategoryAccordionItem = ({
       }, delay);
     };
   };
+  // todo 2. displayed images coming from the api.
+  // todo 3. handle the changes
 
   // * image picker
   const pickImage = useCallback(async () => {
@@ -104,14 +110,45 @@ const CategoryAccordionItem = ({
     const result = await ImagePicker.launchImageLibraryAsync();
     if (!result.canceled) {
       const selectedAssets = result.assets;
-      const selectedImage =
-        selectedAssets.length > 0 ? selectedAssets[0].uri : null;
-      if (selectedImage) {
-        setImages((prevImages) => [...prevImages, selectedImage]);
+
+      let fileName = selectedAssets[0].fileName;
+      let fileSize = selectedAssets[0].fileSize;
+      const fileToUpload = selectedAssets[0];
+      const apiUrl =
+        process.env.API_BASE_URL +
+        "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
+        fileName +
+        "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
+        fileSize +
+        "&ax-start-byte=0&isLast=true";
+      const response = await FileSystem.uploadAsync(apiUrl, fileToUpload.uri, {
+        fieldName: "ax-file-name",
+        httpMethod: "POST",
+        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+      });
+      // console.log("name", "uploads/" + JSON.parse(response.body).name);
+
+      if (response.status == 200) {
+        let responseBody = JSON.parse(response.body);
+        if (responseBody.status == "error") {
+          Alert.alert("Error", responseBody.info);
+        } else {
+          // todo if image is "" replace it to the uri else push to the next one (image2)
+
+          // Check and push the image into the appropriate field
+          if (images.length === 0) {
+            handleReportChange("uploads/" + responseBody.name, "image");
+          } else if (images.length === 1) {
+            handleReportChange("uploads/" + responseBody.name, "image2");
+          } else if (images.length === 2) {
+            handleReportChange("uploads/" + responseBody.name, "image3");
+          }
+          setImages((prevImages) => [...prevImages, fileToUpload.uri]);
+        }
       }
     }
   }, [images]);
-
+  console.log(reportItemState);
   // const takePhoto = async () => {
   //   if (images.length >= 3) {
   //     alert("You can only select up to 3 images.");
@@ -438,9 +475,7 @@ const CategoryAccordionItem = ({
               {images.map((image, index) => (
                 <TouchableOpacity
                   key={uuid()}
-                  onPress={
-                    () => console.log("open modal") /* openModal(index) */
-                  }
+                  onPress={(value) => console.log("open modal", value)}
                 >
                   <Image source={{ uri: image }} style={styles.uploadedPhoto} />
                 </TouchableOpacity>
