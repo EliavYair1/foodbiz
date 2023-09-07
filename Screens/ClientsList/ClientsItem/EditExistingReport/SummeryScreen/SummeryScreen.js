@@ -23,21 +23,37 @@ import { FlatList } from "react-native-gesture-handler";
 import ButtonGroup from "./ButtonGroupNew";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import ReportCard from "./ReportCard";
+import { useSelector } from "react-redux";
+import { HelperText } from "react-native-paper";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
+  const currentReport = useSelector(
+    (state) => state.currentReport.currentReport
+  );
+  const categoriesToPassSummeryScreen = useSelector((state) => state.summary);
+  const foodSafety = categoriesToPassSummeryScreen[0];
+  const nutritionGrade = categoriesToPassSummeryScreen[1];
+  const culinaryGrade = categoriesToPassSummeryScreen[2];
+  const reportGrade = categoriesToPassSummeryScreen[3];
+  const file1 = currentReport.getData("file1");
+  const file2 = currentReport.getData("file2");
+  const positiveFeedback = currentReport.getData("positiveFeedback");
+  // console.log("current Report:", file1, file2, positiveFeedback);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [summaryFormData, setsummaryFormData] = useState([]);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
+
   const drawerRef = useRef();
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
-    previousReports: yup.string().required("previous report is required"),
-    accompany: yup.string().required("accompany is required"),
-    timeOfReport: yup.string().required("date is required"),
+    file1: yup.string().required("previous report is required"),
+    file2: yup.string().required("accompany is required"),
+    positiveFeedback: yup.string().required("positiveFeedback is required"),
     cameraPhoto: yup.string(),
   });
+
   const {
     control,
     handleSubmit,
@@ -49,6 +65,7 @@ const SummeryScreen = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   //   ? drawer logic
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
@@ -72,6 +89,7 @@ const SummeryScreen = () => {
   // * grades coming from the grades from edit report
   //*  send to manger button will send the form with all the info as a request
   // * summery and nots drawer its the same info coming from the edit report
+
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
@@ -91,22 +109,37 @@ const SummeryScreen = () => {
           header={"פידבק חיובי"}
           height={160}
           verticalSpace={16}
-          summaryAndNoteContent={<Text>hello</Text>}
+          summaryAndNoteContent={
+            <Controller
+              control={control}
+              name="positiveFeedback"
+              render={({
+                field: { onChange, onBlur, value },
+                fieldState: { error },
+              }) => (
+                <>
+                  <Text>{positiveFeedback}</Text>
+                  <HelperText type="error">{error?.message}</HelperText>
+                </>
+              )}
+            ></Controller>
+          }
         />
+
         <View style={{}}>
           <ButtonGroup
             headerText={"העלאת קבצים 1"}
-            firstButtonFunc={() => {
-              console.log("button 2 pressed");
-            }}
+            // firstButtonFunc={() => {
+            //   console.log("button 2 pressed");
+            // }}
             handleFormChange={handleFormChange}
             errors={errors}
           />
           <ButtonGroup
             headerText={"העלאת קבצים 2"}
-            firstButtonFunc={() => {
-              console.log("button 4 pressed");
-            }}
+            // firstButtonFunc={() => {
+            //   console.log("button 4 pressed");
+            // }}
             handleFormChange={handleFormChange}
             errors={errors}
           />
@@ -116,7 +149,14 @@ const SummeryScreen = () => {
           header={"ציונים בדוח"}
           height={248}
           verticalSpace={16}
-          summaryAndNoteContent={<ReportCard />}
+          summaryAndNoteContent={
+            <ReportCard
+              fsGrade={foodSafety}
+              cGrade={culinaryGrade}
+              nGrade={nutritionGrade}
+              reportGrade={reportGrade}
+            />
+          }
         />
         <TouchableOpacity
           onPress={() => {

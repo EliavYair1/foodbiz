@@ -2,32 +2,38 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import colors from "../../../../../styles/colors";
 import fonts from "../../../../../styles/fonts";
-const ReportCard = ({ onChangeGrade = false }) => {
-  const [foodSafetyGrade, setFoodSafetyGrade] = useState(82);
-  const [culinarySafetyGrade, setCulinarySafetyGrade] = useState(77);
-  const [nutritionGrade, setNutritionGrade] = useState(80);
+const ReportCard = ({
+  onChangeGrade = false,
+  fsGrade,
+  cGrade,
+  nGrade,
+  reportGrade,
+}) => {
+  const [foodSafetyGrade, setFoodSafetyGrade] = useState(fsGrade);
+  const [culinarySafetyGrade, setCulinarySafetyGrade] = useState(cGrade);
+  const [nutritionGrade, setNutritionGrade] = useState(nGrade);
 
-  const handleGradeChange = (gradeType, newGrade) => {
-    switch (gradeType) {
-      case "foodSafety":
-        setFoodSafetyGrade(newGrade);
-        break;
-      case "culinarySafety":
-        setCulinarySafetyGrade(newGrade);
-        break;
-      case "nutrition":
-        setNutritionGrade(newGrade);
-        break;
-      default:
-        break;
-    }
+  // const handleGradeChange = (gradeType, newGrade) => {
+  //   switch (gradeType) {
+  //     case "foodSafety":
+  //       setFoodSafetyGrade(newGrade);
+  //       break;
+  //     case "culinarySafety":
+  //       setCulinarySafetyGrade(newGrade);
+  //       break;
+  //     case "nutrition":
+  //       setNutritionGrade(newGrade);
+  //       break;
+  //     default:
+  //       break;
+  //   }
 
-    onChangeGrade({
-      foodSafety: foodSafetyGrade,
-      culinarySafety: culinarySafetyGrade,
-      nutrition: nutritionGrade,
-    });
-  };
+  //   onChangeGrade({
+  //     foodSafety: foodSafetyGrade,
+  //     culinarySafety: culinarySafetyGrade,
+  //     nutrition: nutritionGrade,
+  //   });
+  // };
 
   return (
     <View style={styles.reportGradeBox}>
@@ -54,11 +60,7 @@ const ReportCard = ({ onChangeGrade = false }) => {
       <View style={styles.reportGradeWrapper}>
         <Text style={styles.gradeHeader}>ציון לדוח</Text>
         <View style={styles.reportGrade}>
-          <Text style={styles.gradeScore}>
-            {Math.round(
-              (foodSafetyGrade + culinarySafetyGrade + nutritionGrade) / 3
-            )}
-          </Text>
+          <Text style={styles.gradeScore}>{reportGrade}</Text>
         </View>
       </View>
     </View>

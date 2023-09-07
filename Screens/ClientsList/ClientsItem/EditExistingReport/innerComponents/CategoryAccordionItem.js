@@ -75,12 +75,12 @@ const CategoryAccordionItem = ({
   onReportChange,
   accordionHeight,
 }) => {
-  console.log("render id ", item.id);
+  // console.log("render id ", item.id);
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
-  const [images, setImages] = useState([]);
   const [reportItemState, setReportItemState] = useState(reportItem || {});
+  const [images, setImages] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
@@ -126,15 +126,12 @@ const CategoryAccordionItem = ({
         httpMethod: "POST",
         uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
       });
-      // console.log("name", "uploads/" + JSON.parse(response.body).name);
 
       if (response.status == 200) {
         let responseBody = JSON.parse(response.body);
         if (responseBody.status == "error") {
           Alert.alert("Error", responseBody.info);
         } else {
-          // todo if image is "" replace it to the uri else push to the next one (image2)
-
           // Check and push the image into the appropriate field
           if (images.length === 0) {
             handleReportChange("uploads/" + responseBody.name, "image");
@@ -144,11 +141,11 @@ const CategoryAccordionItem = ({
             handleReportChange("uploads/" + responseBody.name, "image3");
           }
           setImages((prevImages) => [...prevImages, fileToUpload.uri]);
+          console.log("images", fileToUpload.uri);
         }
       }
     }
   }, [images]);
-  console.log(reportItemState);
   // const takePhoto = async () => {
   //   if (images.length >= 3) {
   //     alert("You can only select up to 3 images.");
@@ -164,7 +161,6 @@ const CategoryAccordionItem = ({
   //     }
   //   }
   // };
-
   // * accordion toggler
   const toggleAccordion = useCallback(() => {
     setOpen(!open);
@@ -239,7 +235,6 @@ const CategoryAccordionItem = ({
     `עד ה-${addDaysToDate(31)} `,
     " נא לשלוח תאריך מדויק לביצוע",
   ];
-
   return (
     <View
       style={[

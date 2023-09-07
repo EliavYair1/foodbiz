@@ -178,7 +178,6 @@ const CategoryWeightsAccordionItem = ({
     }, 300),
     [reportItemState]
   );
-  console.log("reportItemState:", reportItemState);
   return (
     <View
       style={[

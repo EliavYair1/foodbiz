@@ -41,48 +41,21 @@ const tempFoodTypeOptions = [
 const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
 
 const CategoryTempAccordionItem = ({
-  handleRatingCheckboxChange,
-  ratingCheckboxItem,
   control,
   setValue,
   trigger,
   errors,
-  sectionText,
-  grade0,
-  grade1,
-  grade2,
-  grade3,
-  itemId,
-  dateSelected,
   accordionHeight,
-  foodTypeOptions,
   reportItem,
   onTempReportItem,
-  // temperatureOptions,
 }) => {
+  // console.log("render id ", reportItem);
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
   const [reportItemState, setReportItemState] = useState(reportItem || {});
-  const [selectedOption, setSelectedOption] = useState(reportItemState?.grade);
-  // useEffect(() => {
-  //   setReportItemState((prevReportItemState) => ({
-  //     ...prevReportItemState,
-  //     ...reportItem,
-  //   }));
-  // }, [reportItem]);
-  // console.log(reportItemState);
-  // useEffect(() => {
-  //   onTempReportItem({ ...reportItemState });
-  // }, [reportItemState]);
 
-  // useEffect(() => {
-  //   // Initialize reportItemState and compute values
-  //   const initialReportItemState = { ...reportItem };
-  //   // Perform any additional computations here based on initialReportItemState
-  //   setReportItemState(initialReportItemState);
-  // }, [reportItem]);
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;
@@ -112,14 +85,12 @@ const CategoryTempAccordionItem = ({
   }, [images]);
 
   // * change handler
-  const handleReportChange = useCallback(
-    (value, label) => {
+  const handleReportChange = useMemo(() => {
+    return debounce((value, label) => {
       setReportItemState((prev) => {
         const temp = { ...prev };
         temp[label] = value;
         const measuredTemp = parseFloat(temp["TempMeasured"]);
-
-        // * if TempFoodType value is x then change the TempTarget to y
         if (label == "TempFoodType") {
           if (value <= "4") {
             temp["TempTarget"] = "65";
@@ -179,14 +150,13 @@ const CategoryTempAccordionItem = ({
             }
           }
         }
-        // * match the grade to his str based on gradeLabels array
+
         temp["comment"] = gradeLabels[temp["grade"]];
         onTempReportItem(temp);
         return temp;
       });
-    },
-    [reportItemState]
-  );
+    }, 300); // Adjust the delay (in milliseconds) as needed
+  }, [reportItemState]);
 
   // console.log(selectedOption);
   const toggleAccordion = useCallback(() => {

@@ -11,6 +11,9 @@ const GradeCalculator = ({
   CategoriesItems,
   currentReport,
   onCategoryGradeChange,
+  onMajorCategoryGradeChange,
+  onReportGradeChange,
+  majorCategory,
 }) => {
   const [categoryGrade, setCategoryGrade] = useState(0);
   const [majorCategoryGrade, setMajorCategoryGrade] = useState(0);
@@ -144,7 +147,9 @@ const GradeCalculator = ({
   useEffect(() => {
     calculateMajorCategoryGrade();
     onCategoryGradeChange(categoryGrade);
-  }, [categoryGrade]);
+    onMajorCategoryGradeChange(majorCategoryGrade);
+    onReportGradeChange(reportGrade);
+  }, [categoryGrade, majorCategoryGrade, reportGrade]);
 
   useEffect(() => {
     calculateReportGrade(majorCategoryGrade);
@@ -175,7 +180,7 @@ const GradeCalculator = ({
       <ReportGrade
         reportGradeBoxColor={gradeBackgroundColor(majorCategoryGrade)}
         reportGradeNumber={majorCategoryGrade}
-        reportGradeText={"ציון ביקורת בטיחות מזון"}
+        reportGradeText={`ציון ${majorCategory}`}
       />
       <ReportGrade
         reportGradeBoxColor={gradeBackgroundColor(reportGrade)}

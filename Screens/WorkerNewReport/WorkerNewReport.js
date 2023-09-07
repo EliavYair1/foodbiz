@@ -127,7 +127,6 @@ const WorkerNewReport = () => {
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState([]);
   const [culinaryReviewTexts, setCulinaryReviewTexts] = useState([]);
   const [nutritionReviewTexts, setNutritionReviewTexts] = useState([]);
-
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
     previousReports: yup.string().required("previous report is required"),
@@ -179,6 +178,7 @@ const WorkerNewReport = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   // console.log("errors", errors);
   useEffect(() => {
     schema

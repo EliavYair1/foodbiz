@@ -9,14 +9,9 @@ import colors from "../../../../../styles/colors";
 import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import { Camera } from "expo-camera";
 import { Controller } from "react-hook-form";
-const ButtonGroup = ({
-  headerText,
-  firstButtonFunc,
-  secondButtonFunc,
-  //   thirdButtonFuc,
-  handleFormChange,
-  errors,
-}) => {
+import * as DocumentPicker from "expo-document-picker";
+
+const ButtonGroup = ({ headerText, handleFormChange, errors }) => {
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [imagePicked, setImagePicked] = useState(false);
@@ -35,13 +30,29 @@ const ButtonGroup = ({
       handleFormChange("cameraPhoto", uri);
     }
   };
+
   // console.log(CameraCaptureImageUrl);
+
   const [media, pickMedia, mediaError] = useMediaPicker(handleFormChange);
   // handling image pick
   const handleImagePick = () => {
     console.log("image pick");
     pickMedia("image");
     setImagePicked(true);
+  };
+
+  const handleFileUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
+      if (result.type === "success") {
+        const { uri, name, type } = result;
+        console.log("Selected file:", { uri, name, type });
+      } else {
+        console.log("File selection canceled");
+      }
+    } catch (error) {
+      console.error("Error selecting file:", error);
+    }
   };
 
   return (
@@ -51,7 +62,7 @@ const ButtonGroup = ({
         <Button
           buttonStyle={styles.button}
           icon={true}
-          buttonFunction={firstButtonFunc}
+          buttonFunction={handleFileUpload}
           iconPath={uploadIcon1}
           iconStyle={styles.IconStyle}
           buttonTextStyle={styles.buttonText}
