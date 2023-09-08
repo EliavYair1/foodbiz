@@ -97,12 +97,12 @@ const WorkerNewReport = () => {
     clientId: currentClient?.id,
     id: userId,
     haveNewGeneralCommentsVersion: 1,
-    haveFine: 0,
-    haveAmountOfItems: 0,
-    haveSafetyGrade: 1,
-    haveCulinaryGrade: 1,
-    haveNutritionGrade: 1,
-    haveCategoriesNameForCriticalItems: 0,
+    haveFine: false,
+    haveAmountOfItems: false,
+    haveSafetyGrade: true,
+    haveCulinaryGrade: true,
+    haveNutritionGrade: true,
+    haveCategoriesNameForCriticalItems: false,
   });
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
@@ -114,12 +114,12 @@ const WorkerNewReport = () => {
   const [accompanySelected, setAccompanySelected] = useState(null);
   const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
   const [switchStates, setSwitchStates] = useState({
-    haveFine: 0,
-    haveAmountOfItems: 0,
-    haveSafetyGrade: 1,
-    haveCulinaryGrade: 1,
-    haveNutritionGrade: 1,
-    haveCategoriesNameForCriticalItems: 0,
+    haveFine: false,
+    haveAmountOfItems: false,
+    haveSafetyGrade: true,
+    haveCulinaryGrade: true,
+    haveNutritionGrade: true,
+    haveCategoriesNameForCriticalItems: false,
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
 
@@ -522,12 +522,12 @@ const WorkerNewReport = () => {
       };
 
       let newSwitchStates = {
-        haveFine: 0,
-        haveAmountOfItems: 0,
-        haveSafetyGrade: 1,
-        haveCulinaryGrade: 1,
-        haveNutritionGrade: 1,
-        haveCategoriesNameForCriticalItems: 0,
+        haveFine: false,
+        haveAmountOfItems: false,
+        haveSafetyGrade: true,
+        haveCulinaryGrade: true,
+        haveNutritionGrade: true,
+        haveCategoriesNameForCriticalItems: false,
       };
 
       if (value === "דוח חדש") {
@@ -707,7 +707,9 @@ const WorkerNewReport = () => {
               control={control}
               selectWidth={240}
               optionsHeight={200}
-              defaultText={"בחירה"}
+              defaultText={
+                currentReport ? currentReport.getData("station_name") : "בחירה"
+              }
               displayedValue={getValues().clientStationId}
               selectMenuStyling={{
                 flexDirection: "column",
@@ -874,7 +876,11 @@ const WorkerNewReport = () => {
                 activeOutlineColor={colors.blue}
                 // label={accompanySelected ? accompanySelected : "ללא  מלווה"}
                 // label={null}
-                defaultValue={formData.accompany}
+                defaultValue={
+                  currentReport
+                    ? currentReport.getData("accompany")
+                    : formData.accompany
+                }
                 // placeholder={" "}
                 outlineColor={"rgba(12, 20, 48, 0.2)"}
                 onChangeFunction={(value) => {

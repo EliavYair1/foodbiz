@@ -70,7 +70,7 @@ const Input = ({
                 console.log(`field ${name} : ${value}`);
               }}
               // onBlur={onBlur}
-              value={defaultValue ?? value}
+              // value={defaultValue ?? value} // replacing withe defaultValue
               mode={mode}
               activeOutlineColor={activeOutlineColor}
               outlineColor={outlineColor}
@@ -78,7 +78,7 @@ const Input = ({
               activeUnderlineColor={activeUnderlineColor}
               contentStyle={contentStyle}
               secureTextEntry={secureTextEntry}
-              // defaultValue={defaultValue}
+              defaultValue={defaultValue} // replaced with value
               right={inputIcon}
               style={inputStyle}
               error={!!error}

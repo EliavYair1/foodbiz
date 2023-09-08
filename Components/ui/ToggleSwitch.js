@@ -19,7 +19,7 @@ const ToggleSwitch = ({
   >
     <Text
       style={{
-        fontFamily: switchStates[id] == false ? fonts.ARegular : fonts.ABold,
+        fontFamily: switchStates[id] == 0 ? fonts.ARegular : fonts.ABold,
       }}
     >
       {truthyText}
@@ -31,11 +31,11 @@ const ToggleSwitch = ({
       }}
       thumbColor={"#fff"}
       onValueChange={() => toggleSwitch(id)}
-      value={switchStates[id] || false}
+      value={switchStates[id] || 0}
     />
     <Text
       style={{
-        fontFamily: switchStates[id] == true ? fonts.ARegular : fonts.ABold,
+        fontFamily: switchStates[id] == 1 ? fonts.ARegular : fonts.ABold,
       }}
     >
       {falsyText}

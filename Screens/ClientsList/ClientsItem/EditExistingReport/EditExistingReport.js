@@ -189,12 +189,6 @@ const EditExistingReport = () => {
     return newCategoryNames;
   }, []);
   const [categoryNames, setCategoryNames] = useState(findCategoriesNames);
-  // console.log(categoryNames[2].map((item) => item.id));
-  const [checkboxStatus, setCheckboxStatus] = useState({
-    foodSafetyReviewCbStatus: [],
-    culinaryReviewCbStatus: [],
-    nutritionReviewCbStatus: [],
-  });
 
   // * category header
   const [categoryHeader, setCategoryHeader] = useState(
@@ -607,7 +601,6 @@ const EditExistingReport = () => {
     }
   }, []);
 
-  /* todo list */
   // * summery and notes drawer logic
   const summeryAndNotesManager = (types, condition) => {
     let commentGroups = { critical: [], severe: [], normal: [] };
@@ -753,6 +746,7 @@ const EditExistingReport = () => {
   //   "currentCategories.currentCategories[currentCategoryIndex]",
   //   lastIndexOfCategories == currentCategoryIndex
   // );
+  console.log(currentReport.getData("categorys"));
   // * pagination's between categories names : Next
   const nextCategory = async () => {
     debounce(saveReport(), 300);
@@ -789,12 +783,7 @@ const EditExistingReport = () => {
   // ! drawer logic end
 
   // ? console log section
-  // console.log("categoryNames", categoryNames);
-  // console.log(
-  //   `categorySubHeader: ${categorySubHeader},`,
-  //   `id: ${currentCategories.currentCategories[currentCategoryIndex]}`
-  // );
-  // console.log("child name", findParentAndChildCategories.child.name);
+
   // ! console log end
 
   // ? arrays for flatList
@@ -807,15 +796,6 @@ const EditExistingReport = () => {
     return <CategoryAccordion item={item} />;
   };
 
-  // useEffect(() => {
-  //   console.log(
-  //     "majorCategoryGrade",
-  //     foodSafety,
-  //     culinary,
-  //     nutrition,
-  //     categoryHeader
-  //   );
-  // }, [currentCategories.currentCategories[currentCategoryIndex]]);
   return (
     <>
       <ScreenWrapper
