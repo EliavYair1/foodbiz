@@ -565,8 +565,8 @@ const WorkerNewReport = () => {
     }
   }, 300);
   // todo to return error for date picker
-  // todo to  api/deleteReport.php
-
+  // todo to make sure the the order of tghe categories is saved after reorder
+  // todo to send a post request and save changes in the edit mode and reflect it in the editmode screen .
   // console.log("switches", switchStates);
   // console.log("formData", formData);
   // * toggle switch function
