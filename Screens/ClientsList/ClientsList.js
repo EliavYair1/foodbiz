@@ -43,7 +43,7 @@ const ClientsList = () => {
   useEffect(() => {
     const fetchingClientsData = async () => {
       if (clients) {
-        console.log("hello user");
+        console.log(`hello user: ${user}`);
         setLoading(false);
       } else {
         console.log("unabled to fetch data");
@@ -90,24 +90,31 @@ const ClientsList = () => {
           onSearch={handleSearch}
           filterFunction={ClientCompanyFilterFunction}
         />
-        <Loader size={"large"} color={colors.red} visible={loading} />
-        <View style={{ maxWidth: windowWidth }}>
-          <FlatList
-            ref={flatListRef}
-            style={{ flexGrow: 0 }}
-            data={filteredClients}
-            renderItem={({ item }) => {
-              return (
-                <ClientItem
-                  logo={item.getData("logo")}
-                  client={item}
-                  tablePadding={tablePadding}
-                />
-              );
-            }}
-            keyExtractor={(item) => uuid()}
+        {loading ? (
+          <Loader
+            size={"large"}
+            color={colors.toggleColor1}
+            visible={loading}
           />
-        </View>
+        ) : (
+          <View style={{ maxWidth: windowWidth }}>
+            <FlatList
+              ref={flatListRef}
+              style={{ flexGrow: 0 }}
+              data={filteredClients}
+              renderItem={({ item }) => {
+                return (
+                  <ClientItem
+                    logo={item.getData("logo")}
+                    client={item}
+                    tablePadding={tablePadding}
+                  />
+                );
+              }}
+              keyExtractor={(item) => uuid()}
+            />
+          </View>
+        )}
       </View>
 
       <TouchableOpacity

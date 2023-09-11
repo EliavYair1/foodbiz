@@ -742,11 +742,8 @@ const EditExistingReport = () => {
       console.error("Error in nextCategory:", error);
     }
   };
-  // console.log(
-  //   "currentCategories.currentCategories[currentCategoryIndex]",
-  //   lastIndexOfCategories == currentCategoryIndex
-  // );
-  console.log(currentReport.getData("categorys"));
+
+  // console.log("categorys",currentReport.getData("categorys"));
   // * pagination's between categories names : Next
   const nextCategory = async () => {
     debounce(saveReport(), 300);

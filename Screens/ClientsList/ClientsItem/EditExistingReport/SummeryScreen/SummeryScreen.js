@@ -44,14 +44,17 @@ const SummeryScreen = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [summaryFormData, setsummaryFormData] = useState([]);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
-
+  const [SummeryForm, setSummeryForm] = useState([]);
   const drawerRef = useRef();
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
-    file1: yup.string().required("previous report is required"),
-    file2: yup.string().required("accompany is required"),
     positiveFeedback: yup.string().required("positiveFeedback is required"),
-    cameraPhoto: yup.string(),
+    file1: yup.string().required("file1 is required"),
+    file2: yup.string().required("file2 is required"),
+    imagePicked: yup.string().required("imagePicked is required"),
+    imagePicked2: yup.string().required("imagePicked2 is required"),
+    cameraPhoto: yup.string().required("cameraPhoto is required"),
+    cameraPhoto2: yup.string().required("cameraPhoto2 is required"),
   });
 
   const {
@@ -65,13 +68,20 @@ const SummeryScreen = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-
+  useEffect(() => {
+    schema
+      .validate(summaryFormData)
+      .then(() => setIsSchemaValid(true))
+      .catch((err) => {
+        // console.log("err:", err);
+        setIsSchemaValid(false);
+      });
+  }, [summaryFormData, schema]);
   //   ? drawer logic
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
   };
-
   const closeDrawer = () => {
     if (drawerRef.current) {
       drawerRef.current.closeDrawer();
@@ -80,8 +90,11 @@ const SummeryScreen = () => {
   };
   // handling the form changes
   const handleFormChange = (name, value) => {
-    // setFormData({ ...summaryFormData, [name]: value });
+    setSummeryForm({ ...summaryFormData, [name]: value });
     setIsSchemaValid(true);
+  };
+  const sendForManagerApproval = () => {
+    console.log(" נשלח למנהל");
   };
   // todo list
   // * positive feedback coming from current report
@@ -128,20 +141,36 @@ const SummeryScreen = () => {
 
         <View style={{}}>
           <ButtonGroup
+            control={control}
             headerText={"העלאת קבצים 1"}
-            // firstButtonFunc={() => {
-            //   console.log("button 2 pressed");
-            // }}
             handleFormChange={handleFormChange}
             errors={errors}
+            fileUploadErrMsg={errors.file1 && errors.file1.message}
+            uploadImageErrorMsg={
+              errors.imagePicked && errors.imagePicked.message
+            }
+            imageCaptureErrMsg={
+              errors.cameraPhoto && errors.cameraPhoto.message
+            }
+            fileField={"file1"}
+            imagePickedField={"imagePicked"}
+            cameraPhotoField={"cameraPhoto"}
           />
           <ButtonGroup
+            control={control}
             headerText={"העלאת קבצים 2"}
-            // firstButtonFunc={() => {
-            //   console.log("button 4 pressed");
-            // }}
             handleFormChange={handleFormChange}
             errors={errors}
+            fileUploadErrMsg={errors.file2 && errors.file2.message}
+            uploadImageErrorMsg={
+              errors.imagePicked2 && errors.imagePicked2.message
+            }
+            imageCaptureErrMsg={
+              errors.cameraPhoto2 && errors.cameraPhoto2.message
+            }
+            fileField={"file2"}
+            imagePickedField={"imagePicked2"}
+            cameraPhotoField={"cameraPhoto2"}
           />
         </View>
 
@@ -160,7 +189,7 @@ const SummeryScreen = () => {
         />
         <TouchableOpacity
           onPress={() => {
-            console.log(" נשלח למנהל");
+            handleSubmit(sendForManagerApproval());
           }}
           style={styles.sendToManagerButton}
         >

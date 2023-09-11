@@ -125,7 +125,7 @@ const Accordion = ({
             <DraggableFlatList
               data={accordionContent}
               renderItem={renderAccordionItem}
-              keyExtractor={(item, index) => `draggable-item-${item.id}`}
+              keyExtractor={(item, index) => `draggable-item${index}`}
               onDragEnd={onDragEndCb}
             />
           ) : (

@@ -11,7 +11,18 @@ import { Camera } from "expo-camera";
 import { Controller } from "react-hook-form";
 import * as DocumentPicker from "expo-document-picker";
 
-const ButtonGroup = ({ headerText, handleFormChange, errors }) => {
+const ButtonGroup = ({
+  control,
+  headerText,
+  handleFormChange,
+  errors,
+  uploadImageErrorMsg,
+  imageCaptureErrMsg,
+  fileUploadErrMsg,
+  imagePickedField,
+  fileField,
+  cameraPhotoField,
+}) => {
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [imagePicked, setImagePicked] = useState(false);
@@ -59,31 +70,55 @@ const ButtonGroup = ({ headerText, handleFormChange, errors }) => {
     <View style={styles.uploadGroup}>
       <Text style={styles.uploadText}>{headerText}</Text>
       <View style={styles.buttonGroupWrapper}>
-        <Button
-          buttonStyle={styles.button}
-          icon={true}
-          buttonFunction={handleFileUpload}
-          iconPath={uploadIcon1}
-          iconStyle={styles.IconStyle}
-          buttonTextStyle={styles.buttonText}
-          buttonText={"בחירת קובץ"}
-          buttonWidth={260}
-          // errorMessage={
-          //   !imagePicked ? errors.url && errors.url.message : null
-          // }
+        <Controller
+          control={control}
+          name={fileField}
+          render={({
+            field: { onChange, onBlur, value },
+            fieldState: { error },
+          }) => (
+            <>
+              <Button
+                buttonStyle={styles.button}
+                icon={true}
+                buttonFunction={handleFileUpload}
+                iconPath={uploadIcon1}
+                iconStyle={styles.IconStyle}
+                buttonTextStyle={styles.buttonText}
+                buttonText={"בחירת קובץ"}
+                buttonWidth={260}
+                // errorMessage={
+                //   !imagePicked ? errors.url && errors.url.message : null
+                // }
+                errorMessage={fileUploadErrMsg}
+              />
+            </>
+          )}
         />
-        <Button
-          buttonStyle={styles.button}
-          icon={true}
-          buttonFunction={handleImagePick}
-          iconPath={uploadIcon2}
-          iconStyle={styles.IconStyle}
-          buttonTextStyle={styles.buttonText}
-          buttonText={"מספריית התמונות"}
-          buttonWidth={260}
-          // errorMessage={
-          //   !imagePicked ? errors.url && errors.url.message : null
-          // }
+        <Controller
+          control={control}
+          name={imagePickedField}
+          render={({
+            field: { onChange, onBlur, value },
+            fieldState: { error },
+          }) => (
+            <>
+              <Button
+                buttonStyle={styles.button}
+                icon={true}
+                buttonFunction={handleImagePick}
+                iconPath={uploadIcon2}
+                iconStyle={styles.IconStyle}
+                buttonTextStyle={styles.buttonText}
+                buttonText={"מספריית התמונות"}
+                buttonWidth={260}
+                // errorMessage={
+                //   !imagePicked ? errors.url && errors.url.message : null
+                // }
+                errorMessage={uploadImageErrorMsg}
+              />
+            </>
+          )}
         />
         <View
           style={{
@@ -92,13 +127,21 @@ const ButtonGroup = ({ headerText, handleFormChange, errors }) => {
             justifyContent: "center",
           }}
         >
-          {/* {CameraCaptureImageUrl && (
+          <Controller
+            control={control}
+            name={cameraPhotoField}
+            render={({
+              field: { onChange, onBlur, value },
+              fieldState: { error },
+            }) => (
+              <>
+                {/* {CameraCaptureImageUrl && (
             <Image
               source={{ uri: CameraCaptureImageUrl }}
               style={{ width: 100, height: 100, marginBottom: 10 }}
             />
           )} */}
-          {/* <Camera
+                {/* <Camera
             style={{
               borderRadius: 8,
               backgroundColor: "transparent",
@@ -107,22 +150,26 @@ const ButtonGroup = ({ headerText, handleFormChange, errors }) => {
             type={Camera.Constants.Type.back}
             ref={(ref) => (camera = ref)}
           > */}
-          <Button
-            buttonStyle={styles.button}
-            icon={true}
-            buttonFunction={handleTakePhoto}
-            iconPath={uploadIcon3}
-            iconStyle={styles.IconStyle}
-            buttonTextStyle={styles.buttonText}
-            buttonText={"מצלמה"}
-            buttonWidth={260}
-            errorMessage={
-              !CameraCaptureImageUrl
-                ? errors.cameraPhoto && errors.cameraPhoto.message
-                : null
-            }
+                <Button
+                  buttonStyle={styles.button}
+                  icon={true}
+                  buttonFunction={handleTakePhoto}
+                  iconPath={uploadIcon3}
+                  iconStyle={styles.IconStyle}
+                  buttonTextStyle={styles.buttonText}
+                  buttonText={"מצלמה"}
+                  buttonWidth={260}
+                  // errorMessage={
+                  //   !CameraCaptureImageUrl
+                  //     ? errors.cameraPhoto && errors.cameraPhoto.message
+                  //     : null
+                  // }
+                  errorMessage={imageCaptureErrMsg}
+                />
+                {/* </Camera> */}
+              </>
+            )}
           />
-          {/* </Camera> */}
         </View>
       </View>
     </View>

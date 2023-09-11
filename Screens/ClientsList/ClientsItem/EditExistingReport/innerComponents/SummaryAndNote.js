@@ -6,7 +6,7 @@ const SummaryAndNote = ({
   header,
   summaryAndNoteContent = false,
   height,
-  verticalSpace = false,
+  verticalSpace = 0,
   headerStyling = false,
 }) => {
   //   const [contentHeight, setContentHeight] = useState(0);

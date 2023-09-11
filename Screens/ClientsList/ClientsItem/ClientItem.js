@@ -221,7 +221,6 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           action: (report) => {
             console.log("Trash_icon");
             // console.log(report.getData("id"));
-            // todo
             DeleteReport(userId, report.getData("id"));
             // navigateToRoute(routes.ONBOARDING.SummeryScreen);
           },

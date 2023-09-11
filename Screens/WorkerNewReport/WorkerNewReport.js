@@ -3,13 +3,10 @@ import {
   Text,
   View,
   TouchableOpacity,
-  ImageBackground,
   Image,
   ScrollView,
-  Switch,
   KeyboardAvoidingView,
   Alert,
-  ActivityIndicator,
   SafeAreaView,
   Dimensions,
   Platform,
@@ -17,14 +14,13 @@ import {
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
-import rightDirectionIcon from "../../assets/imgs/rightDirIcon.png";
 import fonts from "../../styles/fonts";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../styles/colors";
 import Accordion from "../../Components/ui/Accordion";
 import { FlatList } from "react-native-gesture-handler";
 import SelectMenu from "../../Components/ui/SelectMenu";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
@@ -36,19 +32,14 @@ import {
   RichToolbar,
   actions,
 } from "react-native-pell-rich-editor";
-// import { ColorPicker, fromHsv } from "react-native-color-picker";
 import ColorPicker from "react-native-wheel-color-picker";
 
-import Expander from "../../Components/ui/Expander";
 import accordionCloseIcon from "../../assets/imgs/accordionCloseIndicator.png";
 import accordionOpenIcon from "../../assets/imgs/accordionOpenIndicator.png";
 import ClientItemArrow from "../../assets/imgs/ClientItemArrow.png";
-import CategoryPrevIcon from "../../assets/imgs/rightDirIcon.png";
 import ClientItemArrowOpen from "../../assets/imgs/accodionOpenIndicatorBlack.png";
 import onDragIcon from "../../assets/imgs/onDragIcon.png";
-import Checkbox from "../../Components/ui/Checkbox";
-import { debounce, get, result } from "lodash";
-import FetchDataService from "../../Services/FetchDataService";
+import { debounce } from "lodash";
 import "@env";
 import axios from "axios";
 import { fetchCategories } from "../../store/redux/reducers/categoriesSlice";
@@ -58,22 +49,15 @@ import Loader from "../../utiles/Loader";
 import { HelperText } from "react-native-paper";
 import Drawer from "../../Components/ui/Drawer";
 import FileIcon from "../../assets/icons/iconImgs/FileIcon.png";
-import ImageText from "../ClientsList/ClientsItem/EditExistingReport/innerComponents/ImageText";
 import routes from "../../Navigation/routes";
-// import setCurrentCategoryItem from "../../store/redux/reducers/getCurrentCategory";
-// import getCurrentStation from "../../store/redux/reducers/getCurrentStation";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
 import { getCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
 import { getCurrentReport } from "../../store/redux/reducers/getCurrentReport";
 import "@env";
-import IconList from "../ClientsList/ClientsItem/EditExistingReport/innerComponents/IconList";
-import { retrieveData } from "../../Services/StorageService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import GoBackNavigator from "../../utiles/GoBackNavigator";
 import Header from "../../Components/ui/Header";
+import GoBackNavigator from "../../utiles/GoBackNavigator";
 
 const windowWidth = Dimensions.get("window").width;
-const windowHeight = Dimensions.get("window").height;
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
@@ -81,7 +65,6 @@ const WorkerNewReport = () => {
   const { navigateToRoute } = useScreenNavigator();
   const [colorSelected, setColorSelected] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const clients = useSelector((state) => state.clients);
   const categories = useSelector((state) => state.categories);
   const reportsTimes = useSelector((state) => state.reportsTimes);
   const currentClient = useSelector(
@@ -90,6 +73,7 @@ const WorkerNewReport = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
+
   const userId = useSelector((state) => state.user);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
@@ -104,6 +88,7 @@ const WorkerNewReport = () => {
     haveNutritionGrade: true,
     haveCategoriesNameForCriticalItems: false,
   });
+  // console.log("formData", formData);
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
@@ -122,11 +107,24 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
-
+  const memoizedCategories = useMemo(() => categories, [categories]);
   // * categories checkboxes Texts
-  const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState([]);
-  const [culinaryReviewTexts, setCulinaryReviewTexts] = useState([]);
-  const [nutritionReviewTexts, setNutritionReviewTexts] = useState([]);
+  const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
+    memoizedCategories?.categories?.[1]?.categories ?? []
+  );
+  // console.log(
+  //   "categorys:",
+  //   formData.categorys,
+  //   foodSafetyReviewTexts.map((item) => item.id),
+  //   currentReport.getData("id")
+  // );
+  const [culinaryReviewTexts, setCulinaryReviewTexts] = useState(
+    memoizedCategories?.categories?.[2]?.categories ?? []
+  );
+  const [nutritionReviewTexts, setNutritionReviewTexts] = useState(
+    memoizedCategories?.categories?.[3]?.categories ?? []
+  );
+
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
     previousReports: yup.string().required("previous report is required"),
@@ -167,6 +165,7 @@ const WorkerNewReport = () => {
         );
       }),
   });
+
   const {
     control,
     handleSubmit,
@@ -206,7 +205,6 @@ const WorkerNewReport = () => {
       });
   }, [dispatch]);
 
-  const memoizedCategories = useMemo(() => categories, [categories]);
   // console.log(memoizedCategories);
   const findReportTimeName = (data) => {
     const reportTimeId = currentReport?.getReportTime();
@@ -218,7 +216,6 @@ const WorkerNewReport = () => {
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
     if (currentReport) {
-      // const { data } = currentReport;
       setSwitchStates({
         haveFine: currentReport.getData("haveFine") == "1",
         haveAmountOfItems: currentReport.getData("haveAmountOfItems") == "1",
@@ -238,18 +235,6 @@ const WorkerNewReport = () => {
       );
     }
   }, [currentReport]);
-  // console.log(currentReport);
-  useEffect(() => {
-    setFoodSafetyReviewTexts(
-      memoizedCategories?.categories?.[1]?.categories ?? []
-    );
-    setCulinaryReviewTexts(
-      memoizedCategories?.categories?.[2]?.categories ?? []
-    );
-    setNutritionReviewTexts(
-      memoizedCategories?.categories?.[3]?.categories ?? []
-    );
-  }, [memoizedCategories, formData]);
 
   // * inner accordionCategoriesItem
   function accordionCategoriesItem(names, categoryName) {
@@ -565,8 +550,8 @@ const WorkerNewReport = () => {
     }
   }, 300);
   // todo to return error for date picker
-  // todo to make sure the the order of tghe categories is saved after reorder
-  // todo to send a post request and save changes in the edit mode and reflect it in the editmode screen .
+  // todo to make sure the the order of the categories is saved after reorder
+  // todo to send a post request and save changes in the edit mode and reflect it in the edit mode screen .
   // console.log("switches", switchStates);
   // console.log("formData", formData);
   // * toggle switch function
@@ -581,6 +566,66 @@ const WorkerNewReport = () => {
       return newState;
     });
   };
+  // console.log(
+  //   "currentReport categorys/form categorys:",
+  //   currentReport.getData("data"),
+  //   formData.data ?? null
+  // );
+  // * post request on the changes of the report edit
+  const saveEditedReport = async (formData) => {
+    let categoriesDataFromReport = currentReport?.getCategoriesData();
+    let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+    // const targetId = formData.categorys[0];
+    // let foundCategory = null;
+    // let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+    // parsedCategoriesDataFromReport.forEach((category) => {
+    //   if (category.id == targetId) {
+    //     foundCategory = category;
+    //     return;
+    //   }
+    // });
+
+    // if (foundCategory) {
+    //   foundCategory.items = [...currentReportItemsForGrade];
+    //   foundCategory.grade = categoryGrade;
+    // } else {
+    //   console.log("ID not found");
+    // }
+
+    const bodyFormData = new FormData();
+    bodyFormData.append("id", currentReport.getData("id")); //checked output : 19150
+    bodyFormData.append("workerId", formData.id); //checked output : 4069114
+    bodyFormData.append("clientId", currentReport.getData("clientId")); //checked output : 34
+    bodyFormData.append("status", currentReport.getData("status")); //checked output : 1
+    bodyFormData.append("newCategorys", formData.categorys); //checked output: [6, 7, 8]
+    bodyFormData.append(
+      "newGeneralCommentTopText",
+      formData.newGeneralCommentTopText
+    ); //checked output: ""
+    bodyFormData.append(
+      "data",
+      JSON.stringify([parsedCategoriesDataFromReport[formData.categorys[0]]])
+    );
+    try {
+      setIsLoading(true);
+      const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
+      const response = await axios.post(apiUrl, bodyFormData);
+      if (response.status == 200) {
+        let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
+        currentReport.setData("data", updatedValues);
+        currentReport.setData(
+          "newGeneralCommentTopText",
+          formData.newGeneralCommentTopText
+        );
+        dispatch(getCurrentReport(currentReport));
+        setIsLoading(false);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Error making POST request:", error);
+    }
+  };
+
   const postNewReport = async (formData) => {
     try {
       const response = await axios.post(
@@ -626,7 +671,7 @@ const WorkerNewReport = () => {
 
       try {
         const response = await postNewReport(formData);
-        console.log("onSubmitForm response", response);
+        console.log("new report response:", response);
       } catch (error) {
         console.error("Error posting data:", error);
       }
@@ -666,7 +711,7 @@ const WorkerNewReport = () => {
   // };
 
   // * paginations between categories names : Next
-  const handleNextCategory = () => {
+  const handleNextCategory = async () => {
     // setCurrentCategoryIndex((prevIndex) => {
     //   const newIndex =
     //     prevIndex < checkedCategoryNameById.length - 1
@@ -677,11 +722,21 @@ const WorkerNewReport = () => {
     //   // console.log(currentItem);
     //   return newIndex;
     // });
+    if (currentReport) {
+      try {
+        const response = await saveEditedReport(formData);
+        console.log("edit post response:", response, formData);
+      } catch (error) {
+        console.error("Error posting data:", error);
+      }
+    }
+
     dispatch(getCurrentCategories(formData.categorys));
     dispatch(getCurrentReport(currentReport));
     dispatch(getCurrentCategory(formData.categorys[0]));
     navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
+
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {
@@ -1365,49 +1420,55 @@ const WorkerNewReport = () => {
                     start={[0, 0]}
                     end={[1, 0]}
                     style={{
-                      width: "100%",
+                      // width: windowWidth,
                       padding: 16,
                       height: 76,
                       zIndex: 1,
-                      alignItems: "center",
-                      justifyContent: "center",
+                      // alignItems: "center",
+                      // justifyContent: "center",
                     }}
                   >
                     <View
                       style={{
-                        justifyContent: "center",
+                        maxWidthwidth: windowWidth,
+                        justifyContent: "space-evenly",
                         alignItems: "center",
                         flexDirection: "row",
                       }}
                     >
-                      <TouchableOpacity
-                        // onPress={handlePrevCategory}
-                        style={{
-                          // alignSelf: "center",
-                          // justifyContent: "flex-end",
-                          // marginLeft: "auto",
-                          flexDirection: "row",
-                          gap: 5,
-                          alignItems: "center",
-                          width: "30%",
-                        }}
-                      >
-                        {/* <Image
-                          source={accordionCloseIcon}
-                          style={{
-                            width: 20,
-                            height: 20,
-                            transform: [{ rotate: "180deg" }],
-                          }}
-                        />
-                        <Text style={styles.categoryDirButton}>
-                          הקטגוריה הקודמת:{" "}
-                          {
-                            checkedCategoryNameById[currentCategoryIndex - 1]
-                              ?.name
-                          }
-                        </Text> */}
-                      </TouchableOpacity>
+                      {formData &&
+                        formData.categorys &&
+                        formData.categorys[0] && (
+                          <TouchableOpacity
+                            // onPress={handlePrevCategory}
+                            style={{
+                              // alignSelf: "center",
+                              // justifyContent: "flex-end",
+                              // marginLeft: "auto",
+                              flexDirection: "row",
+                              gap: 5,
+                              alignItems: "center",
+                              // width: "30%",
+                            }}
+                          >
+                            {/* <Image
+                              source={accordionCloseIcon}
+                              style={{
+                                width: 20,
+                                height: 20,
+                                transform: [{ rotate: "180deg" }],
+                              }}
+                            />
+                            <Text style={styles.categoryDirButton}>
+                              הקטגוריה הקודמת:{" "}
+                              {
+                                checkedCategoryNameById[
+                                  currentCategoryIndex - 1
+                                ]?.name
+                              }
+                            </Text> */}
+                          </TouchableOpacity>
+                        )}
                       <View
                         style={{
                           flexDirection: "row",
@@ -1415,22 +1476,15 @@ const WorkerNewReport = () => {
                           alignItems: "center",
                           alignSelf: "center",
                           textAlign: "center",
-                          width: "40%",
-
-                          //
-
-                          //   formData &&
-                          //   formData.categories &&
-                          //   formData.categories[0]
-                          //     ? "auto"
-                          //     : 0,
-                          // marginRight:
-                          //   formData &&
-                          //   formData.categories &&
-                          //   formData.categories[0]
-                          //     ? -150
-                          //     : 0,
+                          // width: "30%",
+                          flexGrow: 1,
                           gap: 12,
+                          marginLeft:
+                            formData &&
+                            formData.categorys &&
+                            formData.categorys[0]
+                              ? 180
+                              : 0,
                         }}
                       >
                         <Image
@@ -1455,13 +1509,13 @@ const WorkerNewReport = () => {
                           <TouchableOpacity
                             onPress={handleNextCategory}
                             style={{
-                              alignSelf: "flex-end",
+                              alignSelf: "center",
                               justifyContent: "center",
                               flexDirection: "row",
                               gap: 5,
                               alignItems: "center",
                               // marginLeft: "auto",
-                              width: "30%",
+                              // width: "30%",
                             }}
                           >
                             <Text style={styles.categoryDirButton}>
