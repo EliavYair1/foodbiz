@@ -52,7 +52,10 @@ import FileIcon from "../../assets/icons/iconImgs/FileIcon.png";
 import routes from "../../Navigation/routes";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
 import { getCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
-import { getCurrentReport } from "../../store/redux/reducers/getCurrentReport";
+import {
+  getCurrentReport,
+  setCurrentReport,
+} from "../../store/redux/reducers/getCurrentReport";
 import "@env";
 import Header from "../../Components/ui/Header";
 import GoBackNavigator from "../../utiles/GoBackNavigator";
@@ -77,6 +80,7 @@ const WorkerNewReport = () => {
   const userId = useSelector((state) => state.user);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
+  const [IsRearrangement, setIsRearrangement] = useState(false);
   const [formData, setFormData] = useState({
     clientId: currentClient?.id,
     id: userId,
@@ -87,8 +91,9 @@ const WorkerNewReport = () => {
     haveCulinaryGrade: true,
     haveNutritionGrade: true,
     haveCategoriesNameForCriticalItems: false,
+    rearrangement: IsRearrangement,
   });
-  // console.log("formData", formData);
+  // console.log("formData", formData, IsRearrangement);
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
@@ -112,18 +117,15 @@ const WorkerNewReport = () => {
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
     memoizedCategories?.categories?.[1]?.categories ?? []
   );
-  // console.log(
-  //   "categorys:",
-  //   formData.categorys,
-  //   foodSafetyReviewTexts.map((item) => item.id),
-  //   currentReport.getData("id")
-  // );
   const [culinaryReviewTexts, setCulinaryReviewTexts] = useState(
     memoizedCategories?.categories?.[2]?.categories ?? []
   );
   const [nutritionReviewTexts, setNutritionReviewTexts] = useState(
     memoizedCategories?.categories?.[3]?.categories ?? []
   );
+
+  // console.log("foodSafetyReviewTexts:", foodSafetyReviewTexts);
+  // console.log("checkboxStatus:", checkboxStatus);
 
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
@@ -238,15 +240,16 @@ const WorkerNewReport = () => {
 
   // * inner accordionCategoriesItem
   function accordionCategoriesItem(names, categoryName) {
+    // console.log("names", names);
     return names.map((item, index) => {
-      // console.log("item id", item.id);
+      // console.log("checkboxStatus", checkboxStatus);
       const checkboxKey = `${categoryName}${index + 1}`;
       const categoryStatus = checkboxStatus[`${categoryName}Status`];
-      // console.log("categoryStatus:", categoryStatus);
       const checkboxValue =
         categoryStatus && Array.isArray(categoryStatus)
           ? categoryStatus.includes(parseInt(item.id))
           : false;
+      // console.log("checkboxValue:", checkboxValue);
 
       return {
         id: item.id,
@@ -257,13 +260,13 @@ const WorkerNewReport = () => {
               label={checkboxKey}
               checkboxItemText={item.name}
               checked={checkboxValue}
-              handleChange={(checked) =>
+              handleChange={(checked) => {
                 handleCategoriesCheckboxesToggle(
                   `${categoryName}Status`,
                   checked,
                   item.id
-                )
-              }
+                );
+              }}
             />
           </View>
         ),
@@ -337,6 +340,7 @@ const WorkerNewReport = () => {
     const parsedSelectedReportCategory = parsedArrayOfStr(
       selectedReportCategory
     );
+
     return parsedSelectedReportCategory;
   };
 
@@ -353,6 +357,12 @@ const WorkerNewReport = () => {
       culinaryReviewCbStatus: [],
       nutritionReviewCbStatus: [],
     };
+    let newOrderedCategories = {
+      foodSafetyReviewCbStatus: [],
+      culinaryReviewCbStatus: [],
+      nutritionReviewCbStatus: [],
+    };
+    // todo to change the way the categories change according to the onDragCb function logic
 
     if (globalStateCategories) {
       newCheckboxStatus = globalStateCategories.reduce((status, category) => {
@@ -369,13 +379,40 @@ const WorkerNewReport = () => {
         }
         return status;
       }, newCheckboxStatus);
+
+      const myArray = Array.from(parsedSelectedReportCategory);
+      myArray.map((element) => {
+        let index = newCheckboxStatus.foodSafetyReviewCbStatus.findIndex(
+          (id) => id == element
+        );
+
+        if (index !== -1) {
+          newOrderedCategories.foodSafetyReviewCbStatus.push(element);
+          return element;
+        }
+        index = newCheckboxStatus.culinaryReviewCbStatus.findIndex(
+          (id) => id == element
+        );
+        if (index !== -1) {
+          newOrderedCategories.culinaryReviewCbStatus.push(element);
+          return element;
+        }
+
+        index = newCheckboxStatus.nutritionReviewCbStatus.findIndex(
+          (id) => id == element
+        );
+        if (index !== -1) {
+          newOrderedCategories.nutritionReviewCbStatus.push(element);
+          return element;
+        }
+      });
     }
 
     // Saving the categories checkbox status
     const categories = [
-      ...newCheckboxStatus.foodSafetyReviewCbStatus,
-      ...newCheckboxStatus.culinaryReviewCbStatus,
-      ...newCheckboxStatus.nutritionReviewCbStatus,
+      ...newOrderedCategories.foodSafetyReviewCbStatus,
+      ...newOrderedCategories.culinaryReviewCbStatus,
+      ...newOrderedCategories.nutritionReviewCbStatus,
     ];
     // console.log(typeof categories);
     setFormData((prevFormData) => ({
@@ -388,9 +425,8 @@ const WorkerNewReport = () => {
 
     setValue("categorys", categories);
     trigger("categorys");
-    setCheckboxStatus(newCheckboxStatus);
+    setCheckboxStatus(newOrderedCategories);
   };
-
   // * get the array of categories from the report and updates the state
   const handleCategoriesCheckboxesToggle = (category, checked, label) => {
     // console.log("handleCategoriesCheckboxesToggle:", category, checked);
@@ -482,6 +518,7 @@ const WorkerNewReport = () => {
       }));
     }
   };
+
   //  * handling report time
   const handleReportTime = (selectedReport) => {
     const reportTimeDisplayed = selectedReport.getData("reportTime");
@@ -490,12 +527,6 @@ const WorkerNewReport = () => {
   };
   // * general handle form change
   const handleFormChange = debounce((name, value) => {
-    // console.log(
-    //   "handleFormChange called with name:",
-    //   name,
-    //   "and value:",
-    //   value
-    // );
     setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
     setIsSchemaValid(true);
 
@@ -550,10 +581,6 @@ const WorkerNewReport = () => {
     }
   }, 300);
   // todo to return error for date picker
-  // todo to make sure the the order of the categories is saved after reorder
-  // todo to send a post request and save changes in the edit mode and reflect it in the edit mode screen .
-  // console.log("switches", switchStates);
-  // console.log("formData", formData);
   // * toggle switch function
   const toggleSwitch = (id) => {
     setSwitchStates((prevState) => {
@@ -566,71 +593,83 @@ const WorkerNewReport = () => {
       return newState;
     });
   };
-  // console.log(
-  //   "currentReport categorys/form categorys:",
-  //   currentReport.getData("data"),
-  //   formData.data ?? null
-  // );
+
   // * post request on the changes of the report edit
   const saveEditedReport = async (formData) => {
-    let categoriesDataFromReport = currentReport?.getCategoriesData();
-    let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
-    // const targetId = formData.categorys[0];
-    // let foundCategory = null;
-    // let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
-    // parsedCategoriesDataFromReport.forEach((category) => {
-    //   if (category.id == targetId) {
-    //     foundCategory = category;
-    //     return;
-    //   }
-    // });
-
-    // if (foundCategory) {
-    //   foundCategory.items = [...currentReportItemsForGrade];
-    //   foundCategory.grade = categoryGrade;
-    // } else {
-    //   console.log("ID not found");
-    // }
-
     const bodyFormData = new FormData();
-    bodyFormData.append("id", currentReport.getData("id")); //checked output : 19150
-    bodyFormData.append("workerId", formData.id); //checked output : 4069114
-    bodyFormData.append("clientId", currentReport.getData("clientId")); //checked output : 34
-    bodyFormData.append("status", currentReport.getData("status")); //checked output : 1
-    bodyFormData.append("newCategorys", formData.categorys); //checked output: [6, 7, 8]
+    bodyFormData.append("id", currentReport.getData("id")); //checked expected output : 19150(reportid)
+    bodyFormData.append("workerId", currentReport.getData("workerId")); //checked expected output : 4069114 (userid)
+    bodyFormData.append("clientId", currentReport.getData("clientId")); //checked expected output : 34
+    bodyFormData.append(
+      "clientStationId",
+      currentReport.getData("clientStationId")
+    ); //checked expected output : 66
+    bodyFormData.append("accompany", currentReport.getData("accompany")); //checked expected output : 66
+    bodyFormData.append("haveFine", currentReport.getData("haveFine")); //checked expected output : 66
+    bodyFormData.append(
+      "haveAmountOfItems",
+      currentReport.getData("haveAmountOfItems")
+    ); //checked expected output : 1
+    bodyFormData.append(
+      "haveSafetyGrade",
+      currentReport.getData("haveSafetyGrade")
+    ); //checked expected output : 1
+    bodyFormData.append(
+      "haveCulinaryGrade",
+      currentReport.getData("haveCulinaryGrade")
+    ); //checked expected output : 1
+    bodyFormData.append(
+      "haveNutritionGrade",
+      currentReport.getData("haveNutritionGrade")
+    ); //checked expected output : 1
+    bodyFormData.append(
+      "haveCategoriesNameForCriticalItems",
+      currentReport.getData("haveCategoriesNameForCriticalItems")
+    ); //checked expected output : 0
+    bodyFormData.append("reportTime", currentReport.getData("reportTime")); //checked expected output : 11
     bodyFormData.append(
       "newGeneralCommentTopText",
       formData.newGeneralCommentTopText
-    ); //checked output: ""
-    bodyFormData.append(
-      "data",
-      JSON.stringify([parsedCategoriesDataFromReport[formData.categorys[0]]])
     );
+    bodyFormData.append("timeOfReport", currentReport.getData("timeOfReport")); //checked expected output : 12/09/2023
+    bodyFormData.append("data", []);
+
+    bodyFormData.append("status", currentReport.getData("status")); //checked expected output : 1
+    bodyFormData.append(
+      "newCategorys",
+      ";" + formData.categorys.join("|;") + "|"
+    );
+
+    bodyFormData.append("file1", currentReport.getData("file1")); //checked expected output : ""
+    bodyFormData.append("file2", currentReport.getData("file2")); //checked expected output : ""
+    bodyFormData.append(
+      "positiveFeedback",
+      currentReport.getData("positiveFeedback")
+    ); //checked expected output: ""
+
     try {
       setIsLoading(true);
-      const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
+      const apiUrl = process.env.API_BASE_URL + "ajax/saveReport2.php";
       const response = await axios.post(apiUrl, bodyFormData);
       if (response.status == 200) {
-        let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
-        currentReport.setData("data", updatedValues);
         currentReport.setData(
           "newGeneralCommentTopText",
           formData.newGeneralCommentTopText
         );
-        dispatch(getCurrentReport(currentReport));
+        dispatch(setCurrentReport(currentReport));
         setIsLoading(false);
       }
+      return response.data;
     } catch (error) {
       setIsLoading(false);
       console.error("Error making POST request:", error);
     }
   };
-
   const postNewReport = async (formData) => {
     try {
       const response = await axios.post(
         process.env.API_BASE_URL + "api/duplicateReport.php",
-        formData
+        { ...formData, rearrangement: IsRearrangement }
       );
       console.log("(postNewReport)response:", response.status);
       if (response.status === 200) {
@@ -678,8 +717,6 @@ const WorkerNewReport = () => {
     }
   };
 
-  // todo to check why the form.categories dosent show on first render
-
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
@@ -690,15 +727,14 @@ const WorkerNewReport = () => {
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
     : null;
   // * comparing between the categories names to the ids in the forms to display it in the drawer
-  const checkedCategoryNameById =
-    globalCategories && formData.categorys
-      ? globalCategories?.reduce((result, item) => {
-          if (formData?.categorys?.includes(parseInt(item.id, 10))) {
-            result.push(item);
-          }
-          return result;
-        }, [])
-      : [];
+  const idToNameMap = {};
+  globalCategories && formData.categorys
+    ? globalCategories?.forEach((item) => {
+        idToNameMap[item.id] = item.name;
+      })
+    : [];
+  const checkedCategories =
+    formData && formData.categorys?.map((id) => idToNameMap[id]);
 
   // * paginations between categories names : Prev
   // const handlePrevCategory = () => {
@@ -725,7 +761,7 @@ const WorkerNewReport = () => {
     if (currentReport) {
       try {
         const response = await saveEditedReport(formData);
-        console.log("edit post response:", response, formData);
+        console.log("edit post response:", response);
       } catch (error) {
         console.error("Error posting data:", error);
       }
@@ -736,7 +772,6 @@ const WorkerNewReport = () => {
     dispatch(getCurrentCategory(formData.categorys[0]));
     navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
-
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {
@@ -1061,7 +1096,22 @@ const WorkerNewReport = () => {
               }}
               scrollEnabled={true}
               accordionContent={accordionCategoriesItem(
-                foodSafetyReviewTexts,
+                formData && formData.categorys
+                  ? [...foodSafetyReviewTexts].sort((a, b) => {
+                      const aIdx = formData.categorys.indexOf(Number(a.id));
+                      const bIdx = formData.categorys.indexOf(Number(b.id));
+
+                      if (aIdx >= 0 && bIdx >= 0) {
+                        return aIdx - bIdx;
+                      } else if (aIdx >= 0) {
+                        return -1;
+                      } else if (bIdx >= 0) {
+                        return 1;
+                      } else {
+                        return 0;
+                      }
+                    })
+                  : [],
                 "foodSafetyReviewCb"
               )}
               onDragEndCb={(data) => {
@@ -1073,7 +1123,21 @@ const WorkerNewReport = () => {
                   movedData,
                   ...originalData.slice(data.to),
                 ];
+                let newCategoryArrangemnet = [];
+                newData.forEach((item) => {
+                  const index = checkboxStatus[
+                    "foodSafetyReviewCbStatus"
+                  ].findIndex((category) => category == item.id);
+                  index !== -1 && newCategoryArrangemnet.push(Number(item.id));
+
+                  // console.log(item);
+                });
+                setCheckboxStatus((prev) => ({
+                  ...prev,
+                  foodSafetyReviewCbStatus: newCategoryArrangemnet,
+                }));
                 setFoodSafetyReviewTexts(newData);
+                setIsRearrangement(true);
               }}
               contentItemStyling={{
                 width: "100%",
@@ -1113,7 +1177,22 @@ const WorkerNewReport = () => {
                 fontFamily: fonts.ABold,
               }}
               accordionContent={accordionCategoriesItem(
-                culinaryReviewTexts,
+                formData && formData.categorys
+                  ? [...culinaryReviewTexts].sort((a, b) => {
+                      const aIdx = formData.categorys.indexOf(Number(a.id));
+                      const bIdx = formData.categorys.indexOf(Number(b.id));
+
+                      if (aIdx >= 0 && bIdx >= 0) {
+                        return aIdx - bIdx;
+                      } else if (aIdx >= 0) {
+                        return -1;
+                      } else if (bIdx >= 0) {
+                        return 1;
+                      } else {
+                        return 0;
+                      }
+                    })
+                  : [],
                 "culinaryReviewCb"
               )}
               onDragEndCb={(data) => {
@@ -1125,7 +1204,9 @@ const WorkerNewReport = () => {
                   movedData,
                   ...originalData.slice(data.to),
                 ];
+
                 setCulinaryReviewTexts(newData);
+                setIsRearrangement(true);
               }}
               contentItemStyling={{
                 width: "100%",
@@ -1166,7 +1247,22 @@ const WorkerNewReport = () => {
                   fontFamily: fonts.ABold,
                 }}
                 accordionContent={accordionCategoriesItem(
-                  nutritionReviewTexts,
+                  formData && formData.categorys
+                    ? [...nutritionReviewTexts].sort((a, b) => {
+                        const aIdx = formData.categorys.indexOf(Number(a.id));
+                        const bIdx = formData.categorys.indexOf(Number(b.id));
+
+                        if (aIdx >= 0 && bIdx >= 0) {
+                          return aIdx - bIdx;
+                        } else if (aIdx >= 0) {
+                          return -1;
+                        } else if (bIdx >= 0) {
+                          return 1;
+                        } else {
+                          return 0;
+                        }
+                      })
+                    : [],
                   "nutritionReviewCb"
                 )}
                 onDragEndCb={(data) => {
@@ -1179,6 +1275,7 @@ const WorkerNewReport = () => {
                     ...originalData.slice(data.to),
                   ];
                   setNutritionReviewTexts(newData);
+                  setIsRearrangement(true);
                 }}
                 contentItemStyling={{
                   width: "100%",
@@ -1365,8 +1462,6 @@ const WorkerNewReport = () => {
       })
     : NewReportAccordionContent;
 
-  // console.log(checkedCategoryNameById[currentCategoryIndex]
-  //   .name);
   return (
     <>
       {isLoading ? (
@@ -1520,10 +1615,11 @@ const WorkerNewReport = () => {
                           >
                             <Text style={styles.categoryDirButton}>
                               הקטגוריה הבאה:{" "}
-                              {
+                              {/* {
                                 checkedCategoryNameById[currentCategoryIndex]
                                   .name
-                              }
+                              } */}
+                              {checkedCategories[0]}
                             </Text>
                             <Image
                               source={accordionCloseIcon}

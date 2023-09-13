@@ -83,85 +83,7 @@ const PopUp = ({
   } = useForm({
     resolver: yupResolver(schema),
   });
-  const styles = StyleSheet.create({
-    buttonWrapper: {
-      flexDirection: "row",
-      // gap: 16,
-      justifyContent: "space-between",
-    },
-    button: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      borderWidth: 1,
-      borderRadius: 8,
-      paddingVertical: 13,
-      // width: 194,
-      gap: 8,
-    },
-    buttonText: {},
-    buttonOpen: {
-      backgroundColor: "#F194FF",
-    },
-    buttonClose: {
-      backgroundColor: "#2196F3",
-    },
-    textStyle: {
-      color: colors.black,
-      textAlign: "center",
-      fontFamily: fonts.ABold,
-      fontSize: 20,
-    },
-    subtextStyle: {
-      color: colors.black,
-      textAlign: "left",
-      fontFamily: fonts.ARegular,
-      fontSize: 16,
-      // marginBottom: 4,
-    },
-    modalText: {
-      marginBottom: 15,
-      textAlign: "center",
-    },
-    closeIconStyle: {
-      width: 12.5,
-      height: 12.5,
-    },
-    inputWrapper: {
-      // flex: 1,
-    },
 
-    IconStyle: {
-      width: 16,
-      height: 16,
-    },
-    selectHeaderStyle: {},
-    remarksInputWrapper: {},
-    submitButton: {
-      width: "100%",
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: colors.blue,
-      paddingVertical: 8,
-      borderRadius: 8,
-      opacity: 1,
-    },
-    submitButtonText: {
-      color: colors.white,
-    },
-    inputContentStyling: { backgroundColor: "white" },
-    inputStyling: { minWidth: "100%", backgroundColor: "white" },
-    contentContainer: {},
-    disabled: {
-      width: "100%",
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: colors.blue,
-      paddingVertical: 8,
-      borderRadius: 8,
-      opacity: 0.6,
-    },
-  });
   const inputRef = useRef();
   const popUpInputInformation = [
     {
@@ -284,7 +206,6 @@ const PopUp = ({
 
   const onSubmitForm = () => {
     // checking if scheme is valid
-    console.log("formData:", formData);
 
     if (isSchemaValid) {
       console.log("scheme is valid");
@@ -508,5 +429,83 @@ const PopUp = ({
     </Modal>
   );
 };
+const styles = StyleSheet.create({
+  buttonWrapper: {
+    flexDirection: "row",
+    // gap: 16,
+    justifyContent: "space-between",
+  },
+  button: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 13,
+    // width: 194,
+    gap: 8,
+  },
+  buttonText: {},
+  buttonOpen: {
+    backgroundColor: "#F194FF",
+  },
+  buttonClose: {
+    backgroundColor: "#2196F3",
+  },
+  textStyle: {
+    color: colors.black,
+    textAlign: "center",
+    fontFamily: fonts.ABold,
+    fontSize: 20,
+  },
+  subtextStyle: {
+    color: colors.black,
+    textAlign: "left",
+    fontFamily: fonts.ARegular,
+    fontSize: 16,
+    // marginBottom: 4,
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  closeIconStyle: {
+    width: 12.5,
+    height: 12.5,
+  },
+  inputWrapper: {
+    // flex: 1,
+  },
 
+  IconStyle: {
+    width: 16,
+    height: 16,
+  },
+  selectHeaderStyle: {},
+  remarksInputWrapper: {},
+  submitButton: {
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.blue,
+    paddingVertical: 8,
+    borderRadius: 8,
+    opacity: 1,
+  },
+  submitButtonText: {
+    color: colors.white,
+  },
+  inputContentStyling: { backgroundColor: "white" },
+  inputStyling: { minWidth: "100%", backgroundColor: "white" },
+  contentContainer: {},
+  disabled: {
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.blue,
+    paddingVertical: 8,
+    borderRadius: 8,
+    opacity: 0.6,
+  },
+});
 export default PopUp;

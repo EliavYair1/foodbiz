@@ -42,7 +42,7 @@ const SummeryScreen = () => {
   const positiveFeedback = currentReport.getData("positiveFeedback");
   // console.log("current Report:", file1, file2, positiveFeedback);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [summaryFormData, setsummaryFormData] = useState([]);
+  const [summaryFormData, setsummaryFormData] = useState({});
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [SummeryForm, setSummeryForm] = useState([]);
   const drawerRef = useRef();
@@ -53,8 +53,8 @@ const SummeryScreen = () => {
     file2: yup.string().required("file2 is required"),
     imagePicked: yup.string().required("imagePicked is required"),
     imagePicked2: yup.string().required("imagePicked2 is required"),
-    cameraPhoto: yup.string().required("cameraPhoto is required"),
-    cameraPhoto2: yup.string().required("cameraPhoto2 is required"),
+    cameraPhoto: yup.string(),
+    cameraPhoto2: yup.string(),
   });
 
   const {
@@ -68,15 +68,7 @@ const SummeryScreen = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  useEffect(() => {
-    schema
-      .validate(summaryFormData)
-      .then(() => setIsSchemaValid(true))
-      .catch((err) => {
-        // console.log("err:", err);
-        setIsSchemaValid(false);
-      });
-  }, [summaryFormData, schema]);
+
   //   ? drawer logic
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
@@ -90,11 +82,24 @@ const SummeryScreen = () => {
   };
   // handling the form changes
   const handleFormChange = (name, value) => {
-    setSummeryForm({ ...summaryFormData, [name]: value });
+    setSummeryForm((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
     setIsSchemaValid(true);
   };
+  useEffect(() => {
+    schema
+      .validate(summaryFormData)
+      .then(() => setIsSchemaValid(true))
+      .catch((err) => {
+        console.log("err:", err);
+        setIsSchemaValid(false);
+      });
+  }, [summaryFormData, schema]);
   const sendForManagerApproval = () => {
     console.log(" נשלח למנהל");
+    console.log("summaryFormData:", summaryFormData);
   };
   // todo list
   // * positive feedback coming from current report
@@ -132,7 +137,9 @@ const SummeryScreen = () => {
               }) => (
                 <>
                   <Text>{positiveFeedback}</Text>
-                  <HelperText type="error">{error?.message}</HelperText>
+                  <HelperText type="error">
+                    {errors.positiveFeedback && errors.positiveFeedback.message}
+                  </HelperText>
                 </>
               )}
             ></Controller>
@@ -145,10 +152,14 @@ const SummeryScreen = () => {
             headerText={"העלאת קבצים 1"}
             handleFormChange={handleFormChange}
             errors={errors}
-            fileUploadErrMsg={errors.file1 && errors.file1.message}
-            uploadImageErrorMsg={
-              errors.imagePicked && errors.imagePicked.message
+            onImagePickChange={(value) =>
+              handleFormChange("imagePicked", value)
             }
+            fileUploadErrMsg={errors.file1 && errors.file1.message}
+            // uploadImageErrorMsg={
+            //   errors.imagePicked && errors.imagePicked.message
+            // }
+            fileName={"imagePicked"}
             imageCaptureErrMsg={
               errors.cameraPhoto && errors.cameraPhoto.message
             }
@@ -160,11 +171,15 @@ const SummeryScreen = () => {
             control={control}
             headerText={"העלאת קבצים 2"}
             handleFormChange={handleFormChange}
+            onImagePickChange={(value) =>
+              handleFormChange("imagePicked2", value)
+            }
             errors={errors}
             fileUploadErrMsg={errors.file2 && errors.file2.message}
-            uploadImageErrorMsg={
-              errors.imagePicked2 && errors.imagePicked2.message
-            }
+            // uploadImageErrorMsg={
+            //   errors.imagePicked2 && errors.imagePicked2.message
+            // }
+            fileName={"imagePicked2"}
             imageCaptureErrMsg={
               errors.cameraPhoto2 && errors.cameraPhoto2.message
             }

@@ -16,16 +16,19 @@ const ButtonGroup = ({
   headerText,
   handleFormChange,
   errors,
-  uploadImageErrorMsg,
+  // uploadImageErrorMsg,
   imageCaptureErrMsg,
   fileUploadErrMsg,
   imagePickedField,
   fileField,
   cameraPhotoField,
+  fileName,
+  onImagePickChange,
 }) => {
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [imagePicked, setImagePicked] = useState(false);
+
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -45,12 +48,23 @@ const ButtonGroup = ({
   // console.log(CameraCaptureImageUrl);
 
   const [media, pickMedia, mediaError] = useMediaPicker(handleFormChange);
-  // handling image pick
-  const handleImagePick = () => {
-    console.log("image pick");
-    pickMedia("image");
-    setImagePicked(true);
+
+  const handleImagePick = async () => {
+    try {
+      // Use your media picker (in this case, pickMedia)
+      const pickedImage = await pickMedia("image");
+      if (pickedImage) {
+        const { uri } = pickedImage;
+        onImagePickChange(uri);
+        setImagePicked(true);
+      } else {
+        console.log("Media selection canceled");
+      }
+    } catch (error) {
+      console.error("Error selecting media:", error);
+    }
   };
+  console.log(imagePickedField, media);
 
   const handleFileUpload = async () => {
     try {
@@ -112,14 +126,24 @@ const ButtonGroup = ({
                 buttonTextStyle={styles.buttonText}
                 buttonText={"מספריית התמונות"}
                 buttonWidth={260}
-                // errorMessage={
-                //   !imagePicked ? errors.url && errors.url.message : null
-                // }
-                errorMessage={uploadImageErrorMsg}
+                errorMessage={
+                  !imagePicked
+                    ? errors.fileName && errors.fileName.message
+                    : null
+                }
+                // errorMessage={uploadImageErrorMsg}
               />
             </>
           )}
         />
+        {imagePicked && (
+          <View>
+            <Image
+              source={{ uri: media }}
+              style={{ width: 100, height: 100 }}
+            />
+          </View>
+        )}
         <View
           style={{
             flexDirection: "column",

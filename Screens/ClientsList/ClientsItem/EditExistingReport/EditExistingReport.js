@@ -93,12 +93,11 @@ const EditExistingReport = () => {
   const globalStateCategories = memoRizedCats
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
     : null;
-  // * converting the chosen categories to strings
-  const matchedNames = globalStateCategories
-    .filter((obj) =>
-      currentCategories.currentCategories.find((obj2) => obj2 == obj.id)
-    )
-    .map((obj) => obj.name);
+  // * looking for a categories names in the global state
+  const matchedNames = currentCategories.currentCategories.map(
+    (obj) => globalStateCategories.find((obj2) => obj == obj2.id).name
+  );
+
   // for drawer usage
   const lastIndexOfCategories =
     Object.keys(currentCategories.currentCategories).length - 1;
@@ -780,6 +779,7 @@ const EditExistingReport = () => {
   // ! drawer logic end
 
   // ? console log section
+  // console.log(matchedNames[2], currentCategories.currentCategories);
 
   // ! console log end
 
@@ -829,11 +829,11 @@ const EditExistingReport = () => {
             CategoriesItems={CategoriesItems}
             currentReport={currentReport}
             onCategoryGradeChange={(value) => {
-              console.log("grade", value);
+              // console.log("grade", value);
               setCategoryGrade(value);
             }}
             onMajorCategoryGradeChange={(value) => {
-              console.log("major category grade", value);
+              // console.log("major category grade", value);
               // setCategoryGrade(value);
               // setMajorCategoryGrade(value);
               if (
@@ -849,7 +849,7 @@ const EditExistingReport = () => {
               }
             }}
             onReportGradeChange={(value) => {
-              console.log("report  grade", value);
+              // console.log("report  grade", value);
               // setCategoryGrade(value);
               setReportGrade(value);
             }}

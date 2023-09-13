@@ -76,7 +76,6 @@ const ClientsList = () => {
     flatListRef.current.scrollToOffset({ offset: 0, animated: true });
   };
 
-  const tablePadding = 12;
   return (
     <ScreenWrapper
       edges={[]}
@@ -85,7 +84,7 @@ const ClientsList = () => {
     >
       <View style={{ flex: 1, alignItems: "center" }}>
         <Dashboard
-          tablePadding={tablePadding}
+          tablePadding={12}
           data={memoizedClients}
           onSearch={handleSearch}
           filterFunction={ClientCompanyFilterFunction}
@@ -107,7 +106,7 @@ const ClientsList = () => {
                   <ClientItem
                     logo={item.getData("logo")}
                     client={item}
-                    tablePadding={tablePadding}
+                    tablePadding={12}
                   />
                 );
               }}

@@ -11,6 +11,9 @@ const currentReportSlice = createSlice({
     getCurrentReport: (state, action) => {
       state.currentReport = action.payload;
     },
+    setCurrentReport: (state, action) => {
+      state.currentReport = action.payload;
+    },
   },
 });
 

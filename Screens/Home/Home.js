@@ -37,6 +37,7 @@ const Home = () => {
           process.env.API_BASE_URL + "api/clients.php",
           { id: user_id }
         );
+        // console.log("responseClients:", responseClients.data[1].reports[0]);
         if (responseClients.success) {
           let clients = [];
           responseClients.data.forEach((element) => {
