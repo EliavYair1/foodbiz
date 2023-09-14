@@ -51,7 +51,10 @@ import Drawer from "../../Components/ui/Drawer";
 import FileIcon from "../../assets/icons/iconImgs/FileIcon.png";
 import routes from "../../Navigation/routes";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
-import { getCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
+import {
+  getCurrentCategories,
+  setCurrentCategories,
+} from "../../store/redux/reducers/getCurrentCategories";
 import {
   getCurrentReport,
   setCurrentReport,
@@ -64,21 +67,24 @@ const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
   const richText = useRef();
   const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { navigateToRoute } = useScreenNavigator();
   const [colorSelected, setColorSelected] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const categories = useSelector((state) => state.categories);
-  const reportsTimes = useSelector((state) => state.reportsTimes);
+
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
-
   const userId = useSelector((state) => state.user);
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
+  const currentCategories = useSelector((state) => state.currentCategories);
+  const memoizedCategories = useMemo(
+    () => currentCategories,
+    [currentCategories]
+  );
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [IsRearrangement, setIsRearrangement] = useState(false);
   const [formData, setFormData] = useState({
@@ -93,7 +99,6 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
     rearrangement: IsRearrangement,
   });
-  // console.log("formData", formData, IsRearrangement);
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
@@ -112,7 +117,7 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
-  const memoizedCategories = useMemo(() => categories, [categories]);
+
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
     memoizedCategories?.categories?.[1]?.categories ?? []
@@ -123,10 +128,6 @@ const WorkerNewReport = () => {
   const [nutritionReviewTexts, setNutritionReviewTexts] = useState(
     memoizedCategories?.categories?.[3]?.categories ?? []
   );
-
-  // console.log("foodSafetyReviewTexts:", foodSafetyReviewTexts);
-  // console.log("checkboxStatus:", checkboxStatus);
-
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
     previousReports: yup.string().required("previous report is required"),
@@ -192,22 +193,6 @@ const WorkerNewReport = () => {
     setValue("clientId", currentClient?.id);
   }, [formData, schema]);
 
-  // * categories fetching start
-  useEffect(() => {
-    // Fetch the categories from the API and other necessary data when the component mounts
-    Promise.all([dispatch(fetchCategories()), dispatch(fetchReportsTimes())])
-      .then(() => {
-        // Handle successful fetch if needed
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        // Handle error fetching data
-        console.error("Error fetching data:", error);
-        setIsLoading(false);
-      });
-  }, [dispatch]);
-
-  // console.log(memoizedCategories);
   const findReportTimeName = (data) => {
     const reportTimeId = currentReport?.getReportTime();
     const reportTime = data.find((item) => item.id === reportTimeId);
@@ -306,7 +291,7 @@ const WorkerNewReport = () => {
       ...prevFormData,
       newGeneralCommentTopText: strippedContent,
     }));
-  }, 300);
+  }, 0);
 
   // * setting the oldReportId from selected report
   const handleReportIdAndWorkerId = (selectedReport) => {
@@ -594,8 +579,23 @@ const WorkerNewReport = () => {
     });
   };
 
+  const memoRizedCats = memoizedCategories?.categories;
+  const globalCategories = memoRizedCats
+    ? Object.values(memoRizedCats).flatMap((category) => category.categories)
+    : null;
+  // * comparing between the categories names to the ids in the forms to display it in the drawer
+  const idToNameMap = {};
+  globalCategories && formData.categorys
+    ? globalCategories?.forEach((item) => {
+        idToNameMap[item.id] = item.name;
+      })
+    : [];
+  const checkedCategories =
+    formData && formData.categorys?.map((id) => idToNameMap[id]);
+
   // * post request on the changes of the report edit
   const saveEditedReport = async (formData) => {
+    // console.log(formData);
     const bodyFormData = new FormData();
     bodyFormData.append("id", currentReport.getData("id")); //checked expected output : 19150(reportid)
     bodyFormData.append("workerId", currentReport.getData("workerId")); //checked expected output : 4069114 (userid)
@@ -651,12 +651,17 @@ const WorkerNewReport = () => {
       setIsLoading(true);
       const apiUrl = process.env.API_BASE_URL + "ajax/saveReport2.php";
       const response = await axios.post(apiUrl, bodyFormData);
-      if (response.status == 200) {
+      console.log("out");
+      if (response.status == 200 || response.status == 201) {
+        console.log(`in ,status :${response.status}`);
         currentReport.setData(
           "newGeneralCommentTopText",
           formData.newGeneralCommentTopText
         );
+        console.log("[WorkerNewReport]currentReport before:", currentReport);
         dispatch(setCurrentReport(currentReport));
+        dispatch(setCurrentCategories(formData.categorys));
+        console.log("[WorkerNewReport]currentReport after:", currentReport);
         setIsLoading(false);
       }
       return response.data;
@@ -722,20 +727,6 @@ const WorkerNewReport = () => {
     setIsDrawerOpen(isOpen);
   };
 
-  const memoRizedCats = memoizedCategories?.categories;
-  const globalCategories = memoRizedCats
-    ? Object.values(memoRizedCats).flatMap((category) => category.categories)
-    : null;
-  // * comparing between the categories names to the ids in the forms to display it in the drawer
-  const idToNameMap = {};
-  globalCategories && formData.categorys
-    ? globalCategories?.forEach((item) => {
-        idToNameMap[item.id] = item.name;
-      })
-    : [];
-  const checkedCategories =
-    formData && formData.categorys?.map((id) => idToNameMap[id]);
-
   // * paginations between categories names : Prev
   // const handlePrevCategory = () => {
   //   setCurrentCategoryIndex((prevIndex) => {
@@ -767,11 +758,12 @@ const WorkerNewReport = () => {
       }
     }
 
-    dispatch(getCurrentCategories(formData.categorys));
-    dispatch(getCurrentReport(currentReport));
+    // dispatch(getCurrentCategories(formData.categorys));
+    // dispatch(getCurrentReport(currentReport));
     dispatch(getCurrentCategory(formData.categorys[0]));
     navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
+
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {
@@ -1402,13 +1394,18 @@ const WorkerNewReport = () => {
                   <RichEditor
                     ref={richText}
                     onChange={handleContentChange}
-                    initialContentHTML="<div></div>"
-                    placeholder={
-                      "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
+                    // initialContentHTML="<div></div>"
+                    initialContentHTML={
+                      currentReport
+                        ? currentReport.getData("newGeneralCommentTopText")
+                        : "<div></div>"
                     }
-                    shouldStartLoadWithRequest={(request) => {
-                      return true;
-                    }}
+                    // placeholder={
+                    //   "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
+                    // }
+                    // shouldStartLoadWithRequest={(request) => {
+                    //   return true;
+                    // }}
                     style={{
                       minHeight: 123,
                       // direction: "ltr",

@@ -77,7 +77,7 @@ const EditExistingReport = () => {
   // ! redux stpre fetching
   const dispatch = useDispatch();
   const currentStation = useSelector((state) => state.currentStation);
-  const categories = useSelector((state) => state.categories);
+  // const categories = useSelector((state) => state.categories);
 
   const currentSubCategoryId = useSelector((state) => state.currentCategory);
   const currentCategories = useSelector((state) => state.currentCategories);
@@ -87,7 +87,11 @@ const EditExistingReport = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
-  const memoizedCategories = useMemo(() => categories, [categories]);
+  const memoizedCategories = useMemo(
+    () => currentCategories,
+    [currentCategories]
+  );
+  // const memoizedCategories = useMemo(() => categories, [categories]);
 
   const memoRizedCats = memoizedCategories?.categories;
   const globalStateCategories = memoRizedCats
@@ -109,7 +113,7 @@ const EditExistingReport = () => {
     let parentCategory = false;
     let indexSubcategory = false;
 
-    for (const [key, value] of Object.entries(categories.categories)) {
+    for (const [key, value] of Object.entries(memoizedCategories.categories)) {
       value.categories.find((subcategory, index) => {
         if (
           subcategory.id ==
@@ -122,8 +126,11 @@ const EditExistingReport = () => {
       });
     }
     return {
-      parent: categories.categories[parentCategory],
-      child: categories.categories[parentCategory].categories[indexSubcategory],
+      parent: memoizedCategories.categories[parentCategory],
+      child:
+        memoizedCategories.categories[parentCategory].categories[
+          indexSubcategory
+        ],
     };
   }, [currentCategoryIndex]);
   // console.log(findParentAndChildCategories);
@@ -234,7 +241,6 @@ const EditExistingReport = () => {
     "haveCategoriesNameForCriticalItems"
   );
 
-  // console.log("CategoriesItems", CategoriesItems);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   useEffect(() => {
     if (!isFirstLoad) {
@@ -417,7 +423,7 @@ const EditExistingReport = () => {
   };
   // * get the category type value from the categories
   const getCategory = (categoryId) => {
-    for (const [key, value] of Object.entries(categories.categories)) {
+    for (const [key, value] of Object.entries(memoizedCategories.categories)) {
       let found = value.categories.find(
         (category) => category.id == categoryId
       );
@@ -436,7 +442,7 @@ const EditExistingReport = () => {
     let parentCategory = false;
     let indexSubcategory = false;
 
-    for (const [key, value] of Object.entries(categories.categories)) {
+    for (const [key, value] of Object.entries(memoizedCategories.categories)) {
       value.categories.find((subcategory, index) => {
         if (
           subcategory.id ==
@@ -614,7 +620,7 @@ const EditExistingReport = () => {
       for (const currentReportItem of items) {
         for (let type of types) {
           // * looking for the major category base on the type so we can display its subcategories
-          const relevantCategoryToFind = categories.categories[
+          const relevantCategoryToFind = memoizedCategories.categories[
             type
           ].categories.find((el) => el.id == category.id);
           if (!relevantCategoryToFind) continue;
@@ -753,7 +759,6 @@ const EditExistingReport = () => {
       culinary,
       reportGrade,
     ];
-    // console.log("categoriesToPassSummeryScreen", categoriesToPassSummeryScreen);
     try {
       if (currentCategoryIndex === lastIndexOfCategories) {
         console.log(
@@ -780,7 +785,13 @@ const EditExistingReport = () => {
 
   // ? console log section
   // console.log(matchedNames[2], currentCategories.currentCategories);
-
+  useEffect(() => {
+    console.log(
+      "[EditExistingReport]currentReport:",
+      currentReport,
+      currentCategories.currentCategories
+    );
+  }, []);
   // ! console log end
 
   // ? arrays for flatList

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { retrieveData } from "../../Services/StorageService";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import FetchDataService from "../../Services/FetchDataService";
 import Client from "../../Components/modals/client";
@@ -15,12 +15,15 @@ import Loader from "../../utiles/Loader";
 import colors from "../../styles/colors";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
 import { setUser } from "../../store/redux/reducers/userSlice";
-
+import { setCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
+import axios from "axios";
+import { setReportsTimes } from "../../store/redux/reducers/reportsTimesSlice";
 const Home = () => {
   const { fetchData } = FetchDataService();
   const { navigateToRoute } = useScreenNavigator();
   const dispatch = useDispatch();
   const [appIsReady, setAppIsReady] = useState(false);
+
   useEffect(() => {
     async function prepare() {
       try {
@@ -47,7 +50,11 @@ const Home = () => {
           // console.log("clients[Home]:", clients);
 
           dispatch(setUser(user_id));
-
+          const responseCategories = await axios.get(
+            process.env.API_BASE_URL + "api/categories.php"
+          );
+          dispatch(setCurrentCategories(responseCategories.data.categories));
+          dispatch(setReportsTimes(responseCategories.data.reports_times));
           navigateToRoute(routes.ONBOARDING.ClientsList);
           // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
         } else {
@@ -60,7 +67,6 @@ const Home = () => {
     checkLoginStatus();
     prepare();
   }, []);
-
   const onAppLoaded = async () => {
     await SplashScreen.hideAsync();
     setTimeout(async () => {

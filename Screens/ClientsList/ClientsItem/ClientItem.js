@@ -37,6 +37,8 @@ import { getCurrentStation } from "../../../store/redux/reducers/getCurrentStati
 import { getCurrentReport } from "../../../store/redux/reducers/getCurrentReport";
 import axios from "axios";
 import Loader from "../../../utiles/Loader";
+import { setReportsTimes } from "../../../store/redux/reducers/reportsTimesSlice";
+import { setCurrentCategories } from "../../../store/redux/reducers/getCurrentCategories";
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   const contentRef = useRef();
@@ -206,9 +208,9 @@ const ClientItem = ({ client, tablePadding, logo }) => {
             // console.log(report.getSafetyGrade());
             console.log("Edit_icon");
             dispatch(getCurrentStation(report.getReportStationName()));
-            navigateToRoute(routes.ONBOARDING.WorkerNewReport);
             dispatch(getCurrentClient(client));
             dispatch(getCurrentReport(report));
+            navigateToRoute(routes.ONBOARDING.WorkerNewReport);
           },
         },
         {

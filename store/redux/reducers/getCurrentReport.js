@@ -17,6 +17,7 @@ const currentReportSlice = createSlice({
   },
 });
 
-export const { getCurrentReport } = currentReportSlice.actions;
+export const { getCurrentReport, setCurrentReport } =
+  currentReportSlice.actions;
 
 export default currentReportSlice.reducer;

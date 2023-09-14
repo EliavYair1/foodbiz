@@ -27,6 +27,7 @@ import { Controller, useForm } from "react-hook-form";
 import ReportCard from "./ReportCard";
 import { useSelector } from "react-redux";
 import { HelperText } from "react-native-paper";
+import Input from "../../../../../Components/ui/Input";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const currentReport = useSelector(
@@ -42,17 +43,17 @@ const SummeryScreen = () => {
   const positiveFeedback = currentReport.getData("positiveFeedback");
   // console.log("current Report:", file1, file2, positiveFeedback);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [summaryFormData, setsummaryFormData] = useState({});
+  const [SummeryForm, setSummeryForm] = useState({});
   const [isSchemaValid, setIsSchemaValid] = useState(false);
-  const [SummeryForm, setSummeryForm] = useState([]);
   const drawerRef = useRef();
+  const inputRef = useRef();
+
   const schema = yup.object().shape({
-    clientStationId: yup.string().required("station is required"),
     positiveFeedback: yup.string().required("positiveFeedback is required"),
-    file1: yup.string().required("file1 is required"),
-    file2: yup.string().required("file2 is required"),
-    imagePicked: yup.string().required("imagePicked is required"),
-    imagePicked2: yup.string().required("imagePicked2 is required"),
+    // file1: yup.string().required("file1 is required"),
+    // file2: yup.string().required("file2 is required"),
+    imagePicked: yup.string(),
+    imagePicked2: yup.string(),
     cameraPhoto: yup.string(),
     cameraPhoto2: yup.string(),
   });
@@ -86,20 +87,24 @@ const SummeryScreen = () => {
       ...prevFormData,
       [name]: value,
     }));
+    console.log("summaryFormData", SummeryForm);
     setIsSchemaValid(true);
+    console.log("isschemaValid", isSchemaValid);
   };
+
   useEffect(() => {
     schema
-      .validate(summaryFormData)
+      .validate(SummeryForm)
       .then(() => setIsSchemaValid(true))
       .catch((err) => {
         console.log("err:", err);
         setIsSchemaValid(false);
       });
-  }, [summaryFormData, schema]);
+  }, [SummeryForm, schema]);
+
   const sendForManagerApproval = () => {
     console.log(" נשלח למנהל");
-    console.log("summaryFormData:", summaryFormData);
+    console.log("SummeryForm:", SummeryForm);
   };
   // todo list
   // * positive feedback coming from current report
@@ -128,21 +133,28 @@ const SummeryScreen = () => {
           height={160}
           verticalSpace={16}
           summaryAndNoteContent={
-            <Controller
-              control={control}
-              name="positiveFeedback"
-              render={({
-                field: { onChange, onBlur, value },
-                fieldState: { error },
-              }) => (
-                <>
-                  <Text>{positiveFeedback}</Text>
-                  <HelperText type="error">
-                    {errors.positiveFeedback && errors.positiveFeedback.message}
-                  </HelperText>
-                </>
-              )}
-            ></Controller>
+            <>
+              <Input
+                name="positiveFeedback"
+                control={control}
+                proxyRef={inputRef}
+                activeOutlineColor={"grey"}
+                outlineColor={"grey"}
+                mode={"outlined"}
+                inputStyle={{
+                  backgroundColor: "transparent",
+                  // height: 160,
+                  // bor: 0,
+                }}
+                onChangeFunction={(value) => {
+                  handleFormChange("positiveFeedback", value);
+                }}
+                defaultValue={positiveFeedback == "" ? "hello" : "bye"} // test
+              />
+              {/* <HelperText type="error">
+                {errors.positiveFeedback && errors.positiveFeedback.message}
+              </HelperText> */}
+            </>
           }
         />
 

@@ -64,7 +64,7 @@ const ButtonGroup = ({
       console.error("Error selecting media:", error);
     }
   };
-  console.log(imagePickedField, media);
+  // console.log(imagePickedField, media);
 
   const handleFileUpload = async () => {
     try {
