@@ -77,7 +77,7 @@ const EditExistingReport = () => {
   // ! redux stpre fetching
   const dispatch = useDispatch();
   const currentStation = useSelector((state) => state.currentStation);
-  // const categories = useSelector((state) => state.categories);
+  const categories = useSelector((state) => state.categories);
 
   const currentSubCategoryId = useSelector((state) => state.currentCategory);
   const currentCategories = useSelector((state) => state.currentCategories);
@@ -87,11 +87,11 @@ const EditExistingReport = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
-  const memoizedCategories = useMemo(
-    () => currentCategories,
-    [currentCategories]
-  );
-  // const memoizedCategories = useMemo(() => categories, [categories]);
+  // const memoizedCategories = useMemo(
+  //   () => currentCategories,
+  //   [currentCategories]
+  // );
+  const memoizedCategories = useMemo(() => categories, [categories]);
 
   const memoRizedCats = memoizedCategories?.categories;
   const globalStateCategories = memoRizedCats
