@@ -10,7 +10,7 @@ import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import { Camera } from "expo-camera";
 import { Controller } from "react-hook-form";
 import * as DocumentPicker from "expo-document-picker";
-
+import { HelperText } from "react-native-paper";
 const ButtonGroup = ({
   control,
   headerText,
@@ -22,13 +22,13 @@ const ButtonGroup = ({
   imagePickedField,
   fileField,
   cameraPhotoField,
-  fileName,
   onImagePickChange,
+  handleFileUploadCallback,
 }) => {
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [imagePicked, setImagePicked] = useState(false);
-
+  const [fileSelected, setFileSelected] = useState(null);
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -47,31 +47,27 @@ const ButtonGroup = ({
 
   // console.log(CameraCaptureImageUrl);
 
-  const [media, pickMedia, mediaError] = useMediaPicker(handleFormChange);
+  const [media, pickMedia, mediaError] = useMediaPicker();
 
-  const handleImagePick = async () => {
-    try {
-      // Use your media picker (in this case, pickMedia)
-      const pickedImage = await pickMedia("image");
-      if (pickedImage) {
-        const { uri } = pickedImage;
-        onImagePickChange(uri);
-        setImagePicked(true);
-      } else {
-        console.log("Media selection canceled");
-      }
-    } catch (error) {
-      console.error("Error selecting media:", error);
+  const handleImagePick = () => {
+    const pickedImage = pickMedia("image");
+    if (pickedImage) {
+      const { uri } = pickedImage;
+      onImagePickChange(media);
+      setImagePicked(true);
+    } else {
+      console.error(`[Error] Media selection canceled due to: ${mediaError}`);
     }
   };
   // console.log(imagePickedField, media);
-
   const handleFileUpload = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
       if (result.type === "success") {
         const { uri, name, type } = result;
         console.log("Selected file:", { uri, name, type });
+        handleFileUploadCallback(uri);
+        setFileSelected(uri);
       } else {
         console.log("File selection canceled");
       }
@@ -91,9 +87,16 @@ const ButtonGroup = ({
             field: { onChange, onBlur, value },
             fieldState: { error },
           }) => (
-            <>
+            <View style={{ flexDirection: "column" }}>
               <Button
-                buttonStyle={styles.button}
+                buttonStyle={[
+                  [
+                    styles.button,
+                    {
+                      borderColor: !fileSelected ? "red" : "blue",
+                    },
+                  ],
+                ]}
                 icon={true}
                 buttonFunction={handleFileUpload}
                 iconPath={uploadIcon1}
@@ -101,12 +104,14 @@ const ButtonGroup = ({
                 buttonTextStyle={styles.buttonText}
                 buttonText={"בחירת קובץ"}
                 buttonWidth={260}
-                // errorMessage={
-                //   !imagePicked ? errors.url && errors.url.message : null
-                // }
-                errorMessage={fileUploadErrMsg}
+                errorMessage={
+                  !fileSelected
+                    ? errors.fileField && errors.fileField.message
+                    : null
+                }
+                // errorMessage={fileUploadErrMsg}
               />
-            </>
+            </View>
           )}
         />
         <Controller
@@ -116,9 +121,16 @@ const ButtonGroup = ({
             field: { onChange, onBlur, value },
             fieldState: { error },
           }) => (
-            <>
+            <View style={{ flexDirection: "column" }}>
               <Button
-                buttonStyle={styles.button}
+                buttonStyle={[
+                  [
+                    styles.button,
+                    {
+                      color: !imagePicked ? colors.redish : colors.black,
+                    },
+                  ],
+                ]}
                 icon={true}
                 buttonFunction={handleImagePick}
                 iconPath={uploadIcon2}
@@ -128,22 +140,22 @@ const ButtonGroup = ({
                 buttonWidth={260}
                 errorMessage={
                   !imagePicked
-                    ? errors.fileName && errors.fileName.message
+                    ? errors.imagePickedField && errors.imagePickedField.message
                     : null
                 }
                 // errorMessage={uploadImageErrorMsg}
               />
-            </>
+            </View>
           )}
         />
-        {imagePicked && (
+        {/* {imagePicked && (
           <View>
             <Image
               source={{ uri: media }}
               style={{ width: 100, height: 100 }}
             />
           </View>
-        )}
+        )} */}
         <View
           style={{
             flexDirection: "column",
@@ -158,7 +170,7 @@ const ButtonGroup = ({
               field: { onChange, onBlur, value },
               fieldState: { error },
             }) => (
-              <>
+              <View style={{ flexDirection: "column" }}>
                 {/* {CameraCaptureImageUrl && (
             <Image
               source={{ uri: CameraCaptureImageUrl }}
@@ -191,7 +203,7 @@ const ButtonGroup = ({
                   errorMessage={imageCaptureErrMsg}
                 />
                 {/* </Camera> */}
-              </>
+              </View>
             )}
           />
         </View>
