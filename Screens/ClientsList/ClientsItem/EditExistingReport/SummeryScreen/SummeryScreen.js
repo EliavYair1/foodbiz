@@ -50,7 +50,7 @@ const SummeryScreen = () => {
 
   const schema = yup.object().shape({
     positiveFeedback: yup.string().required("positiveFeedback is required"),
-    // file1: yup.string().required("file1 is required"),
+    file1: yup.string().required("file1 is required"),
     // file2: yup.string().required("file2 is required"),
     imagePicked: yup.string(),
     imagePicked2: yup.string(),
@@ -167,6 +167,7 @@ const SummeryScreen = () => {
             onImagePickChange={(value) =>
               handleFormChange("imagePicked", value)
             }
+            fileField={"file1"}
             fileUploadErrMsg={errors.file1 && errors.file1.message}
             // uploadImageErrorMsg={
             //   errors.imagePicked && errors.imagePicked.message
@@ -175,7 +176,6 @@ const SummeryScreen = () => {
             imageCaptureErrMsg={
               errors.cameraPhoto && errors.cameraPhoto.message
             }
-            fileField={"file1"}
             imagePickedField={"imagePicked"}
             cameraPhotoField={"cameraPhoto"}
           />

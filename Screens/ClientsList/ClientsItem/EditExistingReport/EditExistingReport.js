@@ -45,7 +45,6 @@ import Drawer from "../../../../Components/ui/Drawer";
 import { LinearGradient } from "expo-linear-gradient";
 import accordionCloseIcon from "../../../../assets/imgs/accordionCloseIndicator.png";
 import FileIcon from "../../../../assets/icons/iconImgs/FileIcon.png";
-import { fetchCategories } from "../../../../store/redux/reducers/categoriesSlice";
 import Category from "../../../../Components/modals/category";
 import ModalUi from "../../../../Components/ui/ModalUi";
 import CloseDrawerIcon from "../../../../assets/imgs/oncloseDrawerIcon.png";
@@ -77,34 +76,37 @@ const EditExistingReport = () => {
   // ! redux stpre fetching
   const dispatch = useDispatch();
   const currentStation = useSelector((state) => state.currentStation);
-  const categories = useSelector((state) => state.categories);
+  // const categories = useSelector((state) => state.categories);
 
   const currentSubCategoryId = useSelector((state) => state.currentCategory);
   const currentCategories = useSelector((state) => state.currentCategories);
+  const globalCategories = useSelector((state) => state.globalCategories);
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
-  // const memoizedCategories = useMemo(
-  //   () => currentCategories,
-  //   [currentCategories]
-  // );
-  const memoizedCategories = useMemo(() => categories, [categories]);
+
+  // const memoizedCategories = useMemo(() => categories, [categories]);
+
+  const memoizedCategories = useMemo(
+    () => globalCategories,
+    [globalCategories]
+  );
 
   const memoRizedCats = memoizedCategories?.categories;
   const globalStateCategories = memoRizedCats
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
     : null;
   // * looking for a categories names in the global state
-  const matchedNames = currentCategories.currentCategories.map(
+  const matchedNames = currentCategories.categories.map(
     (obj) => globalStateCategories.find((obj2) => obj == obj2.id).name
   );
 
   // for drawer usage
   const lastIndexOfCategories =
-    Object.keys(currentCategories.currentCategories).length - 1;
+    Object.keys(currentCategories.categories).length - 1;
   const passedDownCategoryId = currentSubCategoryId.currentCategory;
   // ! redux stpre fetching end
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
@@ -116,8 +118,7 @@ const EditExistingReport = () => {
     for (const [key, value] of Object.entries(memoizedCategories.categories)) {
       value.categories.find((subcategory, index) => {
         if (
-          subcategory.id ==
-          currentCategories.currentCategories[currentCategoryIndex]
+          subcategory.id == currentCategories.categories[currentCategoryIndex]
         ) {
           indexSubcategory = index;
           parentCategory = key;
@@ -184,7 +185,7 @@ const EditExistingReport = () => {
         const categoryName = category.name;
         const categoryType = parseInt(category.type, 10);
 
-        if (currentCategories.currentCategories.includes(categoryId)) {
+        if (currentCategories.categories.includes(categoryId)) {
           newCategoryNames[categoryType].push({
             id: categoryId,
             name: categoryName,
@@ -216,7 +217,7 @@ const EditExistingReport = () => {
     //  getting the relevent data of the categories based on the current sub Category.
     const relevantData = parsedCategoriesDataFromReport.find(
       (category) =>
-        category.id == currentCategories.currentCategories[currentCategoryIndex]
+        category.id == currentCategories.categories[currentCategoryIndex]
     );
     return relevantData.items;
   }, [currentCategoryIndex]);
@@ -380,9 +381,9 @@ const EditExistingReport = () => {
   const findDataForFlatlist = useMemo(() => {
     // if (currentReportItems.length > 0) {
     // console.log("current categories", currentCategories.currentCategories);
-    if (currentCategories.currentCategories[currentCategoryIndex] == 1) {
+    if (currentCategories.categories[currentCategoryIndex] == 1) {
       return AccordionCategoriesTemperatureList;
-    } else if (currentCategories.currentCategories[currentCategoryIndex] == 2) {
+    } else if (currentCategories.categories[currentCategoryIndex] == 2) {
       return AccordionCategoriesWeightsList;
     } else {
       return AccordionCategoriesGeneralList;
@@ -445,8 +446,7 @@ const EditExistingReport = () => {
     for (const [key, value] of Object.entries(memoizedCategories.categories)) {
       value.categories.find((subcategory, index) => {
         if (
-          subcategory.id ==
-          currentCategories.currentCategories[currentCategoryIndex]
+          subcategory.id == currentCategories.categories[currentCategoryIndex]
         ) {
           indexSubcategory = index;
           parentCategory = key;
@@ -493,7 +493,7 @@ const EditExistingReport = () => {
         const categoryName = category.name;
         const categoryType = parseInt(category.type, 10);
 
-        if (currentCategories.currentCategories.has(categoryId)) {
+        if (currentCategories.categories.has(categoryId)) {
           newCategoryNames[categoryType].push({
             id: categoryId,
             name: categoryName,
@@ -523,7 +523,7 @@ const EditExistingReport = () => {
 
   // * modal pick handler
   const handleOptionClick = (option) => {
-    const indexOfCategory = currentCategories.currentCategories.findIndex(
+    const indexOfCategory = currentCategories.categories.findIndex(
       (category) => category == option
     );
     setCurrentCategoryIndex(indexOfCategory);
@@ -558,7 +558,7 @@ const EditExistingReport = () => {
     //  getting the relevent data of the categories based on the current sub Category.
     const relevantData = CategoriesArrayOfData.find(
       (category) =>
-        category.id == currentCategories.currentCategories[currentCategoryIndex]
+        category.id == currentCategories.categories[currentCategoryIndex]
     );
     // if the current sub category is true then set me his items else send a err msg.
     if (relevantData) {
@@ -613,7 +613,7 @@ const EditExistingReport = () => {
     // * looping through the report categories data.
     parsedCategoriesDataFromReport.forEach((category) => {
       const items =
-        category.id == currentCategories.currentCategories[currentCategoryIndex]
+        category.id == currentCategories.categories[currentCategoryIndex]
           ? currentReportItemsForGrade
           : category.items;
       // * inner loop of the categories items.
@@ -683,7 +683,7 @@ const EditExistingReport = () => {
   // console.log("currentCategoryIndex:", currentCategoryIndex);
   // * post request on the changes of the report edit
   const saveReport = async () => {
-    const targetId = currentCategories.currentCategories[currentCategoryIndex];
+    const targetId = currentCategories.categories[currentCategoryIndex];
     let foundCategory = null;
     // let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
 
@@ -716,12 +716,13 @@ const EditExistingReport = () => {
       setIsLoading(true);
       const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
       const response = await axios.post(apiUrl, bodyFormData);
-      if (response.status == 200) {
+      if (response.status == 200 || response.status == 201) {
         let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
         currentReport.setData("data", updatedValues);
         currentReport.setData("newGeneralCommentTopText", content);
         dispatch(getCurrentReport(currentReport));
         setIsLoading(false);
+        navigateToRoute(routes.ONBOARDING.SummeryScreen);
       }
     } catch (error) {
       setIsLoading(false);
@@ -736,7 +737,7 @@ const EditExistingReport = () => {
       if (currentCategoryIndex === 0) {
         console.log(
           "the first of categories:",
-          currentCategories.currentCategories[currentCategoryIndex]
+          currentCategories.categories[currentCategoryIndex]
         );
         return;
       }
@@ -767,11 +768,11 @@ const EditExistingReport = () => {
         );
         console.log(
           "Reached the last category:",
-          currentCategories.currentCategories[currentCategoryIndex]
+          currentCategories.categories[currentCategoryIndex]
         );
         dispatch(setSummary(categoriesToPassSummeryScreen));
         // todo to send foward these params : positiveFeedback, grades, summeryAndNotes, file1 , file2
-        navigateToRoute(routes.ONBOARDING.SummeryScreen);
+        // navigateToRoute(routes.ONBOARDING.SummeryScreen);
         return;
       }
       setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
@@ -785,13 +786,13 @@ const EditExistingReport = () => {
 
   // ? console log section
   // console.log(matchedNames[2], currentCategories.currentCategories);
-  useEffect(() => {
-    console.log(
-      "[EditExistingReport]currentReport:",
-      currentReport,
-      currentCategories.currentCategories
-    );
-  }, []);
+  // useEffect(() => {
+  //   console.log(
+  //     "[EditExistingReport]currentReport:",
+  //     currentReport,
+  //     currentCategories.categories
+  //   );
+  // }, []);
   // ! console log end
 
   // ? arrays for flatList
@@ -835,7 +836,7 @@ const EditExistingReport = () => {
             currentReportItemsForGrade={currentReportItemsForGrade}
             majorCategory={categoryHeader}
             passedDownCategoryId={
-              currentCategories.currentCategories[currentCategoryIndex]
+              currentCategories.categories[currentCategoryIndex]
             }
             CategoriesItems={CategoriesItems}
             currentReport={currentReport}
@@ -847,12 +848,10 @@ const EditExistingReport = () => {
               // console.log("major category grade", value);
               // setCategoryGrade(value);
               // setMajorCategoryGrade(value);
-              if (
-                currentCategories.currentCategories[currentCategoryIndex] == 5
-              ) {
+              if (currentCategories.categories[currentCategoryIndex] == 5) {
                 setFoodSafety(value);
               } else if (
-                currentCategories.currentCategories[currentCategoryIndex] == 1
+                currentCategories.categories[currentCategoryIndex] == 1
               ) {
                 setCulinary(value);
               } else {

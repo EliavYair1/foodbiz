@@ -42,8 +42,6 @@ import onDragIcon from "../../assets/imgs/onDragIcon.png";
 import { debounce } from "lodash";
 import "@env";
 import axios from "axios";
-import { fetchCategories } from "../../store/redux/reducers/categoriesSlice";
-import { fetchReportsTimes } from "../../store/redux/reducers/reportsTimesSlice";
 import CheckboxItem from "./CheckboxItem/CheckboxItem";
 import Loader from "../../utiles/Loader";
 import { HelperText } from "react-native-paper";
@@ -51,14 +49,8 @@ import Drawer from "../../Components/ui/Drawer";
 import FileIcon from "../../assets/icons/iconImgs/FileIcon.png";
 import routes from "../../Navigation/routes";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
-import {
-  getCurrentCategories,
-  setCurrentCategories,
-} from "../../store/redux/reducers/getCurrentCategories";
-import {
-  getCurrentReport,
-  setCurrentReport,
-} from "../../store/redux/reducers/getCurrentReport";
+import { setCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
+import { setCurrentReport } from "../../store/redux/reducers/getCurrentReport";
 import "@env";
 import Header from "../../Components/ui/Header";
 import GoBackNavigator from "../../utiles/GoBackNavigator";
@@ -78,13 +70,17 @@ const WorkerNewReport = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
+
   const userId = useSelector((state) => state.user);
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
   const currentCategories = useSelector((state) => state.currentCategories);
+  const globalCategories = useSelector((state) => state.globalCategories);
+
   const memoizedCategories = useMemo(
-    () => currentCategories,
-    [currentCategories]
+    () => globalCategories,
+    [globalCategories]
   );
+  // console.log("currentCategories", currentCategories);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [IsRearrangement, setIsRearrangement] = useState(false);
   const [formData, setFormData] = useState({
@@ -181,7 +177,6 @@ const WorkerNewReport = () => {
     resolver: yupResolver(schema),
   });
 
-  // console.log("errors", errors);
   useEffect(() => {
     schema
       .validate(formData)
@@ -580,13 +575,13 @@ const WorkerNewReport = () => {
   };
 
   const memoRizedCats = memoizedCategories?.categories;
-  const globalCategories = memoRizedCats
+  const globalCategoriesObj = memoRizedCats
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
     : null;
   // * comparing between the categories names to the ids in the forms to display it in the drawer
   const idToNameMap = {};
-  globalCategories && formData.categorys
-    ? globalCategories?.forEach((item) => {
+  globalCategoriesObj && formData.categorys
+    ? globalCategoriesObj?.forEach((item) => {
         idToNameMap[item.id] = item.name;
       })
     : [];
@@ -658,10 +653,9 @@ const WorkerNewReport = () => {
           "newGeneralCommentTopText",
           formData.newGeneralCommentTopText
         );
-        console.log("[WorkerNewReport]currentReport before:", currentReport);
+        console.log("[WorkerNewReport]currentCategories:", currentCategories);
         dispatch(setCurrentReport(currentReport));
         dispatch(setCurrentCategories(formData.categorys));
-        console.log("[WorkerNewReport]currentReport after:", currentReport);
         setIsLoading(false);
       }
       return response.data;
@@ -670,6 +664,7 @@ const WorkerNewReport = () => {
       console.error("Error making POST request:", error);
     }
   };
+
   const postNewReport = async (formData) => {
     try {
       const response = await axios.post(

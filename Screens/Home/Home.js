@@ -18,6 +18,7 @@ import { setUser } from "../../store/redux/reducers/userSlice";
 import { setCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
 import axios from "axios";
 import { setReportsTimes } from "../../store/redux/reducers/reportsTimesSlice";
+import { setGlobalCategories } from "../../store/redux/reducers/globalCategories";
 const Home = () => {
   const { fetchData } = FetchDataService();
   const { navigateToRoute } = useScreenNavigator();
@@ -53,7 +54,7 @@ const Home = () => {
           const responseCategories = await axios.get(
             process.env.API_BASE_URL + "api/categories.php"
           );
-          dispatch(setCurrentCategories(responseCategories.data.categories));
+          dispatch(setGlobalCategories(responseCategories.data.categories));
           dispatch(setReportsTimes(responseCategories.data.reports_times));
           navigateToRoute(routes.ONBOARDING.ClientsList);
           // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
