@@ -71,19 +71,19 @@ const GradeCalculator = ({
     let itemsTotal1 = 0;
     let itemsTotal2 = 0;
     let itemsTotal3 = 0;
-    // console.log("currentReportItemsForGrade:", currentReportItemsForGrade);
+    // console.log("calculateCategoryGrade:");
     for (const item of currentReportItemsForGrade) {
       if (item.noRelevant == 1 || item.noCalculate == 1) {
         continue;
       }
       if (item.categoryReset == 1) {
         setCategoryGrade(0);
-        break;
+        return;
       }
       let categoryItem = CategoriesItems.find((el) => el.id == item.id);
       if (item.grade == 0 && categoryItem?.critical == 1) {
         setCategoryGrade(0);
-        break;
+        return;
       }
       itemsTotal++;
       if (item.grade == 1) {
