@@ -16,6 +16,7 @@ const Header = ({
         <Text style={styles.header}>{HeaderText}</Text>
         {subHeader && <Text style={styles.subheader}>{subHeaderText}</Text>}
       </View>
+
       {iconList && (
         <View style={styles.imageTextList}>
           <IconList onCategoriesIconPress={onCategoriesIconPress} />
