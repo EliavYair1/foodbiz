@@ -45,43 +45,6 @@ const FileCategoryRow = ({
     }).start();
   }, [openId, heightAnim]);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: "flex-start",
-    },
-    newReportButton: {
-      borderRadius: 100,
-      backgroundColor: colors.lightBlue,
-      paddingHorizontal: 15,
-      paddingVertical: 8,
-      pointerEvents: "auto",
-      zIndex: 10,
-    },
-    newReportButtonText: {
-      color: colors.black,
-    },
-    tablerowContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingHorizontal: 16,
-      height: 56,
-      backgroundColor: "#EEF6FF",
-    },
-    tableRowTextWrapper: {
-      flexDirection: "row-reverse",
-      alignItems: "center",
-      gap: 8,
-    },
-    tableIcon: {
-      width: 25,
-      height: 25,
-      alignSelf: "center",
-      marginLeft: 10,
-    },
-    tableRowText: {},
-  });
-
   const filesTable = [
     {
       id: 0,
@@ -257,5 +220,40 @@ const FileCategoryRow = ({
     </View>
   );
 };
-
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "flex-start",
+  },
+  newReportButton: {
+    borderRadius: 100,
+    backgroundColor: colors.lightBlue,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    pointerEvents: "auto",
+    zIndex: 10,
+  },
+  newReportButtonText: {
+    color: colors.black,
+  },
+  tablerowContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    height: 56,
+    backgroundColor: "#EEF6FF",
+  },
+  tableRowTextWrapper: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 8,
+  },
+  tableIcon: {
+    width: 25,
+    height: 25,
+    alignSelf: "center",
+    marginLeft: 10,
+  },
+  tableRowText: {},
+});
 export default FileCategoryRow;

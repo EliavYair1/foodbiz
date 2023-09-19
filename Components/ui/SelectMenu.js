@@ -136,8 +136,6 @@ const SelectMenu = ({
     },
   });
   const renderMenuItem = ({ item, idx }) => {
-    // console.log("item:", item, item[propertyName]);
-
     return (
       <TouchableOpacity
         key={item.id}

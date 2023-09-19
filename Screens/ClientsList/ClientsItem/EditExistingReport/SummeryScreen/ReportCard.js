@@ -34,28 +34,35 @@ const ReportCard = ({
   //     nutrition: nutritionGrade,
   //   });
   // };
+  console.log(foodSafetyGrade > 0 ? "aaaaa" : "bbbbb");
 
   return (
     <View style={styles.reportGradeBox}>
       <View style={styles.reportGradesWrapper}>
-        <View>
-          <Text style={styles.gradeHeader}>ציון ביקורת בטיחות מזון</Text>
-          <View style={styles.grade}>
-            <Text style={styles.gradeScore}>{foodSafetyGrade}</Text>
+        {foodSafetyGrade > 0 ? (
+          <View>
+            <Text style={styles.gradeHeader}>ציון ביקורת בטיחות מזון</Text>
+            <View style={styles.grade}>
+              <Text style={styles.gradeScore}>{foodSafetyGrade}</Text>
+            </View>
           </View>
-        </View>
-        <View>
-          <Text style={styles.gradeHeader}>ציון ביקורת בטיחות קולינארית</Text>
-          <View style={styles.grade}>
-            <Text style={styles.gradeScore}>{culinarySafetyGrade}</Text>
+        ) : null}
+        {culinarySafetyGrade > 0 ? (
+          <View>
+            <Text style={styles.gradeHeader}>ציון ביקורת בטיחות קולינארית</Text>
+            <View style={styles.grade}>
+              <Text style={styles.gradeScore}>{culinarySafetyGrade}</Text>
+            </View>
           </View>
-        </View>
-        <View>
-          <Text style={styles.gradeHeader}>ציון ביקורת תזונה</Text>
-          <View style={styles.grade}>
-            <Text style={styles.gradeScore}>{nutritionGrade}</Text>
+        ) : null}
+        {nutritionGrade > 0 ? (
+          <View>
+            <Text style={styles.gradeHeader}>ציון ביקורת תזונה</Text>
+            <View style={styles.grade}>
+              <Text style={styles.gradeScore}>{nutritionGrade}</Text>
+            </View>
           </View>
-        </View>
+        ) : null}
       </View>
       <View style={styles.reportGradeWrapper}>
         <Text style={styles.gradeHeader}>ציון לדוח</Text>

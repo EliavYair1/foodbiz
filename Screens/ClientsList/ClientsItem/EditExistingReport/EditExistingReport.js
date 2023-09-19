@@ -523,6 +523,9 @@ const EditExistingReport = () => {
             marginBottom: 16,
             marginTop: 16,
           }}
+          onBackPress={() => {
+            debounce(saveReport(), 300);
+          }}
         />
         <View style={styles.headerWrapper}>
           <Header

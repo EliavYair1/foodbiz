@@ -201,10 +201,11 @@ const WorkerNewReport = () => {
 
   const findReportTimeName = (data) => {
     const reportTimeId = currentReport?.getReportTime();
+
     const reportTime = data.find((item) => item.id === reportTimeId);
     return reportTime ? reportTime.name : "";
   };
-
+  // console.log("reportsTimes", reportsTimes);
   //  * edit mode existing current report initialization
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
@@ -222,7 +223,7 @@ const WorkerNewReport = () => {
       setAccompanySelected(currentReport.getData("accompany"));
       setCurrentReportDate(currentReport.getData("timeOfReport"));
       setCurrentReportTime(reportTimeName);
-      handleContentChange(currentReport.getData("newGeneralCommentTopText"));
+      // handleContentChange(currentReport.getData("newGeneralCommentTopText"));
       handleCheckboxStatusChange(
         parsedArrayOfStr(currentReport.getData("categorys"))
       );
@@ -289,15 +290,17 @@ const WorkerNewReport = () => {
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
     // console.log(content);
-    const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
-    richText.current?.setContentHTML(strippedContent);
-    setValue("newGeneralCommentTopText", strippedContent);
+    // console.log(content);
+    // const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
+
+    // richText.current?.setContentHTML(strippedContent);
+    setValue("newGeneralCommentTopText", content);
     trigger("newGeneralCommentTopText");
     setFormData((prevFormData) => ({
       ...prevFormData,
-      newGeneralCommentTopText: strippedContent,
+      newGeneralCommentTopText: content,
     }));
-  }, 0);
+  }, 300);
 
   // * setting the oldReportId from selected report
   const handleReportIdAndWorkerId = (selectedReport) => {
@@ -460,14 +463,11 @@ const WorkerNewReport = () => {
   // * checking if the report parameters match to their state true / false
   const handleSwitchStateChange = (selectedReport) => {
     const newSwitchStates = {
-      haveFine: selectedReport.getData("haveFine") ==  1,
-      haveAmountOfItems:
-        selectedReport.getData("haveAmountOfItems") == 1,
+      haveFine: selectedReport.getData("haveFine") == 1,
+      haveAmountOfItems: selectedReport.getData("haveAmountOfItems") == 1,
       haveSafetyGrade: selectedReport.getData("haveSafetyGrade") == 1,
-      haveCulinaryGrade:
-        selectedReport.getData("haveCulinaryGrade") == 1,
-      haveNutritionGrade:
-        selectedReport.getData("haveNutritionGrade") == 1,
+      haveCulinaryGrade: selectedReport.getData("haveCulinaryGrade") == 1,
+      haveNutritionGrade: selectedReport.getData("haveNutritionGrade") == 1,
       haveCategoriesNameForCriticalItems:
         selectedReport.getData("haveCategoriesNameForCriticalItems") == 1,
     };
@@ -512,6 +512,7 @@ const WorkerNewReport = () => {
   //  * handling report time
   const handleReportTime = (selectedReport) => {
     const reportTimeDisplayed = selectedReport.getData("reportTime");
+
     setValue("reportTime", reportTimeDisplayed);
     trigger("reportTime");
   };
@@ -544,6 +545,8 @@ const WorkerNewReport = () => {
         setFormData((prevFormData) => ({
           ...prevFormData,
           oldReportId: "0",
+          accompany: "",
+          reportTime: "",
         }));
         Object.entries(newSwitchStates).forEach(([key, value]) => {
           setValue(key, value ? 1 : 0);
@@ -552,7 +555,6 @@ const WorkerNewReport = () => {
         const selectedReport = filteredStationsResult.find(
           (report) => report.getData("timeOfReport") === value
         );
-
         if (selectedReport) {
           handleReportIdAndWorkerId(selectedReport);
           const parsedSelectedReportCategory =
@@ -599,7 +601,7 @@ const WorkerNewReport = () => {
     formData && formData.categorys?.map((id) => idToNameMap[id]);
 
   // * post request on the changes of the report edit
-  const saveEditedReport = async (formData) => {
+  const saveEditedReport = async () => {
     // console.log(formData);
     const bodyFormData = new FormData();
     bodyFormData.append("id", currentReport.getData("id")); //checked expected output : 19150(reportid)
@@ -658,12 +660,22 @@ const WorkerNewReport = () => {
       const response = await axios.post(apiUrl, bodyFormData);
       console.log("out");
       if (response.status == 200 || response.status == 201) {
-        console.log(`in ,status :${response.status}`);
         currentReport.setData(
           "newGeneralCommentTopText",
           formData.newGeneralCommentTopText
         );
-        console.log("[WorkerNewReport]currentCategories:", currentCategories);
+
+        const responseClients = await fetchData(
+          process.env.API_BASE_URL + "api/clients.php",
+          { id: userId }
+        );
+        if (responseClients.success) {
+          let clients = [];
+          responseClients.data.forEach((element) => {
+            clients.push(new Client(element));
+          });
+          dispatch(setClients({ clients: clients }));
+        }
         dispatch(setCurrentReport(currentReport));
         dispatch(setCurrentCategories(formData.categorys));
         setIsLoading(false);
@@ -768,7 +780,7 @@ const WorkerNewReport = () => {
     // });
     if (currentReport) {
       try {
-        const response = await saveEditedReport(formData);
+        const response = await saveEditedReport();
         console.log("edit post response:", response);
       } catch (error) {
         console.error("Error posting data:", error);
@@ -781,6 +793,7 @@ const WorkerNewReport = () => {
     navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
   // console.log(currentReport.getData("viewUrl"));
+  // console.log(currentReportTime);
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {
@@ -1017,7 +1030,8 @@ const WorkerNewReport = () => {
               control={control}
               selectWidth={240}
               optionsHeight={200}
-              defaultText={"בחירה"}
+              defaultText={currentReport ? currentReportTime : "בחירה"}
+              displayedValue={currentReportTime}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",
@@ -1034,15 +1048,13 @@ const WorkerNewReport = () => {
               name={"reportTime"}
               errorMessage={errors.reportTime && errors.reportTime.message}
               onChange={(value) => {
-                handleFormChange("reportTime", value.id);
                 setCurrentReportTime(value.id);
+                handleFormChange("reportTime", value.id);
                 setValue("reportTime");
                 trigger("reportTime");
                 console.log("reportTime:", value.id);
               }}
               propertyName={"name"}
-              // defaultValue={currentReportTime}
-              displayedValue={currentReportTime}
               returnObject={true}
             />
           ),
@@ -1415,7 +1427,7 @@ const WorkerNewReport = () => {
                     initialContentHTML={
                       currentReport
                         ? currentReport.getData("newGeneralCommentTopText")
-                        : "<div></div>"
+                        : ""
                     }
                     // placeholder={
                     //   "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
@@ -1508,7 +1520,6 @@ const WorkerNewReport = () => {
     //   // saveReport();
     // }
   };
-
   // console.log(foodSafetyReviewTexts,culinaryReviewTexts,nutritionReviewTexts);
   return (
     <>
@@ -1522,7 +1533,16 @@ const WorkerNewReport = () => {
           edges={[]}
         >
           <View style={styles.headerWrapper}>
-            <GoBackNavigator text={"חזרה לרשימת הלקוחות"} />
+            <GoBackNavigator
+              text={"חזרה לרשימת הלקוחות"}
+              onBackPress={async () => {
+                if (currentReport) {
+                  let res = await saveEditedReport();
+
+                  console.log("back press response: ", res);
+                }
+              }}
+            />
             <View
               style={{ flexDirection: "row", justifyContent: "space-between" }}
             >
