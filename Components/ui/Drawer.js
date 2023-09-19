@@ -59,12 +59,8 @@ const Drawer = (
     onToggle(!isOpen);
   };
 
-  const closeDrawer = () => {
-    setIsOpen(false);
-  };
-
   useImperativeHandle(ref, () => ({
-    closeDrawer,
+    toggleDrawer
   }));
 
   const drawerStyle = {
@@ -79,10 +75,6 @@ const Drawer = (
     <>
       {Platform.OS === "ios" ? (
         <SafeAreaView style={styles.container}>
-          <View
-            style={[styles.overlay, { zIndex: isOpen ? 1 : -1 }]}
-            onTouchEnd={toggleDrawer}
-          />
           <Animated.View style={[styles.drawer, drawerStyle]} ref={ref}>
             {header}
             <View style={[{ width: "100%" }, contentStyling ?? ""]}>
@@ -100,10 +92,6 @@ const Drawer = (
         </SafeAreaView>
       ) : (
         <View style={styles.container}>
-          <View
-            style={[styles.overlay, { zIndex: isOpen ? 1 : -1 }]}
-            onTouchEnd={toggleDrawer}
-          />
           <Animated.View style={[styles.drawer, drawerStyle]} ref={ref}>
             {header}
             <View style={[{ width: "100%" }, contentStyling ?? ""]}>
@@ -131,9 +119,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-  },
-  overlay: {
-    height: 76,
   },
   drawer: {
     backgroundColor: "white",

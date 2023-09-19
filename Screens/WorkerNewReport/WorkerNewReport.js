@@ -460,18 +460,16 @@ const WorkerNewReport = () => {
   // * checking if the report parameters match to their state true / false
   const handleSwitchStateChange = (selectedReport) => {
     const newSwitchStates = {
-      haveFine: selectedReport.getData("haveFine") == 0 ? 0 : 1,
+      haveFine: selectedReport.getData("haveFine") ==  1,
       haveAmountOfItems:
-        selectedReport.getData("haveAmountOfItems") == 0 ? 0 : 1,
-      haveSafetyGrade: selectedReport.getData("haveSafetyGrade") == 0 ? 0 : 1,
+        selectedReport.getData("haveAmountOfItems") == 1,
+      haveSafetyGrade: selectedReport.getData("haveSafetyGrade") == 1,
       haveCulinaryGrade:
-        selectedReport.getData("haveCulinaryGrade") == 0 ? 0 : 1,
+        selectedReport.getData("haveCulinaryGrade") == 1,
       haveNutritionGrade:
-        selectedReport.getData("haveNutritionGrade") == 0 ? 0 : 1,
+        selectedReport.getData("haveNutritionGrade") == 1,
       haveCategoriesNameForCriticalItems:
-        selectedReport.getData("haveCategoriesNameForCriticalItems") == 0
-          ? 0
-          : 1,
+        selectedReport.getData("haveCategoriesNameForCriticalItems") == 1,
     };
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -1582,73 +1580,6 @@ const WorkerNewReport = () => {
                         flexDirection: "row",
                       }}
                     >
-                      {formData &&
-                        formData.categorys &&
-                        formData.categorys[0] && (
-                          <TouchableOpacity
-                            // onPress={handlePrevCategory}
-                            style={{
-                              // alignSelf: "center",
-                              // justifyContent: "flex-end",
-                              // marginLeft: "auto",
-                              flexDirection: "row",
-                              gap: 5,
-                              alignItems: "center",
-                              // width: "30%",
-                            }}
-                          >
-                            {/* <Image
-                              source={accordionCloseIcon}
-                              style={{
-                                width: 20,
-                                height: 20,
-                                transform: [{ rotate: "180deg" }],
-                              }}
-                            />
-                            <Text style={styles.categoryDirButton}>
-                              הקטגוריה הקודמת:{" "}
-                              {
-                                checkedCategoryNameById[
-                                  currentCategoryIndex - 1
-                                ]?.name
-                              }
-                            </Text> */}
-                          </TouchableOpacity>
-                        )}
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          alignSelf: "center",
-                          textAlign: "center",
-                          // width: "30%",
-                          flexGrow: 1,
-                          gap: 12,
-                          marginLeft:
-                            formData &&
-                            formData.categorys &&
-                            formData.categorys[0]
-                              ? 180
-                              : 0,
-                        }}
-                      >
-                        <Image
-                          source={FileIcon}
-                          style={{ width: 24, height: 24 }}
-                        />
-                        <Text
-                          style={{
-                            justifyContent: "center",
-                            alignSelf: "center",
-                            color: colors.white,
-                            fontSize: 24,
-                            fontFamily: fonts.ABold,
-                          }}
-                        >
-                          תמצית והערות
-                        </Text>
-                      </View>
                       {formData &&
                         formData.categorys &&
                         formData.categorys[0] && (

@@ -8,7 +8,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import ScreenWrapper from "../../../../../utiles/ScreenWrapper";
 import GoBackNavigator from "../../../../../utiles/GoBackNavigator";
 import Header from "../../../../../Components/ui/Header";
@@ -28,8 +28,16 @@ import ReportCard from "./ReportCard";
 import { useSelector } from "react-redux";
 import { HelperText } from "react-native-paper";
 import Input from "../../../../../Components/ui/Input";
+import SummaryDrawer from "../innerComponents/SummeryDrawer";
+import useScreenNavigator from "../../../../../Hooks/useScreenNavigator";
+
+
+
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
+  const { navigateTogoBack } = useScreenNavigator();
+
+
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
@@ -51,6 +59,14 @@ const SummeryScreen = () => {
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const drawerRef = useRef();
   const inputRef = useRef();
+  const [content, setContent] = useState("");
+  const globalCategories = useSelector((state) => state.globalCategories);
+
+  const memoizedCategories = useMemo(
+    () => globalCategories,
+    [globalCategories]
+  );
+
 
   const schema = yup.object().shape({
     positiveFeedback: yup.string().required("positiveFeedback is required"),
@@ -247,54 +263,13 @@ const SummeryScreen = () => {
           alignSelf: "center",
         }}
       >
-        <Drawer
-          ref={drawerRef}
-          closeDrawer={closeDrawer}
-          content={
-            <LinearGradient
-              colors={["#37549D", "#26489F"]}
-              start={[0, 0]}
-              end={[1, 0]}
-              style={{
-                width: "100%",
-                padding: 16,
-                height: 76,
-                zIndex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  alignSelf: "center",
-                  textAlign: "center",
-                  width: "40%",
 
-                  gap: 12,
-                }}
-              >
-                <Image source={FileIcon} style={{ width: 24, height: 24 }} />
-                <Text
-                  style={{
-                    justifyContent: "center",
-                    alignSelf: "center",
-                    color: colors.white,
-                    fontSize: 24,
-                    fontFamily: fonts.ABold,
-                  }}
-                >
-                  תמצית והערות
-                </Text>
-              </View>
-            </LinearGradient>
-          }
-          height={0}
-          onToggle={handleDrawerToggle}
-          contentStyling={{ padding: 0 }}
-        />
+        <SummaryDrawer
+          onPrevCategory={navigateTogoBack}
+          prevCategoryText={"לקטגוריה הקודמת"}
+            onSetContent={(value) => setContent(value)}
+            memoizedCategories={memoizedCategories}
+         />
       </SafeAreaView>
     </ScreenWrapper>
   );

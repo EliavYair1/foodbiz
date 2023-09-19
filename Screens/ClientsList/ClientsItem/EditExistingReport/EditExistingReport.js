@@ -1,73 +1,35 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  TouchableOpacity,
-  Button,
-  ScrollView,
-  Switch,
-  KeyboardAvoidingView,
-  Dimensions,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ScreenWrapper from "../../../../utiles/ScreenWrapper";
 import useScreenNavigator from "../../../../Hooks/useScreenNavigator";
 import fonts from "../../../../styles/fonts";
 import colors from "../../../../styles/colors";
-import ImageText from "./innerComponents/ImageText";
 import { FlatList } from "react-native-gesture-handler";
-import uuid from "uuid-random";
 import Loader from "../../../../utiles/Loader";
-import ReportGrade from "./innerComponents/ReportGrade";
 import CategoryAccordion from "./innerComponents/CategoryAccordion";
-import { Divider } from "react-native-paper";
-import CheckboxItem from "../../../WorkerNewReport/CheckboxItem/CheckboxItem";
-import Input from "../../../../Components/ui/Input";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import SelectMenu from "../../../../Components/ui/SelectMenu";
 import DatePicker from "../../../../Components/ui/datePicker";
+import useMediaPicker from "../../../../Hooks/useMediaPicker";
 import CategoryAccordionItem from "./innerComponents/CategoryAccordionItem";
 import CategoryWeightsAccordionItem from "./innerComponents/CategoryWeightsAccordionItem";
 import CategoryTempAccordionItem from "./innerComponents/CategoryTempAccordionItem";
-import Drawer from "../../../../Components/ui/Drawer";
-import { LinearGradient } from "expo-linear-gradient";
-import accordionCloseIcon from "../../../../assets/imgs/accordionCloseIndicator.png";
-import FileIcon from "../../../../assets/icons/iconImgs/FileIcon.png";
-import Category from "../../../../Components/modals/category";
 import ModalUi from "../../../../Components/ui/ModalUi";
-import CloseDrawerIcon from "../../../../assets/imgs/oncloseDrawerIcon.png";
-import { debounce, get, result } from "lodash";
-import {
-  RichEditor,
-  RichToolbar,
-  actions,
-} from "react-native-pell-rich-editor";
-import ColorPicker from "react-native-wheel-color-picker";
-import SummaryAndNote from "./innerComponents/SummaryAndNote";
-import CategoryItemName from "./innerComponents/categoryItemName";
 import "@env";
 
 import axios from "axios";
 import { getCurrentReport } from "../../../../store/redux/reducers/getCurrentReport";
 
 import routes from "../../../../Navigation/routes";
-import { getCurrentCategory } from "../../../../store/redux/reducers/getCurrentCategory";
 import GradeCalculator from "./innerComponents/GradeCalculator";
-import IconList from "./innerComponents/IconList";
 import GoBackNavigator from "../../../../utiles/GoBackNavigator";
 import Header from "../../../../Components/ui/Header";
 import { setSummary } from "../../../../store/redux/reducers/summerySlice";
+import SummaryDrawer from "./innerComponents/SummeryDrawer";
 
 const EditExistingReport = () => {
   // console.log("EditExistingReport");
@@ -134,17 +96,11 @@ const EditExistingReport = () => {
     };
   }, [currentCategoryIndex]);
   // console.log(findParentAndChildCategories);
-  const drawerRef = useRef(null);
-  const richText = useRef();
   const [categoryGrade, setCategoryGrade] = useState(0);
-  const [majorCategoryGrade, setMajorCategoryGrade] = useState(0);
   const [reportGrade, setReportGrade] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [relevantCheckboxItems, setRelevantCheckboxItems] = useState([]);
-  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [selectedModalCategory, setSelectedModalCategory] = useState([]);
-  const [colorSelected, setColorSelected] = useState(null);
   const [foodSafety, setFoodSafety] = useState(0);
   const [culinary, setCulinary] = useState(0);
   const [nutrition, setNutrition] = useState(0);
@@ -158,11 +114,8 @@ const EditExistingReport = () => {
   });
   const {
     control,
-    handleSubmit,
     formState: { errors },
-    getValues,
     setValue,
-    watch,
     trigger,
   } = useForm({
     resolver: yupResolver(schema),
@@ -231,15 +184,8 @@ const EditExistingReport = () => {
     findParentAndChildCategories.child.type
   );
   const [content, setContent] = useState("");
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const haveFine = currentReport.getData("haveFine");
-  const haveSafetyGrade = currentReport.getData("haveSafetyGrade");
-  const haveCulinaryGrade = currentReport.getData("haveCulinaryGrade");
-  const haveNutritionGrade = currentReport.getData("haveNutritionGrade");
-  const haveCategoriesNameForCriticalItems = currentReport.getData(
-    "haveCategoriesNameForCriticalItems"
-  );
 
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   useEffect(() => {
@@ -421,99 +367,6 @@ const EditExistingReport = () => {
       }, delay);
     };
   };
-  // * get the category type value from the categories
-  const getCategory = (categoryId) => {
-    for (const [key, value] of Object.entries(memoizedCategories.categories)) {
-      let found = value.categories.find(
-        (category) => category.id == categoryId
-      );
-      if (found) {
-        // console.log("found", found);
-        return found;
-      }
-    }
-    return false;
-  };
-
-  // console.log(findParentAndChildCategories);
-  // todo need to verify activity
-  // * getting the desired category information to display
-  const desiredCategory = () => {
-    let parentCategory = false;
-    let indexSubcategory = false;
-
-    for (const [key, value] of Object.entries(memoizedCategories.categories)) {
-      value.categories.find((subcategory, index) => {
-        if (
-          subcategory.id == currentCategories.categories[currentCategoryIndex]
-        ) {
-          indexSubcategory = index;
-          parentCategory = key;
-          return subcategory;
-        }
-      });
-    }
-    // setCategoriesItems(
-    //   categories.categories[parentCategory].categories[indexSubcategory].items
-    // );
-    // setCategorySubHeader(
-    //   categories.categories[parentCategory].categories[indexSubcategory].name
-    // );
-    // setCategoryHeader(categories.categories[parentCategory].name);
-    // setCategoryType(
-    //   categories.categories[parentCategory].categories[indexSubcategory].type
-    // );
-  };
-  // useEffect(() => {
-  //   desiredCategory();
-  // }, [currentCategoryIndex]);
-
-  // useEffect(() => {
-  //   dispatch(fetchCategories());
-  // }, [dispatch]);
-
-  // console.log(findCategoriesNames);
-  //  * 1. checking if the ids of the categories match to the selected report
-  // *  2.  sorting them by type to their right location based on their parent category
-  // todo need to verify activity
-  const handleCheckboxStatusChange = () => {
-    const globalStateCategories = memoRizedCats
-      ? Object.values(memoRizedCats).flatMap((category) => category.categories)
-      : null;
-
-    let newCategoryNames = {
-      1: [],
-      2: [],
-      3: [],
-    };
-    if (globalStateCategories) {
-      globalStateCategories.forEach((category) => {
-        const categoryId = parseInt(category.id, 10);
-        const categoryName = category.name;
-        const categoryType = parseInt(category.type, 10);
-
-        if (currentCategories.categories.has(categoryId)) {
-          newCategoryNames[categoryType].push({
-            id: categoryId,
-            name: categoryName,
-          });
-        }
-      });
-    }
-    setCategoryNames(newCategoryNames);
-    // setCheckboxStatus(newCheckboxStatus);
-  };
-
-  // useEffect(() => {
-  //   console.log("inside", currentCategories);
-  //   if (currentCategories) {
-  //     // const categoryIds = currentCategories.currentCategories;
-  //     // const categorySet = new Set(categoryIds);
-  //     handleCheckboxStatusChange();
-  //   } else {
-  //     console.log("currentCategories is not a valid Set or is empty.");
-  //   }
-  // }, [currentCategories]);
 
   // * categories picker close function
   const handleModalClose = () => {
@@ -536,148 +389,9 @@ const EditExistingReport = () => {
 
   // ? random functions
 
-  // * form submit function
-  const onSubmitForm = () => {
-    // console.log("form values:", getValues());
-    if (isFormSubmitted) {
-      console.log("form submitted");
-    }
-  };
   // ! random function end
 
   // todo need to verify
-  // * finding the current report data based on the category id from the report edit mode.
-  const getRelevantReportData = (data) => {
-    //  parsing the data.
-    if (!data) {
-      console.log("No data provided");
-      return;
-    }
-    const CategoriesArrayOfData = JSON.parse(data);
-    //  getting the relevent data of the categories based on the current sub Category.
-    const relevantData = CategoriesArrayOfData.find(
-      (category) =>
-        category.id == currentCategories.categories[currentCategoryIndex]
-    );
-    // if the current sub category is true then set me his items else send a err msg.
-    if (relevantData) {
-      setCurrentReportItemsForGrade(relevantData.items);
-      setCurrentReportItems(relevantData.items);
-    } else {
-      console.log("Failed to find Relevant Data");
-    }
-  };
-
-  //  * passing the data from the current report and storing it in the state in the getRelevantReportData function.
-  // useEffect(() => {
-  //   getRelevantReportData(categoriesDataFromReport);
-  // }, [currentCategoryIndex]);
-
-  // ?  summeryAndNotesManager drawer logic
-  // * drawer handler
-  const handleDrawerToggle = (isOpen) => {
-    setIsDrawerOpen(isOpen);
-  };
-
-  const closeDrawer = () => {
-    if (drawerRef.current) {
-      drawerRef.current.closeDrawer();
-      setIsDrawerOpen(false);
-    }
-  };
-
-  // * newGeneralCommentTopText drawer change handler
-  const handleContentChange = debounce((content) => {
-    // console.log("content:", content);
-    const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
-    richText.current?.setContentHTML(strippedContent);
-    setContent(content);
-  }, 300);
-
-  // * newGeneralCommentTopText color picker
-  const handleCustomAction = () => {
-    setColorSelected(!colorSelected);
-    console.log("Custom action triggered");
-  };
-  useEffect(() => {
-    if (content == "") {
-      handleContentChange(currentReport.getData("newGeneralCommentTopText"));
-    }
-  }, []);
-
-  // * summery and notes drawer logic
-  const summeryAndNotesManager = (types, condition) => {
-    let commentGroups = { critical: [], severe: [], normal: [] };
-    // const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
-    // * looping through the report categories data.
-    parsedCategoriesDataFromReport.forEach((category) => {
-      const items =
-        category.id == currentCategories.categories[currentCategoryIndex]
-          ? currentReportItemsForGrade
-          : category.items;
-      // * inner loop of the categories items.
-      for (const currentReportItem of items) {
-        for (let type of types) {
-          // * looking for the major category base on the type so we can display its subcategories
-          const relevantCategoryToFind = memoizedCategories.categories[
-            type
-          ].categories.find((el) => el.id == category.id);
-          if (!relevantCategoryToFind) continue;
-          // * looking the relevent category in the items based on their id's.
-          const categoriesMatchReportId = relevantCategoryToFind.items.find(
-            (categoryItem) => categoryItem.id == currentReportItem.id
-          );
-
-          // * checking if the conditions is true base on
-          if (condition(category, currentReportItem)) {
-            let comment = currentReportItem.comment;
-
-            if (
-              currentReportItem.image ||
-              currentReportItem.image2 ||
-              currentReportItem.image3
-            ) {
-              comment += " - מצורפת תמונה";
-            }
-
-            if (
-              categoriesMatchReportId &&
-              categoriesMatchReportId.critical == 1 &&
-              currentReportItem.grade == 0
-            ) {
-              if (haveCategoriesNameForCriticalItems == 1) {
-                comment = (
-                  <Text style={{ color: "red" }}>
-                    {comment}
-                    <Text style={{ fontFamily: fonts.ABold }}>
-                      {" "}
-                      *הקטגוריה {getCategory(category.id).name} התאפסה
-                    </Text>
-                  </Text>
-                );
-              }
-
-              commentGroups.critical.push(comment);
-            } else if (
-              categoriesMatchReportId &&
-              categoriesMatchReportId.critical == 0 &&
-              currentReportItem.grade == 0
-            ) {
-              commentGroups.severe.push(comment);
-            } else {
-              commentGroups.normal.push(comment);
-            }
-          }
-        }
-      }
-    });
-
-    return [
-      ...commentGroups.critical,
-      ...commentGroups.severe,
-      ...commentGroups.normal,
-    ];
-  };
 
   // console.log("currentCategoryIndex:", currentCategoryIndex);
   // * post request on the changes of the report edit
@@ -737,6 +451,8 @@ const EditExistingReport = () => {
           "the first of categories:",
           currentCategories.categories[currentCategoryIndex]
         );
+
+        navigateToRoute(routes.ONBOARDING.WorkerNewReport);
         return;
       }
       setCurrentCategoryIndex((prevIndex) => prevIndex - 1);
@@ -783,22 +499,6 @@ const EditExistingReport = () => {
     }
   };
   // ! drawer logic end
-
-  // ? console log section
-  // console.log(matchedNames[2], currentCategories.currentCategories);
-  // useEffect(() => {
-  //   console.log(
-  //     "[EditExistingReport]currentReport:",
-  //     currentReport,
-  //     currentCategories.categories
-  //   );
-  // }, []);
-  // ! console log end
-
-  // ? arrays for flatList
-
-  // todo optimize memorized performance
-  // * define a function to select the appropriate array based on the category ID
 
   const renderItem = ({ item }) => {
     // console.log("Rendering item:", item.id);
@@ -910,398 +610,23 @@ const EditExistingReport = () => {
           // bottom: 0,
         }}
       >
-        <Drawer
-          header={
-            <LinearGradient
-              colors={["#37549D", "#26489F"]}
-              start={[0, 0]}
-              end={[1, 0]}
-              style={{ width: "100%", padding: 16, height: 76, zIndex: 1 }}
-            >
-              <View
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  flexDirection: "row",
-                }}
-              >
-                {isDrawerOpen && (
-                  <TouchableOpacity onPress={() => closeDrawer()}>
-                    <Image
-                      source={CloseDrawerIcon}
-                      style={{ width: 20, height: 20 }}
-                    />
-                  </TouchableOpacity>
-                )}
-
-                {!isDrawerOpen && (
-                  <TouchableOpacity
-                    onPress={prevCategory}
-                    style={{
-                      alignSelf: "center",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 5,
-                    }}
-                  >
-                    <Image
-                      source={accordionCloseIcon}
-                      style={{
-                        width: 20,
-                        height: 20,
-                        transform: [{ rotate: "180deg" }],
-                      }}
-                    />
-
-                    <Text style={styles.categoryDirButton}>
-                      הקטגוריה הקודמת:
-                      {currentCategoryIndex == 0
-                        ? ""
-                        : matchedNames[currentCategoryIndex - 1]}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    textAlign: "center",
-                    flex: 1,
-                    gap: 12,
-                  }}
-                >
-                  <Image source={FileIcon} style={{ width: 24, height: 24 }} />
-                  <Text
-                    style={{
-                      justifyContent: "center",
-                      alignSelf: "center",
-                      color: colors.white,
-                      fontSize: 24,
-                      fontFamily: fonts.ABold,
-                    }}
-                  >
-                    תמצית והערות
-                  </Text>
-                </View>
-                {/* {formData && formData.categories && formData.categories[0] && ( */}
-                {!isDrawerOpen && (
-                  <TouchableOpacity
-                    onPress={nextCategory}
-                    style={{
-                      alignSelf: "center",
-                      flexDirection: "row",
-                      gap: 5,
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text style={styles.categoryDirButton}>
-                      הקטגוריה הבאה:{" "}
-                      {lastIndexOfCategories == currentCategoryIndex
-                        ? "למסך סיכום"
-                        : matchedNames[currentCategoryIndex + 1]}
-                    </Text>
-                    <Image
-                      source={accordionCloseIcon}
-                      style={{ width: 20, height: 20 }}
-                    />
-                  </TouchableOpacity>
-                )}
-
-                {/* )} */}
-              </View>
-            </LinearGradient>
+        <SummaryDrawer
+          onPrevCategory={prevCategory}
+          prevCategoryText={
+            currentCategoryIndex == 0
+              ? "למסך הגדרות"
+              : "הקטגוריה הקודמת: " + matchedNames[currentCategoryIndex - 1]
           }
-          content={[
-            <SummaryAndNote
-              height={207}
-              header={"תמצית הדוח"}
-              summaryAndNoteContent={
-                <View
-                  style={{
-                    flex: 1,
-                    width: "100%",
-                    marginTop: 20,
-                    height: "100%",
-                    direction: "rtl",
-                    paddingHorizontal: 16,
-                  }}
-                >
-                  <View
-                    style={{
-                      backgroundColor: "#D3E0FF",
-                      width: "100%",
-                      alignItems: "flex-start",
-                      // marginBottom: 200,
-                      position: "relative",
-                      zIndex: 3,
-                    }}
-                  >
-                    <RichToolbar
-                      editor={richText}
-                      selectedButtonStyle={{ backgroundColor: "#baceff" }}
-                      unselectedButtonStyle={{ backgroundColor: "#D3E0FF" }}
-                      iconTint="#000000"
-                      selectedIconTint="#000000"
-                      actions={[
-                        actions.insertOrderedList,
-                        actions.insertBulletsList,
-                        actions.setUnderline,
-                        actions.setItalic,
-                        actions.setBold,
-                        "custom",
-                      ]}
-                      // onPressAddImage={onPressAddImage}
-                      // onAction={onAction} // Add the onAction prop for custom actions
-                      iconMap={{
-                        ["custom"]: ({}) => <Text>C</Text>,
-                      }}
-                      custom={handleCustomAction}
-                    />
-                  </View>
-                  {colorSelected && (
-                    <View
-                      style={{
-                        direction: "ltr",
-                        width: 200,
-                        position: "absolute",
-                        top: 20,
-                        zIndex: 3,
-                      }}
-                    >
-                      <ColorPicker
-                        onColorChange={(color) => {
-                          console.log(color);
-                          richText.current?.setForeColor(color);
-                        }}
-                        sliderSize={20}
-                        thumbSize={60}
-                        gapSize={5}
-                        // noSnap={true}
-                        color="#000000"
-                        palette={[
-                          "#000000",
-                          "#ffff00",
-                          "#0000ff",
-                          "#ff0000",
-                          "#00ff00",
-                        ]}
-                        swatches={true}
-                      />
-                    </View>
-                  )}
-                  <ScrollView
-                    style={{
-                      // flex: Platform.OS === "ios" ? 1 : 0,
-                      flex: 1,
-                      // direction: "ltr",
-                      // direction: "rtl",
-                      overflow: "visible",
-                      height: "100%",
-                      minHeight: 250,
-                    }}
-                  >
-                    <KeyboardAvoidingView
-                      behavior={Platform.OS === "ios" ? "padding" : "height"}
-                      style={{ flex: 1 }}
-                    >
-                      <RichEditor
-                        ref={richText}
-                        onChange={handleContentChange}
-                        initialContentHTML={content}
-                        placeholder={
-                          "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
-                        }
-                        shouldStartLoadWithRequest={(request) => {
-                          return true;
-                        }}
-                        style={{
-                          minHeight: 123,
-                          // direction: "ltr",
-                          // direction: "rtl",
-                          borderWidth: 1,
-                          borderColor: "#eee",
-                          zIndex: 2,
-                          overflow: "visible",
-                        }}
-                      />
-                    </KeyboardAvoidingView>
-                  </ScrollView>
-                </View>
-              }
-            />,
-            <SummaryAndNote
-              header={" הערות ביקורת בטיחות מזון"}
-              height={160}
-              verticalSpace={16}
-              summaryAndNoteContent={
-                <>
-                  <FlatList
-                    data={
-                      haveSafetyGrade == 1
-                        ? summeryAndNotesManager(
-                            [1],
-                            (category, item) =>
-                              item.showOnComment == 1 &&
-                              item.charge != "הלקוח" &&
-                              item.charge != "מנהל המשק" &&
-                              item.charge != "בית החולים"
-                            // item &&
-                            // getCategory(category.id).type == 1
-                          )
-                        : null
-                    }
-                    renderItem={({ item, index }) => {
-                      // summeryAndNotesManager(item);
-                      // console.log(`currentReportItems:`, currentReportItems);
-                      return (
-                        <CategoryItemName
-                          key={item.id}
-                          number={index + 1}
-                          item={item}
-                        />
-                      );
-                    }}
-                    keyExtractor={(item, index) =>
-                      item.id ? item.id.toString() : index.toString()
-                    }
-                  />
-                </>
-              }
-            />,
-            <SummaryAndNote
-              header={"הערות ביקורת קולינארית"}
-              height={160}
-              verticalSpace={16}
-              summaryAndNoteContent={
-                <>
-                  <FlatList
-                    data={
-                      haveCulinaryGrade == 1
-                        ? summeryAndNotesManager(
-                            [2],
-                            (category, item) =>
-                              item.showOnComment == 1 &&
-                              item.charge != "הלקוח" &&
-                              item.charge != "מנהל המשק" &&
-                              item.charge != "בית החולים"
-                            // item &&
-                            // getCategory(category.id).type == 2
-                          )
-                        : null
-                    }
-                    // data={haveCulinaryGrade == 1 ? categoriesDataFromReport : null}
-                    renderItem={({ item, index }) => (
-                      <CategoryItemName
-                        key={item.id}
-                        number={index + 1}
-                        item={item}
-                      />
-                    )}
-                    keyExtractor={(item, index) =>
-                      item.id ? item.id.toString() : index.toString()
-                    }
-                  />
-                </>
-              }
-            />,
-            <SummaryAndNote
-              header={"הערות תזונה"}
-              height={160}
-              verticalSpace={16}
-              summaryAndNoteContent={
-                <>
-                  <FlatList
-                    data={
-                      haveNutritionGrade == 1
-                        ? summeryAndNotesManager(
-                            [3],
-                            (category, item) =>
-                              item.showOnComment == 1 &&
-                              item.charge != "הלקוח" &&
-                              item.charge != "מנהל המשק" &&
-                              item.charge != "בית החולים"
-                            // item &&
-                            // getCategory(category.id).type == 3
-                          )
-                        : null
-                    }
-                    // data={haveNutritionGrade == 1 ? categoriesDataFromReport : null}
-                    renderItem={({ item, index }) => (
-                      <CategoryItemName
-                        key={item.id}
-                        number={index + 1}
-                        item={item}
-                      />
-                    )}
-                    keyExtractor={(item, index) =>
-                      item.id ? item.id.toString() : index.toString()
-                    }
-                  />
-                </>
-              }
-            />,
-            <SummaryAndNote
-              header={"הערות באחריות לקוח"}
-              height={160}
-              verticalSpace={16}
-              summaryAndNoteContent={
-                <>
-                  <FlatList
-                    // data={haveSafetyGrade == 1 ? categoriesDataFromReport : null}
-                    data={summeryAndNotesManager(
-                      [1, 2, 3],
-                      (category, item) =>
-                        item.showOnComment == 1 &&
-                        (item.charge == "הלקוח" || item.charge == "מנהל המשק")
-                    )}
-                    renderItem={({ item, index }) => (
-                      <CategoryItemName
-                        key={item.id}
-                        number={index + 1}
-                        item={item}
-                      />
-                    )}
-                    keyExtractor={(item, index) =>
-                      item.id ? item.id.toString() : index.toString()
-                    }
-                  />
-                </>
-              }
-            />,
-            <SummaryAndNote
-              header={"הערות תשתית (באחריות בית החולים)"}
-              height={160}
-              verticalSpace={16}
-              summaryAndNoteContent={
-                <>
-                  <FlatList
-                    // data={haveSafetyGrade == 1 ? categoriesDataFromReport : null}
-                    data={summeryAndNotesManager(
-                      [1, 2, 3],
-                      (category, item) =>
-                        item.showOnComment == 1 && item.charge == "בית החולים"
-                    )}
-                    renderItem={({ item, index }) => (
-                      <CategoryItemName
-                        key={item.id}
-                        number={index + 1}
-                        item={item}
-                      />
-                    )}
-                    keyExtractor={(item, index) =>
-                      item.id ? item.id.toString() : index.toString()
-                    }
-                  />
-                </>
-              }
-            />,
-          ]}
-          height={647}
-          onToggle={handleDrawerToggle}
-          ref={drawerRef}
-          closeDrawer={closeDrawer}
-          contentStyling={{ padding: 16 }}
+          onNextCategory={nextCategory}
+          nextCategoryText={
+            lastIndexOfCategories == currentCategoryIndex
+              ? "למסך סיכום"
+              : "הקטגוריה הבאה: " + matchedNames[currentCategoryIndex + 1]
+          }
+          onSetContent={(value) => setContent(value)}
+          currentCategoryId={currentCategories.categories[currentCategoryIndex]}
+          currentReportItemsForGrade={currentReportItemsForGrade}
+          memoizedCategories={memoizedCategories}
         />
       </View>
     </>
@@ -1366,10 +691,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accordionOpen,
     paddingHorizontal: 16,
     paddingVertical: 12,
-  },
-  categoryDirButton: {
-    color: colors.white,
-    fontFamily: fonts.ARegular,
-    fontSize: 16,
   },
 });
