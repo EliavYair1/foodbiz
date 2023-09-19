@@ -738,6 +738,8 @@ const EditExistingReport = () => {
           "the first of categories:",
           currentCategories.categories[currentCategoryIndex]
         );
+
+        navigateToRoute(routes.ONBOARDING.WorkerNewReport);
         return;
       }
       setCurrentCategoryIndex((prevIndex) => prevIndex - 1);
@@ -955,10 +957,10 @@ const EditExistingReport = () => {
                     />
 
                     <Text style={styles.categoryDirButton}>
-                      הקטגוריה הקודמת:
+                      
                       {currentCategoryIndex == 0
-                        ? ""
-                        : matchedNames[currentCategoryIndex - 1]}
+                        ? "למסך הגדרות"
+                        : "הקטגוריה הקודמת: " + matchedNames[currentCategoryIndex - 1]}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -997,10 +999,9 @@ const EditExistingReport = () => {
                     }}
                   >
                     <Text style={styles.categoryDirButton}>
-                      הקטגוריה הבאה:{" "}
                       {lastIndexOfCategories == currentCategoryIndex
                         ? "למסך סיכום"
-                        : matchedNames[currentCategoryIndex + 1]}
+                        : "הקטגוריה הבאה: " +matchedNames[currentCategoryIndex + 1]}
                     </Text>
                     <Image
                       source={accordionCloseIcon}
