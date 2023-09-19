@@ -6,9 +6,9 @@ const LastFiveReportDetails = ({ lastFiveReport }) => {
   return (
     <View style={{}}>
       <GradeDetails title="כללי" grade={lastFiveReport.grade} />
-      <GradeDetails title="בטיחות מזון" grade={lastFiveReport.nutritionGrade} />
-      <GradeDetails title="ציון בטיחות" grade={lastFiveReport.safetyGrade} />
+      <GradeDetails title="בטיחות מזון" grade={lastFiveReport.safetyGrade} />
       <GradeDetails title="קולינארי" grade={lastFiveReport.culinaryGrade} />
+      <GradeDetails title="תזונה" grade={lastFiveReport.nutritionGrade} />
     </View>
   );
 };

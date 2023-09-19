@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
   Alert,
+  Linking,
 } from "react-native";
 import React, {
   useState,
@@ -16,6 +17,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
+
 import colors from "../../../styles/colors";
 import fonts from "../../../styles/fonts";
 import Button from "../../../Components/ui/Button";
@@ -116,7 +118,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const lastFiveReport = client.getLastFiveReportsData();
   const { haveCulinaryGrade, haveGrade, haveNutritionGrade, haveSafetyGrade } =
     lastReport.data;
-
+    
   const reportsTable = [
     {
       id: 0,
@@ -202,7 +204,8 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           icon: require("../../../assets/imgs/Edit_icon.png"),
 
           isActive: (report) => {
-            return report.data.status < 5;
+            // return report.data.status < 5;
+            return report.data.status == 1;
           },
           action: (report) => {
             // console.log(report.getSafetyGrade());
@@ -262,12 +265,18 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       label: "דוא״ל",
       width: "16.6666667%",
       data: "email",
+      formatter: (value) => {
+        return <TouchableOpacity onPress={() => Linking.openURL('mailto:' + value.trim())} style={{fontSize: 10}}><Text  selectable={true}>{value}</Text></TouchableOpacity>
+      }
     },
     {
       id: 3,
       label: "טלפון",
       width: "16.6666667%",
       data: "phone",
+      formatter: (value) => {
+        return <TouchableOpacity onPress={() => Linking.openURL('tel:' + value.trim())} style={{fontSize: 10}}><Text  selectable={true}>{value}</Text></TouchableOpacity>
+      }
     },
     {
       id: 4,
@@ -370,7 +379,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
 
         <View style={{ alignSelf: "center", width: "15%" }}>
           <Text style={styles.subHeaderText}>
-            {lastReport.data.timeOfReport}
+            {lastReport.getTimeOfReport()}
           </Text>
           <Text
             style={[

@@ -17,6 +17,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.moburst.foodbiz",
       "infoPlist": {
         "NSCameraUsageDescription": "Your message to the user describing camera usage."
       }

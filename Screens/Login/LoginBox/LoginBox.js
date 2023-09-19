@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, FlatList } from "react-native";
+import { StyleSheet, Text, View, FlatList, Alert } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { TextInput } from "react-native-paper";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -18,6 +18,11 @@ import fonts from "../../../styles/fonts";
 import { storeData, retrieveData } from "../../../Services/StorageService";
 import { setClients } from "../../../store/redux/reducers/clientSlice";
 import Client from "../../../Components/modals/client";
+import axios from "axios";
+import { setGlobalCategories } from "../../../store/redux/reducers/globalCategories";
+import { setReportsTimes } from "../../../store/redux/reducers/reportsTimesSlice";
+
+
 const LoginBox = () => {
   const [passwordShowToggle, setPasswordShowToggle] = useState(true);
   const [formData, setFormData] = useState({});
@@ -119,21 +124,30 @@ const LoginBox = () => {
           process.env.API_BASE_URL + "api/clients.php",
           { id: response.user_id }
         );
-        // if success push the client data && and navigate to another screen
+        // console.log("responseClients:", responseClients.data[1].reports[0]);
         if (responseClients.success) {
           let clients = [];
           responseClients.data.forEach((element) => {
             clients.push(new Client(element));
           });
-          dispatch(setClients(clients));
+          dispatch(setClients({ clients: clients }));
+          // console.log("clients[Home]:", clients);
+
+          const responseCategories = await axios.get(
+            process.env.API_BASE_URL + "api/categories.php"
+          );
+          dispatch(setGlobalCategories(responseCategories.data.categories));
+          dispatch(setReportsTimes(responseCategories.data.reports_times));
           navigateToRoute(routes.ONBOARDING.ClientsList);
+          // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
         } else {
-          // if fail to fetch client data
           console.log("error2:", responseClients.message);
+          Alert.alert("Error", response.message);
         }
       } else {
         // if fail to fetch user data
         console.log("error:", response.message);
+        Alert.alert("Error", response.message);
       }
     }
     console.log("The form submitted:", formData);

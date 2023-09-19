@@ -41,6 +41,12 @@ const ClientsList = () => {
   const flatListRef = useRef(null);
 
   useEffect(() => {
+    if(clients && clients.length > 0) {
+      setFilteredClients(clients)
+    }
+  }, [clients]);
+
+  useEffect(() => {
     const fetchingClientsData = async () => {
       if (clients) {
         console.log(`hello user: ${user}`);

@@ -23,6 +23,7 @@ const ClientTableRow = ({ rowData, headers }) => {
                     onPress={() => action.action(rowData)}
                     key={action.id}
                     disabled={!action.isActive(rowData)}
+                    style={{opacity: action.isActive(rowData) ? 1 : 0.2}}
                   >
                     <Image source={action.icon} style={styles.imgIcon} />
                   </TouchableOpacity>
@@ -32,7 +33,6 @@ const ClientTableRow = ({ rowData, headers }) => {
           );
         } else {
           const cellValue = rowData && rowData.getData(header.data);
-
           return (
             <View style={styles.tableRowContainer} key={header.id}>
               <Text
@@ -43,7 +43,7 @@ const ClientTableRow = ({ rowData, headers }) => {
                     header.backgroundColor && header.backgroundColor(cellValue),
                 }}
               >
-                {cellValue}
+                {header.formatter ? header.formatter(cellValue) : cellValue}
               </Text>
             </View>
           );

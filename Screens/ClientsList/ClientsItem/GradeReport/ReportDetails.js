@@ -11,17 +11,17 @@ const ReportDetails = ({
   return (
     <View style={{ alignSelf: "center", width: "15%" }}>
       {haveGrade && <GradeDetails title="כללי" grade={lastReport.data.grade} />}
-      {haveNutritionGrade && (
-        <GradeDetails
-          title="בטיחות מזון"
-          grade={lastReport.data.nutritionGrade}
-        />
-      )}
       {haveSafetyGrade && (
-        <GradeDetails title="ציון בטיחות" grade={lastReport.data.safetyGrade} />
+        <GradeDetails title="בטיחות מזון" grade={lastReport.data.safetyGrade} />
       )}
       {haveCulinaryGrade && (
         <GradeDetails title="קולינארי" grade={lastReport.data.culinaryGrade} />
+      )}
+      {haveNutritionGrade && (
+        <GradeDetails
+          title="תזונה"
+          grade={lastReport.data.nutritionGrade}
+        />
       )}
     </View>
   );

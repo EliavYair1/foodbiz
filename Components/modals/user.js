@@ -22,9 +22,16 @@ export default class User {
     }
   }
 
+  getReceivingReminders() {
+    return this.data.receivingReminders ==1 ? "כן" : "לא"
+  }
+
   getData(attr) {
     if (attr == "station") {
       return this.getStationName();
+    }
+    if (attr == "receivingReminders") {
+      return this.getReceivingReminders();
     }
     return this.data[attr];
   }

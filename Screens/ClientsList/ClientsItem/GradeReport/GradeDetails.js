@@ -5,7 +5,7 @@ import fonts from "../../../../styles/fonts";
 const GradeDetails = ({ title, grade }) => {
   return (
     <Text style={styles.subHeaderText}>
-      {title}:<Text style={{ fontFamily: fonts.ABold }}>{grade}</Text>
+      {title}: <Text style={{ fontFamily: fonts.ABold }}>{grade}</Text>
     </Text>
   );
 };
