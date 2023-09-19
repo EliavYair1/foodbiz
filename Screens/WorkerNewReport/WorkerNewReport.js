@@ -455,18 +455,16 @@ const WorkerNewReport = () => {
   // * checking if the report parameters match to their state true / false
   const handleSwitchStateChange = (selectedReport) => {
     const newSwitchStates = {
-      haveFine: selectedReport.getData("haveFine") == 0 ? 0 : 1,
+      haveFine: selectedReport.getData("haveFine") ==  1,
       haveAmountOfItems:
-        selectedReport.getData("haveAmountOfItems") == 0 ? 0 : 1,
-      haveSafetyGrade: selectedReport.getData("haveSafetyGrade") == 0 ? 0 : 1,
+        selectedReport.getData("haveAmountOfItems") == 1,
+      haveSafetyGrade: selectedReport.getData("haveSafetyGrade") == 1,
       haveCulinaryGrade:
-        selectedReport.getData("haveCulinaryGrade") == 0 ? 0 : 1,
+        selectedReport.getData("haveCulinaryGrade") == 1,
       haveNutritionGrade:
-        selectedReport.getData("haveNutritionGrade") == 0 ? 0 : 1,
+        selectedReport.getData("haveNutritionGrade") == 1,
       haveCategoriesNameForCriticalItems:
-        selectedReport.getData("haveCategoriesNameForCriticalItems") == 0
-          ? 0
-          : 1,
+        selectedReport.getData("haveCategoriesNameForCriticalItems") == 1,
     };
     setFormData((prevFormData) => ({
       ...prevFormData,

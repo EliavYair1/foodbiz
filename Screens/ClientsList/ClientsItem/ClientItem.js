@@ -41,9 +41,14 @@ import axios from "axios";
 import Loader from "../../../utiles/Loader";
 import { setReportsTimes } from "../../../store/redux/reducers/reportsTimesSlice";
 import { setCurrentCategories } from "../../../store/redux/reducers/getCurrentCategories";
+import Client from "../../../Components/modals/client";
+import { setClients } from "../../../store/redux/reducers/clientSlice";
+import FetchDataService from "../../../Services/FetchDataService";
+
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   const contentRef = useRef();
+  const { fetchData } = FetchDataService();
   const [open, setOpen] = useState(false);
   const arrayOfTabs = ["דוחות", "קבצים", "בעלי גישה"];
   const [activeTab, setActiveTab] = useState(arrayOfTabs[0]);
@@ -102,8 +107,20 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       );
 
       if (response.status == 200 || response.status == 201) {
+        const responseClients = await fetchData(
+          process.env.API_BASE_URL + "api/clients.php",
+          { id: userId }
+        );
+        if (responseClients.success) {
+
+          let clients = [];
+          responseClients.data.forEach((element) => {
+            clients.push(new Client(element));
+          });
+          dispatch(setClients({ clients: clients }));
+        }
         setIsLoading(false);
-        Alert.alert("Success", "Post deleted successfully");
+        Alert.alert("הצלחה", "הדוח נמחק בהצלחה");
       } else {
         setIsLoading(false);
         Alert.alert("Error", "Failed to delete post");
@@ -118,7 +135,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const lastFiveReport = client.getLastFiveReportsData();
   const { haveCulinaryGrade, haveGrade, haveNutritionGrade, haveSafetyGrade } =
     lastReport.data;
-    
+
   const reportsTable = [
     {
       id: 0,
@@ -225,9 +242,25 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           },
           action: (report) => {
             console.log("Trash_icon");
-            // console.log(report.getData("id"));
-            DeleteReport(userId, report.getData("id"));
-            // navigateToRoute(routes.ONBOARDING.SummeryScreen);
+            Alert.alert(
+              "מחיקת דוח",
+              "האם אתה בטוח שברצונך למחוק את הדוח?",
+              [
+                {
+                  text: "כן",
+                  style: 'destructive',
+                  onPress: () => {
+                    DeleteReport(userId, report.getData("id"));
+                  },
+                },
+                {
+                  text: "לא",
+                  onPress: () => {},
+                  style: "cancel",
+                },
+              ],
+              { cancelable: false }
+            );
           },
         },
         {

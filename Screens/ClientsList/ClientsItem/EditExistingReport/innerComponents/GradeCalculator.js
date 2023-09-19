@@ -149,7 +149,7 @@ const GradeCalculator = ({
     onCategoryGradeChange(categoryGrade);
     onMajorCategoryGradeChange(majorCategoryGrade);
     onReportGradeChange(reportGrade);
-  }, [categoryGrade, majorCategoryGrade, reportGrade]);
+  }, [categoryGrade, majorCategoryGrade, reportGrade, categoryType]);
 
   useEffect(() => {
     calculateReportGrade(majorCategoryGrade);
