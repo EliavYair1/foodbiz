@@ -11,6 +11,7 @@ import {
   Modal,
   Dimensions,
   Alert,
+  Button,
 } from "react-native";
 import { Divider } from "react-native-paper";
 import CheckboxItem from "../../../../WorkerNewReport/CheckboxItem/CheckboxItem";
@@ -29,6 +30,8 @@ import colors from "../../../../../styles/colors";
 import "@env";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import Loader from "../../../../../utiles/Loader";
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
 
@@ -75,6 +78,7 @@ const CategoryAccordionItem = ({
   accordionHeight,
 }) => {
   // console.log("render id ", item.id);
+  const { showActionSheetWithOptions } = useActionSheet();
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
@@ -82,7 +86,98 @@ const CategoryAccordionItem = ({
   const [images, setImages] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [imageLoader, setImageLoader] = useState(false);
 
+  const showImagePickerOptions = useCallback(async () => {
+    const options = ["Take a Photo", "Choose from Library", "Cancel"];
+
+    if (images.length >= 3) {
+      alert("You can only select up to 3 images.");
+      return;
+    }
+
+    try {
+      const buttonIndex = await new Promise((resolve) => {
+        showActionSheetWithOptions(
+          {
+            options,
+            cancelButtonIndex: 2,
+          },
+          (buttonIndex) => {
+            resolve(buttonIndex);
+          }
+        );
+      });
+
+      if (buttonIndex === 0) {
+        // Take a photo
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 1,
+        });
+
+        if (!result.cancelled) {
+          setImages((prevImages) => [...prevImages, result.uri]);
+        }
+      } else if (buttonIndex === 1) {
+        // Choose from library
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          aspect: [4, 3],
+          quality: 1,
+        });
+        if (!result.canceled) {
+          setImageLoader(true);
+          const selectedAssets = result.assets;
+
+          let fileName = selectedAssets[0].fileName;
+          let fileSize = selectedAssets[0].fileSize;
+          const fileToUpload = selectedAssets[0];
+          const apiUrl =
+            process.env.API_BASE_URL +
+            "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
+            fileName +
+            "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
+            fileSize +
+            "&ax-start-byte=0&isLast=true";
+          const response = await FileSystem.uploadAsync(
+            apiUrl,
+            fileToUpload.uri,
+            {
+              fieldName: "ax-file-name",
+              httpMethod: "POST",
+              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+            }
+          );
+
+          if (response.status == 200) {
+            let responseBody = JSON.parse(response.body);
+            if (responseBody.status == "error") {
+              setImageLoader(false);
+              Alert.alert("Error", responseBody.info);
+            } else {
+              setImageLoader(false);
+              // Check and push the image into the appropriate field
+              if (images.length === 0) {
+                handleReportChange("uploads/" + responseBody.name, "image");
+              } else if (images.length === 1) {
+                handleReportChange("uploads/" + responseBody.name, "image2");
+              } else if (images.length === 2) {
+                handleReportChange("uploads/" + responseBody.name, "image3");
+              }
+              setImages((prevImages) => [...prevImages, fileToUpload.uri]);
+              console.log("images", fileToUpload.uri);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error while showing image picker:", error);
+    }
+  }, [images]);
   const openModal = (index) => {
     setSelectedImageIndex(index);
     setModalVisible(true);
@@ -464,7 +559,7 @@ const CategoryAccordionItem = ({
           <View style={styles.headerWrapper}>
             <Text style={styles.header}>תמונות:</Text>
 
-            <TouchableOpacity onPress={pickImage}>
+            <TouchableOpacity onPress={showImagePickerOptions}>
               <Text style={styles.ImageUploadText}>הוספת תמונה</Text>
             </TouchableOpacity>
             <ScrollView horizontal>
@@ -473,10 +568,30 @@ const CategoryAccordionItem = ({
                   key={uuid()}
                   onPress={(value) => console.log("open modal", value)}
                 >
-                  <Image source={{ uri: image }} style={styles.uploadedPhoto} />
+                  {imageLoader ? (
+                    <Loader
+                      visible={imageLoader}
+                      loaderStyling={{
+                        width: 12,
+                        height: 12,
+                      }}
+                      loaderWrapperStyle={{
+                        zIndex: 1,
+                        alignSelf: "center",
+                        justifyContent: "center",
+                      }}
+                      color={colors.black}
+                    />
+                  ) : (
+                    <Image
+                      source={{ uri: image }}
+                      style={styles.uploadedPhoto}
+                    />
+                  )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
+
             {modalVisible && (
               <Modal
                 animationType="slide"

@@ -64,7 +64,7 @@ const EditExistingReport = () => {
   const matchedNames = currentCategories.categories.map(
     (obj) => globalStateCategories.find((obj2) => obj == obj2.id).name
   );
-
+  // console.log(currentCategories.categories);
   // for drawer usage
   const lastIndexOfCategories =
     Object.keys(currentCategories.categories).length - 1;

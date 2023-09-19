@@ -25,7 +25,7 @@ import Button from "../ui/Button";
 import useMediaPicker from "../../Hooks/useMediaPicker";
 import { Camera } from "expo-camera";
 import Loader from "../../utiles/Loader";
-
+import * as ImagePicker from "expo-image-picker";
 const PopUp = ({
   animationType,
   modalHeaderText,
@@ -51,7 +51,7 @@ const PopUp = ({
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({});
-
+  const [imageCapture, setImageCapture] = useState(null);
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -212,9 +212,17 @@ const PopUp = ({
   };
   const handleTakePhoto = async () => {
     if (hasPermission) {
-      const { uri } = await camera.takePictureAsync();
-      setCameraCaptureImageUrl(uri);
-      handleFormChange("cameraPhoto", uri);
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      if (!result.canceled) {
+        const selectedMedia = result.assets[0].uri;
+        setCameraCaptureImageUrl(selectedMedia);
+        handleFormChange("cameraPhoto", selectedMedia);
+      }
     }
   };
 
