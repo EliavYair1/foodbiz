@@ -37,7 +37,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import SelectMenu from "../../../../Components/ui/SelectMenu";
 import DatePicker from "../../../../Components/ui/datePicker";
-import useMediaPicker from "../../../../Hooks/useMediaPicker";
 import CategoryAccordionItem from "./innerComponents/CategoryAccordionItem";
 import CategoryWeightsAccordionItem from "./innerComponents/CategoryWeightsAccordionItem";
 import CategoryTempAccordionItem from "./innerComponents/CategoryTempAccordionItem";

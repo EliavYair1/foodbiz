@@ -46,11 +46,11 @@ const PopUp = ({
   secondInputText, //temp
   thirdInputText, //temp
 }) => {
-  const [isSchemaValid, setIsSchemaValid] = useState(false);
-  const [formData, setFormData] = useState({});
   const [imagePicked, setImagePicked] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
+  const [isSchemaValid, setIsSchemaValid] = useState(false);
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
     (async () => {
@@ -59,22 +59,14 @@ const PopUp = ({
     })();
   }, []);
 
-  const handleTakePhoto = async () => {
-    if (hasPermission) {
-      const { uri } = await camera.takePictureAsync();
-      setCameraCaptureImageUrl(uri);
-      handleFormChange("cameraPhoto", uri);
-    }
-  };
-
   const schema = yup.object().shape({
     station: yup.string().required("station is required"),
     fileName: yup.string().required("file name is required"),
     authorName: yup.string().required("author name is required"),
     date: yup.string().required("date is required"),
-    url: yup.string().required("image is required"),
+    imagePicker: yup.string().required("imagePicker is required"),
+    cameraPhoto: yup.string().required("cameraPhoto is required"),
     remarks: yup.string(),
-    cameraPhoto: yup.string().required("image pick is required"),
   });
   const {
     control,
@@ -83,7 +75,16 @@ const PopUp = ({
   } = useForm({
     resolver: yupResolver(schema),
   });
-
+  // validate the scheme on every change of the state
+  useEffect(() => {
+    schema
+      .validate(formData)
+      .then(() => setIsSchemaValid(true))
+      .catch((err) => {
+        console.log("err:", err);
+        setIsSchemaValid(false);
+      });
+  }, [formData, schema]);
   const inputRef = useRef();
   const popUpInputInformation = [
     {
@@ -183,31 +184,45 @@ const PopUp = ({
     },
   ];
 
-  // handling image pick
-  const handleImagePick = () => {
-    pickMedia("image");
-    setImagePicked(true);
-  };
-
   // handling the form changes
   const handleFormChange = (name, value) => {
-    setFormData({ ...formData, [name]: value });
-    setIsSchemaValid(true);
-  };
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
 
-  const [media, pickMedia, mediaError] = useMediaPicker(handleFormChange);
-  // validate the scheme on every change of the state
-  useEffect(() => {
-    schema
-      .validate(formData)
-      .then(() => setIsSchemaValid(true))
-      .catch(() => setIsSchemaValid(false));
-  }, [formData, schema]);
+    setIsSchemaValid(true);
+    console.log("isschemaValid", isSchemaValid);
+    console.log("formData:", formData);
+  };
+  // todo the imagepicker keep showing up even after picking an image
+  const [media, pickMedia, mediaError] = useMediaPicker();
+  // handling image pick
+  const handleImagePick = () => {
+    const pickedImage = pickMedia("image");
+    if (pickedImage) {
+      console.log("pickedImage", pickedImage);
+      const { uri } = pickedImage;
+      handleFormChange("imagePicker", media);
+      setImagePicked(true);
+      console.log("imagePicked", imagePicked);
+    } else {
+      console.error(`[Error] Media selection canceled due to: ${mediaError}`);
+    }
+  };
+  const handleTakePhoto = async () => {
+    if (hasPermission) {
+      const { uri } = await camera.takePictureAsync();
+      setCameraCaptureImageUrl(uri);
+      handleFormChange("cameraPhoto", uri);
+    }
+  };
 
   const onSubmitForm = () => {
     // checking if scheme is valid
 
     if (isSchemaValid) {
+      console.log("(onSubmitForm)formData", formData);
       console.log("scheme is valid");
     }
   };
@@ -341,15 +356,17 @@ const PopUp = ({
                         buttonText={buttonText1}
                         buttonWidth={184}
                         errorMessage={
-                          !imagePicked ? errors.url && errors.url.message : null
+                          !imagePicked
+                            ? errors.imagePicker && errors.imagePicker.message
+                            : null
                         }
                       />
-                      {imagePicked && (
+                      {/* {imagePicked && (
                         <Image
                           source={{ uri: media }}
                           style={{ width: 100, height: 100 }}
                         />
-                      )}
+                      )} */}
                     </View>
 
                     <View style={{ flexDirection: "column", flexWrap: "wrap" }}>

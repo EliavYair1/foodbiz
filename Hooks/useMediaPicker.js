@@ -23,7 +23,7 @@ const useMediaPicker = (handleInputChange = false) => {
         const selectedMedia = result.assets[0].uri;
         // setMedia(result.uri);
         setMedia(selectedMedia);
-        handleInputChange("url", selectedMedia);
+        // handleInputChange("url", selectedMedia);
       }
     } catch (error) {
       console.error("error:", error);

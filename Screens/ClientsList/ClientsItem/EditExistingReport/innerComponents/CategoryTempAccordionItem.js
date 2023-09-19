@@ -17,7 +17,6 @@ import Input from "../../../../../Components/ui/Input";
 import DatePicker from "../../../../../Components/ui/datePicker";
 import SelectMenu from "../../../../../Components/ui/SelectMenu";
 import ClientItemArrow from "../../../../../assets/imgs/ClientItemArrow.png";
-import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";

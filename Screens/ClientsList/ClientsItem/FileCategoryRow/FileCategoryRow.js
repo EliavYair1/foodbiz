@@ -21,7 +21,6 @@ import CameraIcon from "../../../../assets/imgs/CameraIcon.png";
 import libraryIcon from "../../../../assets/imgs/libraryIcon.png";
 import PopUp from "../../../../Components/ui/popUp";
 import SelectMenu from "../../../../Components/ui/SelectMenu";
-import useMediaPicker from "../../../../Hooks/useMediaPicker";
 const FileCategoryRow = ({
   children,
   items,
@@ -32,7 +31,6 @@ const FileCategoryRow = ({
   const heightAnim = useRef(new Animated.Value(0)).current;
   const [openId, setOpenId] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [media, pickMedia, mediaError] = useMediaPicker();
   const onCloseNewFileModal = () => {
     setModalVisible(!modalVisible);
   };

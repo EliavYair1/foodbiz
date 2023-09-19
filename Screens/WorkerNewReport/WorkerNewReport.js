@@ -33,7 +33,6 @@ import {
   actions,
 } from "react-native-pell-rich-editor";
 import ColorPicker from "react-native-wheel-color-picker";
-
 import accordionCloseIcon from "../../assets/imgs/accordionCloseIndicator.png";
 import accordionOpenIcon from "../../assets/imgs/accordionOpenIndicator.png";
 import ClientItemArrow from "../../assets/imgs/ClientItemArrow.png";
@@ -61,6 +60,7 @@ import {
 } from "../../store/redux/reducers/clientSlice";
 import FetchDataService from "../../Services/FetchDataService";
 import Report from "../../Components/modals/report";
+import ModalUi from "../../Components/ui/ModalUi";
 
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
@@ -89,9 +89,11 @@ const WorkerNewReport = () => {
     () => globalCategories,
     [globalCategories]
   );
+
   // console.log("currentCategories", currentCategories);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [IsRearrangement, setIsRearrangement] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [formData, setFormData] = useState({
     clientId: currentClient?.id,
     id: userId,
@@ -122,7 +124,7 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
-
+  const [selectedModalCategory, setSelectedModalCategory] = useState([]);
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
     memoizedCategories?.categories?.[1]?.categories ?? []
@@ -416,6 +418,7 @@ const WorkerNewReport = () => {
     trigger("categorys");
     setCheckboxStatus(newOrderedCategories);
   };
+  // console.log(checkboxStatus);
   // * get the array of categories from the report and updates the state
   const handleCategoriesCheckboxesToggle = (category, checked, label) => {
     // console.log("handleCategoriesCheckboxesToggle:", category, checked);
@@ -1474,7 +1477,41 @@ const WorkerNewReport = () => {
         return section;
       })
     : NewReportAccordionContent;
+  // todo make the modal work
+  const categoriesModal = [
+    {
+      subheader: "ביקורת בטיחות מזון",
+      options: checkboxStatus.foodSafetyReviewCbStatus,
+    },
+    {
+      subheader: "ביקורת קולנירית",
+      options: checkboxStatus.culinaryReviewCbStatus,
+    },
+    {
+      subheader: "ביקורת תזונה",
+      options: checkboxStatus.nutritionReviewCbStatus,
+    },
+  ];
+  // * categories picker close function
+  const handleModalClose = () => {
+    setModalVisible(false);
+  };
+  // * modal pick handler
+  const handleOptionClick = (option) => {
+    const indexOfCategory = currentCategories.categories.findIndex(
+      (category) => category == option
+    );
+    console.log("indexOfCategory", indexOfCategory);
+    // setCurrentCategoryIndex(indexOfCategory);
+    handleModalClose();
+    // if (selectedModalCategory) {
+    //   console.log("modal option choice:", option);
+    //   // debounce(saveReport(), 300);
+    //   // saveReport();
+    // }
+  };
 
+  // console.log(foodSafetyReviewTexts,culinaryReviewTexts,nutritionReviewTexts);
   return (
     <>
       {isLoading ? (
@@ -1499,7 +1536,8 @@ const WorkerNewReport = () => {
                 }
                 iconList={currentReport}
                 onCategoriesIconPress={() => {
-                  navigateToRoute(routes.ONBOARDING.EditExistingReport);
+                  // navigateToRoute(routes.ONBOARDING.EditExistingReport);
+                  setModalVisible(true);
                 }}
               />
             </View>
@@ -1678,6 +1716,16 @@ const WorkerNewReport = () => {
                 </Text>
               </TouchableOpacity>
             </LinearGradient>
+          )}
+          {modalVisible && (
+            <View>
+              <ModalUi
+                header="קטגוריות"
+                modalContent={categoriesModal}
+                onClose={handleModalClose}
+                handleOptionClick={handleOptionClick}
+              />
+            </View>
           )}
         </ScreenWrapper>
       )}
