@@ -356,7 +356,6 @@ const EditExistingReport = () => {
       options: categoryNames[3],
     },
   ];
-
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;
