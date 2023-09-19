@@ -54,9 +54,15 @@ import { setCurrentReport } from "../../store/redux/reducers/getCurrentReport";
 import "@env";
 import Header from "../../Components/ui/Header";
 import GoBackNavigator from "../../utiles/GoBackNavigator";
+import Client from "../../Components/modals/client";
+import { setClients, changeClientOnIndex } from "../../store/redux/reducers/clientSlice";
+import FetchDataService from "../../Services/FetchDataService";
+import Report from "../../Components/modals/report";
+
 
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
+  const { fetchData } = FetchDataService();
   const richText = useRef();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +81,7 @@ const WorkerNewReport = () => {
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
   const currentCategories = useSelector((state) => state.currentCategories);
   const globalCategories = useSelector((state) => state.globalCategories);
+  let clients = useSelector((state) => state.clients);
 
   const memoizedCategories = useMemo(
     () => globalCategories,
@@ -673,24 +680,39 @@ const WorkerNewReport = () => {
       );
       console.log("(postNewReport)response:", response.status);
       if (response.status === 200) {
-        Alert.alert(
-          "Success",
-          "Data posted successfully!",
-          [
-            {
-              text: "ok",
-              onPress: () => {
-                navigateToRoute(routes.ONBOARDING.ClientsList);
-              },
-            },
-            {
-              text: "Cancel",
-              onPress: () => {},
-              style: "cancel",
-            },
-          ],
-          { cancelable: false }
+        const responseClients = await fetchData(
+          process.env.API_BASE_URL + "api/clients.php",
+          { id: userId }
         );
+        if (responseClients.success) {
+
+          let clients = [];
+          responseClients.data.forEach((element) => {
+            clients.push(new Client(element));
+          });
+          dispatch(setClients({ clients: clients }));
+          
+          Alert.alert(
+            "Success",
+            "Data posted successfully!",
+            [
+              {
+                text: "ok",
+                onPress: () => {
+
+                  navigateToRoute(routes.ONBOARDING.ClientsList);
+                },
+              },
+              {
+                text: "Cancel",
+                onPress: () => {},
+                style: "cancel",
+              },
+            ],
+            { cancelable: false }
+          );
+        }
+        
       }
       return response.data;
     } catch (error) {
@@ -710,7 +732,7 @@ const WorkerNewReport = () => {
 
       try {
         const response = await postNewReport(formData);
-        console.log("new report response:", response);
+        // console.log("new report response:", response);
       } catch (error) {
         console.error("Error posting data:", error);
       }
@@ -820,7 +842,7 @@ const WorkerNewReport = () => {
 
         {
           id: 1,
-          text: <Text> התבסס על דוח קודם</Text>,
+          text: <Text>התבסס על דוח קודם</Text>,
           boxItem: (
             <SelectMenu
               control={control}
@@ -860,7 +882,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 2,
-          text: <Text> יש קנסות</Text>,
+          text: <Text>יש קנסות</Text>,
           boxItem: (
             <ToggleSwitch
               id={"haveFine"}
@@ -873,7 +895,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 3,
-          text: <Text> להציג כמות סעיפים</Text>,
+          text: <Text>להציג כמות סעיפים</Text>,
           boxItem: (
             <ToggleSwitch
               id={"haveAmountOfItems"}
@@ -886,7 +908,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 4,
-          text: <Text> "הצג ציון ביקורת בטיחות מזון"</Text>,
+          text: <Text>הצג ציון ביקורת בטיחות מזון</Text>,
           boxItem: (
             <ToggleSwitch
               id={"haveSafetyGrade"}
@@ -899,7 +921,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 5,
-          text: <Text> הצג ציון ביקורת קולינרית</Text>,
+          text: <Text>הצג ציון ביקורת קולינרית</Text>,
           boxItem: (
             <ToggleSwitch
               id={"haveCulinaryGrade"}
@@ -912,7 +934,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 6,
-          text: <Text> הצג ציון תזונה</Text>,
+          text: <Text>הצג ציון תזונה</Text>,
           boxItem: (
             <ToggleSwitch
               id={"haveNutritionGrade"}
@@ -925,7 +947,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 7,
-          text: <Text> הצג שמות קטגוריות בתמצית עבור ליקויים קריטיים</Text>,
+          text: <Text>הצג שמות קטגוריות בתמצית עבור ליקויים קריטיים</Text>,
           boxItem: (
             <ToggleSwitch
               id={"haveCategoriesNameForCriticalItems"}
@@ -938,7 +960,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 8,
-          text: <Text> שם המלווה</Text>,
+          text: <Text>שם המלווה</Text>,
           boxItem: (
             <View style={{ justifyContent: "flex-end", alignSelf: "center" }}>
               <Input
@@ -969,7 +991,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 9,
-          text: <Text> תאריך ביקורת</Text>,
+          text: <Text>תאריך ביקורת</Text>,
           boxItem: (
             <DatePicker
               control={control}
@@ -989,7 +1011,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 10,
-          text: <Text> זמן הביקורת</Text>,
+          text: <Text>זמן הביקורת</Text>,
           boxItem: (
             <SelectMenu
               control={control}
