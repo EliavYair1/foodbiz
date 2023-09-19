@@ -722,7 +722,6 @@ const EditExistingReport = () => {
         currentReport.setData("newGeneralCommentTopText", content);
         dispatch(getCurrentReport(currentReport));
         setIsLoading(false);
-        navigateToRoute(routes.ONBOARDING.SummeryScreen);
       }
     } catch (error) {
       setIsLoading(false);
@@ -762,14 +761,16 @@ const EditExistingReport = () => {
     ];
     try {
       if (currentCategoryIndex === lastIndexOfCategories) {
-        console.log(
-          "categoriesToPassSummeryScreen",
-          categoriesToPassSummeryScreen
-        );
+        // console.log(
+        //   "categoriesToPassSummeryScreen",
+        //   categoriesToPassSummeryScreen
+        // );
         console.log(
           "Reached the last category:",
           currentCategories.categories[currentCategoryIndex]
         );
+        navigateToRoute(routes.ONBOARDING.SummeryScreen);
+
         dispatch(setSummary(categoriesToPassSummeryScreen));
         // todo to send foward these params : positiveFeedback, grades, summeryAndNotes, file1 , file2
         // navigateToRoute(routes.ONBOARDING.SummeryScreen);

@@ -55,10 +55,12 @@ import "@env";
 import Header from "../../Components/ui/Header";
 import GoBackNavigator from "../../utiles/GoBackNavigator";
 import Client from "../../Components/modals/client";
-import { setClients, changeClientOnIndex } from "../../store/redux/reducers/clientSlice";
+import {
+  setClients,
+  changeClientOnIndex,
+} from "../../store/redux/reducers/clientSlice";
 import FetchDataService from "../../Services/FetchDataService";
 import Report from "../../Components/modals/report";
-
 
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
@@ -683,13 +685,12 @@ const WorkerNewReport = () => {
           { id: userId }
         );
         if (responseClients.success) {
-
           let clients = [];
           responseClients.data.forEach((element) => {
             clients.push(new Client(element));
           });
           dispatch(setClients({ clients: clients }));
-          
+
           Alert.alert(
             "Success",
             "Data posted successfully!",
@@ -697,7 +698,6 @@ const WorkerNewReport = () => {
               {
                 text: "ok",
                 onPress: () => {
-
                   navigateToRoute(routes.ONBOARDING.ClientsList);
                 },
               },
@@ -710,7 +710,6 @@ const WorkerNewReport = () => {
             { cancelable: false }
           );
         }
-        
       }
       return response.data;
     } catch (error) {
@@ -778,7 +777,7 @@ const WorkerNewReport = () => {
     dispatch(getCurrentCategory(formData.categorys[0]));
     navigateToRoute(routes.ONBOARDING.EditExistingReport);
   };
-
+  // console.log(currentReport.getData("viewUrl"));
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {

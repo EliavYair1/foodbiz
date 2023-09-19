@@ -17,7 +17,7 @@ const FoodbizNavigator = () => {
       />
       <Stack.Screen
         name="Login"
-        options={{ headerShown: false }}
+        options={{ headerShown: false, gestureEnabled: false }}
         component={Login}
       />
       <Stack.Screen
