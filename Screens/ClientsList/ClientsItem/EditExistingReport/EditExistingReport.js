@@ -342,20 +342,26 @@ const EditExistingReport = () => {
 
   // console.log("findDataForFlatlist", findDataForFlatlist);
 
-  const categoriesModal = [
-    {
+  let categoriesModal = [];
+
+  if(categoryNames[1].length > 0) {
+    categoriesModal.push({
       subheader: "ביקורת בטיחות מזון",
       options: categoryNames[1],
-    },
-    {
-      subheader: "ביקורת קולנירית",
+    });
+  }
+  if(categoryNames[2].length > 0) {
+    categoriesModal.push({
+      subheader: "ביקורת קולינארית",
       options: categoryNames[2],
-    },
-    {
+    });
+  }
+  if(categoryNames[3].length > 0) {
+    categoriesModal.push({
       subheader: "ביקורת תזונה",
       options: categoryNames[3],
-    },
-  ];
+    });
+  }
 
   // * Simulating your debounce function
   const debounce = (fn, delay) => {

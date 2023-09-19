@@ -921,7 +921,7 @@ const WorkerNewReport = () => {
         },
         {
           id: 5,
-          text: <Text>הצג ציון ביקורת קולינרית</Text>,
+          text: <Text>הצג ציון ביקורת קולינארית</Text>,
           boxItem: (
             <ToggleSwitch
               id={"haveCulinaryGrade"}
@@ -1482,7 +1482,7 @@ const WorkerNewReport = () => {
       options: checkboxStatus.foodSafetyReviewCbStatus,
     },
     {
-      subheader: "ביקורת קולנירית",
+      subheader: "ביקורת קולינארית",
       options: checkboxStatus.culinaryReviewCbStatus,
     },
     {
