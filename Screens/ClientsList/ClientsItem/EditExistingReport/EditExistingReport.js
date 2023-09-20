@@ -557,21 +557,16 @@ const EditExistingReport = () => {
               setCategoryGrade(value);
             }}
             onMajorCategoryGradeChange={(value) => {
-              // console.log("major category grade", value, categoryType);
-              // setCategoryGrade(value);
-              // setMajorCategoryGrade(value);
               if (categoryType == 2) {
-                setCulinary(value);
+                currentReport.setData('culinaryGrade', value)
               } else if (categoryType == 1) {
-                setFoodSafety(value);
+                currentReport.setData('safetyGrade', value)
               } else {
-                setNutrition(value);
+                currentReport.setData('nutritionGrade', value)
               }
             }}
             onReportGradeChange={(value) => {
-              // console.log("report  grade", value);
-              // setCategoryGrade(value);
-              setReportGrade(value);
+                currentReport.setData('grade', value)
             }}
           />
           <View
