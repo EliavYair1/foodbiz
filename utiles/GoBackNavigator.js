@@ -3,7 +3,7 @@ import React from "react";
 import useScreenNavigator from "../Hooks/useScreenNavigator";
 import fonts from "../styles/fonts";
 const GoBackNavigator = ({ text, containerStyling, onBackPress = false }) => {
-  const { navigateTogoBack } = useScreenNavigator();
+  const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
   const handleNavigation = () => {
     if (onBackPress) {
       onBackPress();

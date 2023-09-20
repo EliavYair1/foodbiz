@@ -560,11 +560,9 @@ const EditExistingReport = () => {
               // console.log("major category grade", value, categoryType);
               // setCategoryGrade(value);
               // setMajorCategoryGrade(value);
-              if (currentCategories.categories[currentCategoryIndex] == 2) {
+              if (categoryType == 2) {
                 setCulinary(value);
-              } else if (
-                currentCategories.categories[currentCategoryIndex] == 1
-              ) {
+              } else if (categoryType == 1) {
                 setFoodSafety(value);
               } else {
                 setNutrition(value);
