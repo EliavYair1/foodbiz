@@ -552,8 +552,14 @@ const EditExistingReport = () => {
             currentReport={currentReport}
             onCategoryGradeChange={(value) => {
               // console.log("grade", value);
-              parsedCategoriesDataFromReport.find((item) => item.id == currentCategories.categories[currentCategoryIndex]).grade = categoryGrade;
-              currentReport.setData('data', JSON.stringify(parsedCategoriesDataFromReport));
+              parsedCategoriesDataFromReport.find(
+                (item) =>
+                  item.id == currentCategories.categories[currentCategoryIndex]
+              ).grade = categoryGrade;
+              currentReport.setData(
+                "data",
+                JSON.stringify(parsedCategoriesDataFromReport)
+              );
               setCategoryGrade(value);
             }}
             onMajorCategoryGradeChange={(value) => {
