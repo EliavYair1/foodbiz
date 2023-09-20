@@ -36,6 +36,7 @@ const ReportCard = ({
   // };
   console.log(foodSafetyGrade > 0 ? "aaaaa" : "bbbbb");
 
+  //TODO: fix check if grade exists (based on categories)
   return (
     <View style={styles.reportGradeBox}>
       <View style={styles.reportGradesWrapper}>

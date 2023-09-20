@@ -258,10 +258,10 @@ const SummeryScreen = () => {
           verticalSpace={16}
           summaryAndNoteContent={
             <ReportCard
-              fsGrade={foodSafety}
-              cGrade={culinaryGrade}
-              nGrade={nutritionGrade}
-              reportGrade={reportGrade}
+              fsGrade={currentReport.getData('safetyGrade')}
+              cGrade={currentReport.getData('culinaryGrade')}
+              nGrade={currentReport.getData('nutritionGrade')}
+              reportGrade={currentReport.getData('grade')}
             />
           }
         />
