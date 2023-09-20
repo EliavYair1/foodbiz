@@ -163,7 +163,7 @@ const EditExistingReport = () => {
     findParentAndChildCategories.child.items
   );
   const categoriesDataFromReport = currentReport.getCategoriesData();
-  const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+  let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
 
   const findRelevantReportData = useMemo(() => {
     //  getting the relevent data of the categories based on the current sub Category.
@@ -552,6 +552,8 @@ const EditExistingReport = () => {
             currentReport={currentReport}
             onCategoryGradeChange={(value) => {
               // console.log("grade", value);
+              parsedCategoriesDataFromReport.find((item) => item.id == currentCategories.categories[currentCategoryIndex]).grade = categoryGrade;
+              currentReport.setData('data', JSON.stringify(parsedCategoriesDataFromReport));
               setCategoryGrade(value);
             }}
             onMajorCategoryGradeChange={(value) => {

@@ -43,6 +43,7 @@ const GradeCalculator = ({
             .map((item) => item.id)
             .includes(parseInt(element.id, 10))
         );
+        // console.log('currentPickedCategoriesElementsId', currentPickedCategoriesElementsId)
       let totalGrade = 0;
       // * extracting the grades of the currentPickedCategoriesElementsId and sum the amount of the total grades
       currentPickedCategoriesElementsId.forEach((element) => {
@@ -50,7 +51,7 @@ const GradeCalculator = ({
           passedDownCategoryId == element.id ? categoryGrade : element.grade,
           10
         );
-        // console.log("grade", grade);
+        console.log("grade", grade);
         // console.log("passedDownCategoryId", passedDownCategoryId);
         // console.log("passedDownCategoryId", categoryGrade);
         totalGrade += grade;
@@ -61,7 +62,8 @@ const GradeCalculator = ({
         totalGrade / numberOfCurrentSubcategories
       );
       // console.log("currentSubcategories", currentSubcategories);
-      // console.log("totalGrade", totalGrade);
+      // console.log("numberOfCurrentSubcategories", numberOfCurrentSubcategories);
+      console.log("totalGrade", totalGrade);
       setMajorCategoryGrade(avgValOfCurrentSubcategories);
     }
   };
@@ -139,18 +141,20 @@ const GradeCalculator = ({
     }
     setReportGrade(Math.round(reportGradeCalc));
   };
-
+  
   useEffect(() => {
     calculateCategoryGrade();
   }, [currentReportItemsForGrade]);
 
   useEffect(() => {
+    console.log('re calc');
     calculateMajorCategoryGrade();
     onCategoryGradeChange(categoryGrade);
     onMajorCategoryGradeChange(majorCategoryGrade);
     onReportGradeChange(reportGrade);
   }, [categoryGrade, majorCategoryGrade, reportGrade, categoryType]);
 
+  console.log('majorCategoryGrade', majorCategoryGrade)
   useEffect(() => {
     calculateReportGrade(majorCategoryGrade);
   }, [majorCategoryGrade]);
