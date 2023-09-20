@@ -164,7 +164,7 @@ const EditExistingReport = () => {
   );
   const categoriesDataFromReport = currentReport.getCategoriesData();
   const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
-
+  console.log(parsedCategoriesDataFromReport);
   const findRelevantReportData = useMemo(() => {
     //  getting the relevent data of the categories based on the current sub Category.
     const relevantData = parsedCategoriesDataFromReport.find(
