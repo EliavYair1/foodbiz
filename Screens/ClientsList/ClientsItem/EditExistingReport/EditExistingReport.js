@@ -510,6 +510,7 @@ const EditExistingReport = () => {
     // console.log("Rendering item:", item.id);
     return <CategoryAccordion item={item} />;
   };
+  // console.log(currentCategories.categories[currentCategoryIndex]);
 
   return (
     <>
@@ -554,15 +555,15 @@ const EditExistingReport = () => {
               setCategoryGrade(value);
             }}
             onMajorCategoryGradeChange={(value) => {
-              // console.log("major category grade", value);
+              // console.log("major category grade", value, categoryType);
               // setCategoryGrade(value);
               // setMajorCategoryGrade(value);
-              if (currentCategories.categories[currentCategoryIndex] == 5) {
-                setFoodSafety(value);
+              if (currentCategories.categories[currentCategoryIndex] == 2) {
+                setCulinary(value);
               } else if (
                 currentCategories.categories[currentCategoryIndex] == 1
               ) {
-                setCulinary(value);
+                setFoodSafety(value);
               } else {
                 setNutrition(value);
               }
@@ -573,7 +574,6 @@ const EditExistingReport = () => {
               setReportGrade(value);
             }}
           />
-
           <View
             style={{
               flex: 1,
