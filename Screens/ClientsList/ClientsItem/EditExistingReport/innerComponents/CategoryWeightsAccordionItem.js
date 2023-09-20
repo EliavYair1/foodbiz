@@ -73,10 +73,6 @@ const CategoryWeightsAccordionItem = ({
     return { numberOfWeights, totalWeight };
   };
 
-  const [numsOfWeights, setNumsOfWeights] = useState(
-    findNumOfWeights(reportItem).numberOfWeights
-  );
-
   // *  calculating avg of weights
   const AvgWeightCalculation = ({ numberOfWeights, totalWeight }) => {
     return numberOfWeights > 0 ? totalWeight / numberOfWeights : 0;
@@ -138,10 +134,11 @@ const CategoryWeightsAccordionItem = ({
         const temp = { ...prev };
         temp[label] = value;
         if (label !== "grade") {
-          const avgWeightsCalculation = AvgWeightCalculation(
-            findNumOfWeights(temp)
-          );
-          // console.log("avgWeightsCalculation:", avgWeightsCalculation);
+          const findNumOfWeightsVar = findNumOfWeights(temp)
+          const avgWeightsCalculation = AvgWeightCalculation(findNumOfWeightsVar);
+          const numsOfWeights = findNumOfWeightsVar.numberOfWeights;
+
+          console.log("avgWeightsCalculation:", avgWeightsCalculation);
           if (numsOfWeights > 0) {
             setAvgWeight(avgWeightsCalculation);
             if (
@@ -169,7 +166,7 @@ const CategoryWeightsAccordionItem = ({
         }
         // * match the grade to his str based on gradeLabels array
         temp["comment"] = gradeLabels[temp["grade"]];
-        console.log("temp:", prev, temp);
+        // console.log("temp:", prev, temp);
 
         onWeightReportItem(temp);
         return temp;
@@ -177,6 +174,8 @@ const CategoryWeightsAccordionItem = ({
     }, 300),
     [reportItemState]
   );
+
+  // console.log('avgWeight', avgWeight)
   return (
     <View
       style={[
