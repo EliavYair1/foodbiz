@@ -95,7 +95,6 @@ const EditExistingReport = () => {
         ],
     };
   }, [currentCategoryIndex]);
-  // console.log(findParentAndChildCategories);
   const [categoryGrade, setCategoryGrade] = useState(0);
   const [reportGrade, setReportGrade] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
@@ -164,7 +163,6 @@ const EditExistingReport = () => {
   );
   const categoriesDataFromReport = currentReport.getCategoriesData();
   let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
-
   const findRelevantReportData = useMemo(() => {
     //  getting the relevent data of the categories based on the current sub Category.
     const relevantData = parsedCategoriesDataFromReport.find(
@@ -283,10 +281,11 @@ const EditExistingReport = () => {
           errors={errors}
           accordionHeight={140}
           onTempReportItem={(reportItem) => {
-            if (reportItem.TempFoodName) {
-              console.log("item:", i, reportItem);
-              handleReportItemChange(reportItem, i);
-            }
+            // if (reportItem.TempFoodName) {
+            //   console.log("item:", i, reportItem);
+            // }
+            console.log("reportItem", reportItem);
+            handleReportItemChange(reportItem, i);
           }}
         />
       ),
@@ -310,9 +309,10 @@ const EditExistingReport = () => {
             trigger={trigger}
             errors={errors}
             onWeightReportItem={(reportItem) => {
-              if (reportItem.WeightFoodName) {
-                handleReportItemChange(reportItem);
-              }
+              // if (reportItem.WeightFoodName) {
+              // }
+              handleReportItemChange(reportItem);
+              console.log("reportItem", reportItem);
             }}
             accordionHeight={150}
           />
@@ -362,7 +362,6 @@ const EditExistingReport = () => {
       options: categoryNames[3],
     });
   }
-
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;
@@ -473,12 +472,15 @@ const EditExistingReport = () => {
   // * pagination's between categories names : Next
   const nextCategory = async () => {
     debounce(saveReport(), 300);
-
+    const majorCategoryHeadersToPass = categoriesModal.map(
+      (category) => category.subheader
+    );
     const categoriesToPassSummeryScreen = [
       foodSafety,
       nutrition,
       culinary,
       reportGrade,
+      majorCategoryHeadersToPass,
     ];
     try {
       if (currentCategoryIndex === lastIndexOfCategories) {
@@ -504,14 +506,12 @@ const EditExistingReport = () => {
       console.error("Error in nextCategory:", error);
     }
   };
-  // ! drawer logic end
 
+  // ! drawer logic end
   const renderItem = ({ item }) => {
     // console.log("Rendering item:", item.id);
     return <CategoryAccordion item={item} />;
   };
-  // console.log(currentCategories.categories[currentCategoryIndex]);
-
   return (
     <>
       <ScreenWrapper
@@ -564,15 +564,15 @@ const EditExistingReport = () => {
             }}
             onMajorCategoryGradeChange={(value) => {
               if (categoryType == 2) {
-                currentReport.setData('culinaryGrade', value)
+                currentReport.setData("culinaryGrade", value);
               } else if (categoryType == 1) {
-                currentReport.setData('safetyGrade', value)
+                currentReport.setData("safetyGrade", value);
               } else {
-                currentReport.setData('nutritionGrade', value)
+                currentReport.setData("nutritionGrade", value);
               }
             }}
             onReportGradeChange={(value) => {
-                currentReport.setData('grade', value)
+              currentReport.setData("grade", value);
             }}
           />
           <View

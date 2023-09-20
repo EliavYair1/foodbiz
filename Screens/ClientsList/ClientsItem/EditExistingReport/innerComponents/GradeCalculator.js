@@ -43,7 +43,7 @@ const GradeCalculator = ({
             .map((item) => item.id)
             .includes(parseInt(element.id, 10))
         );
-        // console.log('currentPickedCategoriesElementsId', currentPickedCategoriesElementsId)
+      // console.log('currentPickedCategoriesElementsId', currentPickedCategoriesElementsId)
       let totalGrade = 0;
       // * extracting the grades of the currentPickedCategoriesElementsId and sum the amount of the total grades
       currentPickedCategoriesElementsId.forEach((element) => {
@@ -147,14 +147,12 @@ const GradeCalculator = ({
   }, [currentReportItemsForGrade]);
 
   useEffect(() => {
-    console.log('re calc');
     calculateMajorCategoryGrade();
     onCategoryGradeChange(categoryGrade);
     onMajorCategoryGradeChange(majorCategoryGrade);
     onReportGradeChange(reportGrade);
   }, [categoryGrade, majorCategoryGrade, reportGrade, categoryType]);
 
-  // console.log('majorCategoryGrade', majorCategoryGrade)
   useEffect(() => {
     calculateReportGrade(majorCategoryGrade);
   }, [majorCategoryGrade]);

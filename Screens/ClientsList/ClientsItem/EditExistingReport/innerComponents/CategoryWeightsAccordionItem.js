@@ -28,6 +28,8 @@ import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
 import { debounce, get, identity, result } from "lodash";
 import Radio from "../../../../../Components/ui/Radio";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import * as FileSystem from "expo-file-system";
 import Loader from "../../../../../utiles/Loader";
 const gradeLabels = ["ליקוי חמור", "ליקוי בינוני", "ליקוי קל", "תקין"];
 const ratingsOptions = [
@@ -51,12 +53,15 @@ const CategoryWeightsAccordionItem = ({
   errors,
   id,
 }) => {
-  // console.log("id", id);
+  const { showActionSheetWithOptions } = useActionSheet();
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
   const [reportItemState, setReportItemState] = useState(reportItem || {});
+  const [imageLoader, setImageLoader] = useState(false);
+  // console.log("reportItem", reportItem);
+
   // * counting the weights and
   const findNumOfWeights = (data) => {
     let numberOfWeights = 0;
@@ -95,23 +100,6 @@ const CategoryWeightsAccordionItem = ({
   // todo to apply loading when component loads
   // todo to nerrow down the amount of input by iterating them
 
-  // * image picker
-  const pickImage = useCallback(async () => {
-    if (images.length >= 1) {
-      alert("You can only select up to 1 images.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync();
-    if (!result.canceled) {
-      const selectedAssets = result.assets;
-      const selectedImage =
-        selectedAssets.length > 0 ? selectedAssets[0].uri : null;
-      if (selectedImage) {
-        setImages((prevImages) => [...prevImages, selectedImage]);
-      }
-    }
-  }, [images]);
-
   const toggleAccordion = useCallback(() => {
     setOpen(!open);
     if (!open) {
@@ -129,52 +117,146 @@ const CategoryWeightsAccordionItem = ({
   // * change handler
   const handleMeasuredWeightChange = useCallback(
     debounce((value, label) => {
-      console.log("handleMeasuredWeightChange triggered with:", value, label);
-      setReportItemState((prev) => {
-        const temp = { ...prev };
-        temp[label] = value;
-        if (label !== "grade") {
-          const findNumOfWeightsVar = findNumOfWeights(temp)
-          const avgWeightsCalculation = AvgWeightCalculation(findNumOfWeightsVar);
-          const numsOfWeights = findNumOfWeightsVar.numberOfWeights;
+      // console.log("handleMeasuredWeightChange triggered with:", value, label);
+      const temp = { ...reportItemState };
+      temp[label] = value;
 
-          console.log("avgWeightsCalculation:", avgWeightsCalculation);
-          if (numsOfWeights > 0) {
-            setAvgWeight(avgWeightsCalculation);
-            if (
-              avgWeightsCalculation >=
-              parseInt(temp["WeightTarget"]) * 0.95
-            ) {
-              temp["grade"] = 3;
-            } else if (
-              avgWeightsCalculation >=
-              parseInt(temp["WeightTarget"]) * 0.9
-            ) {
-              temp["grade"] = 2;
-            } else if (
-              avgWeightsCalculation >=
-              parseInt(temp["WeightTarget"]) * 0.8
-            ) {
-              temp["grade"] = 1;
-            } else {
-              temp["grade"] = 0;
-            }
-          } else if (numsOfWeights == 0 || numsOfWeights == undefined) {
-            setAvgWeight("");
+      if (label !== "grade") {
+        const findNumOfWeightsVar = findNumOfWeights(temp);
+        const avgWeightsCalculation = AvgWeightCalculation(findNumOfWeightsVar);
+        const numsOfWeights = findNumOfWeightsVar.numberOfWeights;
+
+        // console.log("avgWeightsCalculation:", avgWeightsCalculation);
+        if (numsOfWeights > 0) {
+          setAvgWeight(avgWeightsCalculation);
+          if (avgWeightsCalculation >= parseInt(temp["WeightTarget"]) * 0.95) {
             temp["grade"] = 3;
+          } else if (
+            avgWeightsCalculation >=
+            parseInt(temp["WeightTarget"]) * 0.9
+          ) {
+            temp["grade"] = 2;
+          } else if (
+            avgWeightsCalculation >=
+            parseInt(temp["WeightTarget"]) * 0.8
+          ) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
           }
+        } else if (numsOfWeights == 0 || numsOfWeights == undefined) {
+          setAvgWeight("");
+          temp["grade"] = 3;
         }
-        // * match the grade to his str based on gradeLabels array
-        temp["comment"] = gradeLabels[temp["grade"]];
-        // console.log("temp:", prev, temp);
-
-        onWeightReportItem(temp);
-        return temp;
-      });
+      }
+      // * match the grade to his str based on gradeLabels array
+      temp["comment"] = gradeLabels[temp["grade"]];
+      console.log("temp", temp);
+      onWeightReportItem(temp);
+      setReportItemState(temp);
     }, 300),
     [reportItemState]
   );
+  // * image picker
+  const showImagePickerOptions = useCallback(async () => {
+    const options = ["Take a Photo", "Choose from Library", "Cancel"];
 
+    if (images.length >= 1) {
+      alert("You can only select up to 1 images.");
+      return;
+    }
+
+    try {
+      const buttonIndex = await new Promise((resolve) => {
+        showActionSheetWithOptions(
+          {
+            options,
+            cancelButtonIndex: 2,
+          },
+          (buttonIndex) => {
+            resolve(buttonIndex);
+          }
+        );
+      });
+
+      if (buttonIndex === 0) {
+        // Take a photo
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 1,
+        });
+
+        if (!result.cancelled) {
+          setImages((prevImages) => [...prevImages, result.uri]);
+        }
+      } else if (buttonIndex === 1) {
+        // Choose from library
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          aspect: [4, 3],
+          quality: 1,
+        });
+        if (!result.canceled) {
+          setImageLoader(true);
+          const selectedAssets = result.assets;
+
+          let fileName = selectedAssets[0].fileName;
+          let fileSize = selectedAssets[0].fileSize;
+          const fileToUpload = selectedAssets[0];
+          const apiUrl =
+            process.env.API_BASE_URL +
+            "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
+            fileName +
+            "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
+            fileSize +
+            "&ax-start-byte=0&isLast=true";
+          const response = await FileSystem.uploadAsync(
+            apiUrl,
+            fileToUpload.uri,
+            {
+              fieldName: "ax-file-name",
+              httpMethod: "POST",
+              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+            }
+          );
+
+          if (response.status == 200) {
+            let responseBody = JSON.parse(response.body);
+            if (responseBody.status == "error") {
+              setImageLoader(false);
+              Alert.alert("Error", responseBody.info);
+            } else {
+              setImageLoader(false);
+              // Check and push the image into the appropriate field
+              if (images.length === 0) {
+                handleMeasuredWeightChange(
+                  "uploads/" + responseBody.name,
+                  "image"
+                );
+              } else if (images.length === 1) {
+                handleMeasuredWeightChange(
+                  "uploads/" + responseBody.name,
+                  "image2"
+                );
+              } else if (images.length === 2) {
+                handleMeasuredWeightChange(
+                  "uploads/" + responseBody.name,
+                  "image3"
+                );
+              }
+              setImages((prevImages) => [...prevImages, fileToUpload.uri]);
+              console.log("images", fileToUpload.uri);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error while showing image picker:", error);
+    }
+  }, [images]);
   // console.log('avgWeight', avgWeight)
   return (
     <View
@@ -217,6 +299,7 @@ const CategoryWeightsAccordionItem = ({
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
                 // setValue("WeightFoodName", value);
+                handleMeasuredWeightChange(value, "WeightFoodName");
                 // trigger("WeightFoodName");
               }}
             />
@@ -507,15 +590,42 @@ const CategoryWeightsAccordionItem = ({
           <View style={styles.headerWrapper}>
             <Text style={styles.header}>תמונות:</Text>
 
-            <TouchableOpacity onPress={pickImage}>
+            <TouchableOpacity onPress={showImagePickerOptions}>
               <Text style={styles.ImageUploadText}>הוספת תמונה</Text>
             </TouchableOpacity>
             <ScrollView horizontal>
               {images.map((image, index) => (
+                <TouchableOpacity
+                  key={uuid()}
+                  onPress={(value) => console.log("open modal", value)}
+                >
+                  {imageLoader ? (
+                    <Loader
+                      visible={imageLoader}
+                      loaderStyling={{
+                        width: 12,
+                        height: 12,
+                      }}
+                      loaderWrapperStyle={{
+                        zIndex: 1,
+                        alignSelf: "center",
+                        justifyContent: "center",
+                      }}
+                      color={colors.black}
+                    />
+                  ) : (
+                    <Image
+                      source={{ uri: image }}
+                      style={styles.uploadedPhoto}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
+              {/* {images.map((image, index) => (
                 <View key={uuid()}>
                   <Image source={{ uri: image }} style={styles.uploadedPhoto} />
                 </View>
-              ))}
+              ))} */}
             </ScrollView>
           </View>
         </View>

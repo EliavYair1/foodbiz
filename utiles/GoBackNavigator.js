@@ -2,13 +2,15 @@ import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
 import React from "react";
 import useScreenNavigator from "../Hooks/useScreenNavigator";
 import fonts from "../styles/fonts";
+import routes from "../Navigation/routes";
 const GoBackNavigator = ({ text, containerStyling, onBackPress = false }) => {
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
   const handleNavigation = () => {
     if (onBackPress) {
       onBackPress();
     }
-    navigateTogoBack();
+    // navigateTogoBack();
+    navigateToRoute(routes.ONBOARDING.ClientsList);
   };
   return (
     <View style={[styles.container, containerStyling ?? ""]}>

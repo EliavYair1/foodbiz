@@ -88,6 +88,7 @@ const CategoryAccordionItem = ({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageLoader, setImageLoader] = useState(false);
 
+  // * image picker
   const showImagePickerOptions = useCallback(async () => {
     const options = ["Take a Photo", "Choose from Library", "Cancel"];
 
@@ -195,66 +196,6 @@ const CategoryAccordionItem = ({
   // todo 2. displayed images coming from the api.
   // todo 3. handle the changes
 
-  // * image picker
-  const pickImage = useCallback(async () => {
-    if (images.length >= 3) {
-      alert("You can only select up to 3 images.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync();
-    if (!result.canceled) {
-      const selectedAssets = result.assets;
-
-      let fileName = selectedAssets[0].fileName;
-      let fileSize = selectedAssets[0].fileSize;
-      const fileToUpload = selectedAssets[0];
-      const apiUrl =
-        process.env.API_BASE_URL +
-        "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
-        fileName +
-        "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
-        fileSize +
-        "&ax-start-byte=0&isLast=true";
-      const response = await FileSystem.uploadAsync(apiUrl, fileToUpload.uri, {
-        fieldName: "ax-file-name",
-        httpMethod: "POST",
-        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-      });
-
-      if (response.status == 200) {
-        let responseBody = JSON.parse(response.body);
-        if (responseBody.status == "error") {
-          Alert.alert("Error", responseBody.info);
-        } else {
-          // Check and push the image into the appropriate field
-          if (images.length === 0) {
-            handleReportChange("uploads/" + responseBody.name, "image");
-          } else if (images.length === 1) {
-            handleReportChange("uploads/" + responseBody.name, "image2");
-          } else if (images.length === 2) {
-            handleReportChange("uploads/" + responseBody.name, "image3");
-          }
-          setImages((prevImages) => [...prevImages, fileToUpload.uri]);
-          console.log("images", fileToUpload.uri);
-        }
-      }
-    }
-  }, [images]);
-  // const takePhoto = async () => {
-  //   if (images.length >= 3) {
-  //     alert("You can only select up to 3 images.");
-  //     return;
-  //   }
-
-  //   const result = await ImagePicker.launchCameraAsync();
-
-  //   if (!result.cancelled) {
-  //     const selectedImage = result.uri;
-  //     if (selectedImage) {
-  //       setImages((prevImages) => [...prevImages, selectedImage]);
-  //     }
-  //   }
-  // };
   // * accordion toggler
   const toggleAccordion = useCallback(() => {
     setOpen(!open);

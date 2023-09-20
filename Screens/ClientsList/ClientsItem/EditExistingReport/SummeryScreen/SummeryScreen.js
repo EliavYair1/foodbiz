@@ -32,6 +32,7 @@ import SummaryDrawer from "../innerComponents/SummeryDrawer";
 import useScreenNavigator from "../../../../../Hooks/useScreenNavigator";
 import useSaveReport from "../../../../../Hooks/useSaveReport";
 import { setCurrentReport } from "../../../../../store/redux/reducers/getCurrentReport";
+import Loader from "../../../../../utiles/Loader";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateTogoBack } = useScreenNavigator();
@@ -42,7 +43,7 @@ const SummeryScreen = () => {
   );
   const categoriesToPassSummeryScreen = useSelector((state) => state.summary);
   const globalCategories = useSelector((state) => state.globalCategories);
-
+  // console.log(categoriesToPassSummeryScreen);
   const foodSafety =
     categoriesToPassSummeryScreen && categoriesToPassSummeryScreen[0];
   const nutritionGrade =
@@ -125,16 +126,24 @@ const SummeryScreen = () => {
   }, [SummeryForm, schema]);
   // console.log(currentReport.getData("data"));
   // console.log("categoriesDataFromReport", categoriesDataFromReport);
-
   const handleSaveReport = async () => {
     const bodyFormData = new FormData();
     bodyFormData.append("id", currentReport.getData("id"));
     bodyFormData.append("workerId", currentReport.getData("workerId"));
     bodyFormData.append("clientId", currentReport.getData("clientId"));
-    bodyFormData.append("status", currentReport.getData("status"));
+    bodyFormData.append("status", 2);
+    bodyFormData.append(
+      "newGeneralCommentTopText",
+      SummeryForm.newGeneralCommentTopText
+    );
     bodyFormData.append("newCategorys", currentReport.getData("categorys"));
-    bodyFormData.append("newGeneralCommentTopText", content);
-    bodyFormData.append("data", categoriesDataFromReport);
+    bodyFormData.append("positiveFeedback", positiveFeedback);
+    bodyFormData.append("file1", SummeryForm.file1);
+    bodyFormData.append("file1 u-2", SummeryForm.imagePicked);
+    bodyFormData.append("file2", SummeryForm.file2);
+    bodyFormData.append("file2 u-2", SummeryForm.imagePicked2);
+    bodyFormData.append("data", []);
+
     const reportSaved = await saveReport(bodyFormData);
     if (reportSaved) {
       currentReport.setData("status", 2);
@@ -142,16 +151,22 @@ const SummeryScreen = () => {
       currentReport.setData("file1", SummeryForm.file1);
       currentReport.setData("file2", SummeryForm.file2);
       dispatch(setCurrentReport(currentReport));
+      console.log("[SummeryScreen]response:", reportSaved);
     }
   };
+
   const sendForManagerApproval = async () => {
     console.log(" נשלח למנהל");
     console.log("SummeryForm:", SummeryForm);
     console.log("isSchemaValid:", isSchemaValid);
     if (isSchemaValid) {
       console.log("scheme is valid");
-      const res = await handleSaveReport();
-      console.log("sendForManagerApproval", res);
+      try {
+        await handleSaveReport();
+        console.log("success sending information for manager approval");
+      } catch (error) {
+        console.error("Error sending for manager approval:", error);
+      }
     }
   };
   // todo list
@@ -175,115 +190,115 @@ const SummeryScreen = () => {
           onCategoriesIconPress={() => console.log("categories pressed")}
         />
       </View>
-      <View style={{ flex: 1 }}>
-        <SummaryAndNote
-          header={"פידבק חיובי"}
-          height={160}
-          verticalSpace={16}
-          summaryAndNoteContent={
-            <>
-              <Input
-                name="positiveFeedback"
-                control={control}
-                proxyRef={inputRef}
-                activeOutlineColor={"grey"}
-                outlineColor={"grey"}
-                mode={"outlined"}
-                inputStyle={{
-                  backgroundColor: "transparent",
-                  // height: 160,
-                  // bor: 0,
-                }}
-                onChangeFunction={(value) => {
-                  handleFormChange("positiveFeedback", value);
-                }}
-                defaultValue={positiveFeedback == "" ? "hello" : "bye"} // test
-              />
-              {/* <HelperText type="error">
+      {isLoading ? (
+        <Loader visible={isLoading} />
+      ) : (
+        <View style={{ flex: 1 }}>
+          <SummaryAndNote
+            header={"פידבק חיובי"}
+            height={160}
+            verticalSpace={16}
+            summaryAndNoteContent={
+              <>
+                <Input
+                  name="positiveFeedback"
+                  control={control}
+                  proxyRef={inputRef}
+                  activeOutlineColor={"grey"}
+                  outlineColor={"grey"}
+                  mode={"outlined"}
+                  inputStyle={{
+                    backgroundColor: "transparent",
+                  }}
+                  onChangeFunction={(value) => {
+                    handleFormChange("positiveFeedback", value);
+                  }}
+                  defaultValue={positiveFeedback == "" ? "hello" : "bye"} // test
+                />
+                {/* <HelperText type="error">
                 {errors.positiveFeedback && errors.positiveFeedback.message}
               </HelperText> */}
-            </>
-          }
-        />
-
-        <View style={{}}>
-          <ButtonGroup
-            control={control}
-            headerText={"העלאת קבצים 1"}
-            handleFormChange={handleFormChange}
-            errors={errors}
-            fileField={"file1"}
-            handleFileUploadCallback={(value) => {
-              // console.log("here", value);
-              handleFormChange("file1", value);
-            }}
-            imagePickedField={"imagePicked"}
-            onImagePickChange={(value) => {
-              handleFormChange("imagePicked", value);
-            }}
-            imageCaptureErrMsg={
-              errors.cameraPhoto && errors.cameraPhoto.message
+              </>
             }
-            cameraPhotoField={"cameraPhoto"}
           />
-          <ButtonGroup
-            control={control}
-            headerText={"העלאת קבצים 2"}
-            handleFormChange={handleFormChange}
-            imagePickedField={"imagePicked2"}
-            onImagePickChange={(value) =>
-              handleFormChange("imagePicked2", value)
-            }
-            errors={errors}
-            handleFileUploadCallback={(value) => {
-              // console.log("here", value);
-              handleFormChange("file2", value);
-            }}
-            // fileUploadErrMsg={errors.file2 && errors.file2.message}
-            // uploadImageErrorMsg={
-            //   errors.imagePicked2 && errors.imagePicked2.message
-            // }
-            // fileName={"imagePicked2"}
-            imageCaptureErrMsg={
-              errors.cameraPhoto2 && errors.cameraPhoto2.message
-            }
-            fileField={"file2"}
-            cameraPhotoField={"cameraPhoto2"}
-          />
-        </View>
 
-        <SummaryAndNote
-          header={"ציונים בדוח"}
-          height={248}
-          verticalSpace={16}
-          summaryAndNoteContent={
-            <ReportCard
-              fsGrade={currentReport.getData('safetyGrade')}
-              cGrade={currentReport.getData('culinaryGrade')}
-              nGrade={currentReport.getData('nutritionGrade')}
-              reportGrade={currentReport.getData('grade')}
+          <View style={{}}>
+            <ButtonGroup
+              control={control}
+              headerText={"העלאת קבצים 1"}
+              handleFormChange={handleFormChange}
+              errors={errors}
+              fileField={"file1"}
+              handleFileUploadCallback={(value) => {
+                // console.log("here", value);
+                handleFormChange("file1", value);
+              }}
+              imagePickedField={"imagePicked"}
+              onImagePickChange={(value) => {
+                handleFormChange("imagePicked", value);
+              }}
+              imageCaptureErrMsg={
+                errors.cameraPhoto && errors.cameraPhoto.message
+              }
+              cameraPhotoField={"cameraPhoto"}
             />
-          }
-        />
-        <TouchableOpacity
-          onPress={() => {
-            handleSubmit(sendForManagerApproval());
-          }}
-          style={[
-            styles.sendToManagerButton,
-            !isSchemaValid && { opacity: 0.6 },
-          ]}
-        >
-          <LinearGradient
-            colors={["#5368B4", "#2A3E8B"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.gradientBackground}
+            <ButtonGroup
+              control={control}
+              headerText={"העלאת קבצים 2"}
+              handleFormChange={handleFormChange}
+              imagePickedField={"imagePicked2"}
+              onImagePickChange={(value) =>
+                handleFormChange("imagePicked2", value)
+              }
+              errors={errors}
+              handleFileUploadCallback={(value) => {
+                // console.log("here", value);
+                handleFormChange("file2", value);
+              }}
+              imageCaptureErrMsg={
+                errors.cameraPhoto2 && errors.cameraPhoto2.message
+              }
+              fileField={"file2"}
+              cameraPhotoField={"cameraPhoto2"}
+            />
+          </View>
+
+          <SummaryAndNote
+            header={"ציונים בדוח"}
+            height={248}
+            verticalSpace={16}
+            summaryAndNoteContent={
+              <ReportCard
+                fsGrade={currentReport.getData("safetyGrade")}
+                cGrade={currentReport.getData("culinaryGrade")}
+                nGrade={currentReport.getData("nutritionGrade")}
+                reportGrade={currentReport.getData("grade")}
+                gradesCondition={categoriesToPassSummeryScreen}
+              />
+            }
+          />
+          <TouchableOpacity
+            onPress={() => {
+              handleSubmit(sendForManagerApproval());
+            }}
+            style={[
+              styles.sendToManagerButton,
+              !isSchemaValid && { opacity: 0.6 },
+            ]}
           >
-            <Text style={styles.sendToManagerButtonText}>שלח לאישור מנהל</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+            <LinearGradient
+              colors={["#5368B4", "#2A3E8B"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientBackground}
+            >
+              <Text style={styles.sendToManagerButtonText}>
+                שלח לאישור מנהל
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <SafeAreaView
         style={{
@@ -296,7 +311,10 @@ const SummeryScreen = () => {
         <SummaryDrawer
           onPrevCategory={navigateTogoBack}
           prevCategoryText={"לקטגוריה הקודמת"}
-          onSetContent={(value) => setContent(value)}
+          onSetContent={(value) => {
+            handleFormChange("newGeneralCommentTopText", value);
+            setContent(value);
+          }}
           memoizedCategories={memoizedCategories}
         />
       </SafeAreaView>

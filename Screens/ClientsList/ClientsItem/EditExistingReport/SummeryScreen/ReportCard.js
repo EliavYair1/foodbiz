@@ -8,62 +8,45 @@ const ReportCard = ({
   cGrade,
   nGrade,
   reportGrade,
+  gradesCondition,
 }) => {
-  const [foodSafetyGrade, setFoodSafetyGrade] = useState(fsGrade);
-  const [culinarySafetyGrade, setCulinarySafetyGrade] = useState(cGrade);
-  const [nutritionGrade, setNutritionGrade] = useState(nGrade);
-
-  // const handleGradeChange = (gradeType, newGrade) => {
-  //   switch (gradeType) {
-  //     case "foodSafety":
-  //       setFoodSafetyGrade(newGrade);
-  //       break;
-  //     case "culinarySafety":
-  //       setCulinarySafetyGrade(newGrade);
-  //       break;
-  //     case "nutrition":
-  //       setNutritionGrade(newGrade);
-  //       break;
-  //     default:
-  //       break;
-  //   }
-
-  //   onChangeGrade({
-  //     foodSafety: foodSafetyGrade,
-  //     culinarySafety: culinarySafetyGrade,
-  //     nutrition: nutritionGrade,
-  //   });
-  // };
-  console.log(foodSafetyGrade > 0 ? "aaaaa" : "bbbbb");
-
-  //TODO: fix check if grade exists (based on categories)
   return (
     <View style={styles.reportGradeBox}>
       <View style={styles.reportGradesWrapper}>
-        {foodSafetyGrade > 0 ? (
-          <View>
-            <Text style={styles.gradeHeader}>ציון ביקורת בטיחות מזון</Text>
-            <View style={styles.grade}>
-              <Text style={styles.gradeScore}>{foodSafetyGrade}</Text>
-            </View>
-          </View>
-        ) : null}
-        {culinarySafetyGrade > 0 ? (
-          <View>
-            <Text style={styles.gradeHeader}>ציון ביקורת בטיחות קולינארית</Text>
-            <View style={styles.grade}>
-              <Text style={styles.gradeScore}>{culinarySafetyGrade}</Text>
-            </View>
-          </View>
-        ) : null}
-        {nutritionGrade > 0 ? (
-          <View>
-            <Text style={styles.gradeHeader}>ציון ביקורת תזונה</Text>
-            <View style={styles.grade}>
-              <Text style={styles.gradeScore}>{nutritionGrade}</Text>
-            </View>
-          </View>
-        ) : null}
+        {gradesCondition[4].map((header, index) => {
+          if (header == "ביקורת בטיחות מזון") {
+            return fsGrade > 0 ? (
+              <View key={index}>
+                <Text style={styles.gradeHeader}>ציון ביקורת בטיחות מזון</Text>
+                <View style={styles.grade}>
+                  <Text style={styles.gradeScore}>{fsGrade}</Text>
+                </View>
+              </View>
+            ) : null;
+          } else if (header == "ביקורת קולינארית") {
+            return cGrade > 0 ? (
+              <View key={index}>
+                <Text style={styles.gradeHeader}>
+                  ציון ביקורת בטיחות קולינארית
+                </Text>
+                <View style={styles.grade}>
+                  <Text style={styles.gradeScore}>{cGrade}</Text>
+                </View>
+              </View>
+            ) : null;
+          } else if (header == "ביקורת תזונה") {
+            return nGrade > 0 ? (
+              <View key={index}>
+                <Text style={styles.gradeHeader}>ציון ביקורת תזונה</Text>
+                <View style={styles.grade}>
+                  <Text style={styles.gradeScore}>{nGrade}</Text>
+                </View>
+              </View>
+            ) : null;
+          } else {
+            return null;
+          }
+        })}
       </View>
       <View style={styles.reportGradeWrapper}>
         <Text style={styles.gradeHeader}>ציון לדוח</Text>

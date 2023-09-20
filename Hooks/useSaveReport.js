@@ -1,9 +1,13 @@
 import { useState } from "react";
 import axios from "axios";
 import "@env";
+import { Alert } from "react-native";
+import routes from "../Navigation/routes";
+import useScreenNavigator from "./useScreenNavigator";
+
 const useSaveReport = () => {
   const [isLoading, setIsLoading] = useState(false);
-
+  const { navigateToRoute } = useScreenNavigator();
   const saveReport = async (reportData) => {
     try {
       setIsLoading(true);
@@ -11,7 +15,27 @@ const useSaveReport = () => {
       const response = await axios.post(apiUrl, reportData);
       if (response.status == 200 || response.status == 201) {
         setIsLoading(false);
-        return true;
+        console.log("[useSaveReport] Response.data", response.data);
+
+        Alert.alert(
+          "Success",
+          "Data posted successfully!",
+          [
+            {
+              text: "ok",
+              onPress: () => {
+                navigateToRoute(routes.ONBOARDING.ClientsList);
+              },
+            },
+            {
+              text: "Cancel",
+              onPress: () => {},
+              style: "cancel",
+            },
+          ],
+          { cancelable: false }
+        );
+        return response.data;
       }
     } catch (error) {
       setIsLoading(false);

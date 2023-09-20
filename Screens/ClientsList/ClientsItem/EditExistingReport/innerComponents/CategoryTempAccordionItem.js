@@ -21,6 +21,9 @@ import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
 import Radio from "../../../../../Components/ui/Radio";
+import * as FileSystem from "expo-file-system";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import Loader from "../../../../../utiles/Loader";
 const ratingsOptions = [
   { label: "0", value: "0" },
   { label: "1", value: "1" },
@@ -49,12 +52,13 @@ const CategoryTempAccordionItem = ({
   onTempReportItem,
 }) => {
   // console.log("render id ", reportItem);
+  const { showActionSheetWithOptions } = useActionSheet();
   const [open, setOpen] = useState(false);
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [images, setImages] = useState([]);
   const [reportItemState, setReportItemState] = useState(reportItem || {});
-
+  const [imageLoader, setImageLoader] = useState(false);
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;
@@ -65,98 +69,170 @@ const CategoryTempAccordionItem = ({
       }, delay);
     };
   };
+  // * change handler
+  const handleReportChange = useMemo(() => {
+    return debounce((value, label) => {
+      const temp = { ...reportItemState };
+      temp[label] = value;
+      const measuredTemp = parseFloat(temp["TempMeasured"]);
+      if (label == "TempFoodType") {
+        if (value <= "4") {
+          temp["TempTarget"] = "65";
+        } else if (value == "5") {
+          temp["TempTarget"] = "75";
+        } else if (value == "6" || value == "7") {
+          temp["TempTarget"] = "5";
+        } else {
+          temp["TempTarget"] = "80";
+        }
+      }
+      if (label == "TempMeasured" || label == "TempFoodType") {
+        // * TempTarget value is 5 set the following conditions
+        if (temp["TempTarget"] == "5") {
+          // * if TempMeasured <x || y change the grade to z
+          if (measuredTemp < 6 || temp["TempMeasured"] == "מתחת ל-0") {
+            temp["grade"] = 3;
+          } else if (measuredTemp >= 6 && measuredTemp < 11) {
+            temp["grade"] = 2;
+          } else if (measuredTemp >= 11 && measuredTemp < 16) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+          // * TempTarget value is 65 set the following conditions
+        } else if (temp["TempTarget"] == "65") {
+          if (measuredTemp > 64 || temp["TempMeasured"] == "מעל 80") {
+            temp["grade"] = 3;
+          } else if (measuredTemp > 59 && measuredTemp <= 64) {
+            temp["grade"] = 2;
+          } else if (measuredTemp > 54 && measuredTemp <= 59) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+          // * TempTarget value is 75 set the following conditions
+        } else if (temp["TempTarget"] == "75") {
+          if (measuredTemp > 74 || temp["TempMeasured"] == "מעל 80") {
+            temp["grade"] = 3;
+          } else if (measuredTemp > 64 && measuredTemp <= 74) {
+            temp["grade"] = 2;
+          } else if (measuredTemp > 59 && measuredTemp <= 64) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+          // * TempTarget value is 80 set the following conditions
+        } else if (temp["TempTarget"] == "80") {
+          if (measuredTemp > 79 || temp["TempMeasured"] == "מעל 80") {
+            temp["grade"] = 3;
+          } else if (measuredTemp > 74 && measuredTemp <= 79) {
+            temp["grade"] = 2;
+          } else if (measuredTemp > 69 && measuredTemp <= 74) {
+            temp["grade"] = 1;
+          } else {
+            temp["grade"] = 0;
+          }
+        }
+      }
+
+      temp["comment"] = gradeLabels[temp["grade"]];
+      onTempReportItem(temp);
+      setReportItemState(temp);
+    }, 300);
+  }, [reportItemState]);
 
   // * image picker
-  const pickImage = useCallback(async () => {
+  const showImagePickerOptions = useCallback(async () => {
+    const options = ["Take a Photo", "Choose from Library", "Cancel"];
+
     if (images.length >= 1) {
       alert("You can only select up to 1 images.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync();
-    if (!result.canceled) {
-      const selectedAssets = result.assets;
-      const selectedImage =
-        selectedAssets.length > 0 ? selectedAssets[0].uri : null;
-      if (selectedImage) {
-        setImages((prevImages) => [...prevImages, selectedImage]);
+
+    try {
+      const buttonIndex = await new Promise((resolve) => {
+        showActionSheetWithOptions(
+          {
+            options,
+            cancelButtonIndex: 2,
+          },
+          (buttonIndex) => {
+            resolve(buttonIndex);
+          }
+        );
+      });
+
+      if (buttonIndex === 0) {
+        // Take a photo
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 1,
+        });
+
+        if (!result.cancelled) {
+          setImages((prevImages) => [...prevImages, result.uri]);
+        }
+      } else if (buttonIndex === 1) {
+        // Choose from library
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          aspect: [4, 3],
+          quality: 1,
+        });
+        if (!result.canceled) {
+          setImageLoader(true);
+          const selectedAssets = result.assets;
+
+          let fileName = selectedAssets[0].fileName;
+          let fileSize = selectedAssets[0].fileSize;
+          const fileToUpload = selectedAssets[0];
+          const apiUrl =
+            process.env.API_BASE_URL +
+            "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
+            fileName +
+            "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
+            fileSize +
+            "&ax-start-byte=0&isLast=true";
+          const response = await FileSystem.uploadAsync(
+            apiUrl,
+            fileToUpload.uri,
+            {
+              fieldName: "ax-file-name",
+              httpMethod: "POST",
+              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+            }
+          );
+
+          if (response.status == 200) {
+            let responseBody = JSON.parse(response.body);
+            if (responseBody.status == "error") {
+              setImageLoader(false);
+              Alert.alert("Error", responseBody.info);
+            } else {
+              setImageLoader(false);
+              // Check and push the image into the appropriate field
+              if (images.length === 0) {
+                handleReportChange("uploads/" + responseBody.name, "image");
+              } else if (images.length === 1) {
+                handleReportChange("uploads/" + responseBody.name, "image2");
+              } else if (images.length === 2) {
+                handleReportChange("uploads/" + responseBody.name, "image3");
+              }
+              setImages((prevImages) => [...prevImages, fileToUpload.uri]);
+              console.log("images", fileToUpload.uri);
+            }
+          }
+        }
       }
+    } catch (error) {
+      console.error("Error while showing image picker:", error);
     }
   }, [images]);
 
-  // * change handler
-  const handleReportChange = useMemo(() => {
-    return debounce((value, label) => {
-      setReportItemState((prev) => {
-        const temp = { ...prev };
-        temp[label] = value;
-        const measuredTemp = parseFloat(temp["TempMeasured"]);
-        if (label == "TempFoodType") {
-          if (value <= "4") {
-            temp["TempTarget"] = "65";
-          } else if (value == "5") {
-            temp["TempTarget"] = "75";
-          } else if (value == "6" || value == "7") {
-            temp["TempTarget"] = "5";
-          } else {
-            temp["TempTarget"] = "80";
-          }
-        }
-        if (label === "TempMeasured" || label == "TempFoodType") {
-          // * TempTarget value is 5 set the following conditions
-          if (temp["TempTarget"] == "5") {
-            // * if TempMeasured <x || y change the grade to z
-            if (measuredTemp < 6 || temp["TempMeasured"] == "מתחת ל-0") {
-              temp["grade"] = 3;
-            } else if (measuredTemp >= 6 && measuredTemp < 11) {
-              temp["grade"] = 2;
-            } else if (measuredTemp >= 11 && measuredTemp < 16) {
-              temp["grade"] = 1;
-            } else {
-              temp["grade"] = 0;
-            }
-            // * TempTarget value is 65 set the following conditions
-          } else if (temp["TempTarget"] == "65") {
-            if (measuredTemp > 64 || temp["TempMeasured"] == "מעל 80") {
-              temp["grade"] = 3;
-            } else if (measuredTemp > 59 && measuredTemp <= 64) {
-              temp["grade"] = 2;
-            } else if (measuredTemp > 54 && measuredTemp <= 59) {
-              temp["grade"] = 1;
-            } else {
-              temp["grade"] = 0;
-            }
-            // * TempTarget value is 75 set the following conditions
-          } else if (temp["TempTarget"] == "75") {
-            if (measuredTemp > 74 || temp["TempMeasured"] == "מעל 80") {
-              temp["grade"] = 3;
-            } else if (measuredTemp > 64 && measuredTemp <= 74) {
-              temp["grade"] = 2;
-            } else if (measuredTemp > 59 && measuredTemp <= 64) {
-              temp["grade"] = 1;
-            } else {
-              temp["grade"] = 0;
-            }
-            // * TempTarget value is 80 set the following conditions
-          } else if (temp["TempTarget"] == "80") {
-            if (measuredTemp > 79 || temp["TempMeasured"] == "מעל 80") {
-              temp["grade"] = 3;
-            } else if (measuredTemp > 74 && measuredTemp <= 79) {
-              temp["grade"] = 2;
-            } else if (measuredTemp > 69 && measuredTemp <= 74) {
-              temp["grade"] = 1;
-            } else {
-              temp["grade"] = 0;
-            }
-          }
-        }
-
-        temp["comment"] = gradeLabels[temp["grade"]];
-        onTempReportItem(temp);
-        return temp;
-      });
-    }, 300); // Adjust the delay (in milliseconds) as needed
-  }, [reportItemState]);
-  // console.log(reportItemState);
   // console.log(selectedOption);
   const toggleAccordion = useCallback(() => {
     setOpen(!open);
@@ -232,9 +308,9 @@ const CategoryTempAccordionItem = ({
               // centeredViewStyling={{ marginLeft: 480 }}
               onChange={(value) => {
                 handleReportChange(value.value, "TempFoodType");
-                // setValue("foodType", value.value);
+                setValue("foodType", value.value);
                 // trigger("foodType");
-                // console.log(value);
+                console.log("value", value.value);
               }}
               returnObject={true}
               errorMessage={errors.foodType && errors.foodType.message}
@@ -256,6 +332,7 @@ const CategoryTempAccordionItem = ({
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
+                handleReportChange(value, "TempFoodName");
                 setValue("nameOfDish", value);
                 trigger("nameOfDish");
               }}
@@ -314,7 +391,10 @@ const CategoryTempAccordionItem = ({
               name={"TempTarget"}
               mode={"flat"}
               // label={"65c"}
-              defaultValue={reportItemState.TempTarget ?? "65"}
+              // defaultValue={
+              //   !reportItemState.TempTarget ? "65" : reportItemState.TempTarget
+              // }
+              value={reportItemState.TempTarget ?? "65"}
               disabled
               // placeholder={"יש לנקות *ממטרות* מדיח כלים"}
               contentStyle={[
@@ -324,8 +404,9 @@ const CategoryTempAccordionItem = ({
               inputStyle={[styles.inputStyling, { width: 70 }]}
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
-                console.log(value, "is selected");
-                setValue("TempTarget", value);
+                // console.log(value.value, "is selected");
+                // handleReportChange(value.value, "TempTarget");
+                setValue("TempTarget", value.value);
                 trigger("TempTarget");
               }}
             />
@@ -380,14 +461,36 @@ const CategoryTempAccordionItem = ({
           <View style={styles.headerWrapper}>
             <Text style={styles.header}>תמונות:</Text>
 
-            <TouchableOpacity onPress={pickImage}>
+            <TouchableOpacity onPress={showImagePickerOptions}>
               <Text style={styles.ImageUploadText}>הוספת תמונה</Text>
             </TouchableOpacity>
             <ScrollView horizontal>
               {images.map((image, index) => (
-                <View key={uuid()}>
-                  <Image source={{ uri: image }} style={styles.uploadedPhoto} />
-                </View>
+                <TouchableOpacity
+                  key={uuid()}
+                  onPress={(value) => console.log("open modal", value)}
+                >
+                  {imageLoader ? (
+                    <Loader
+                      visible={imageLoader}
+                      loaderStyling={{
+                        width: 12,
+                        height: 12,
+                      }}
+                      loaderWrapperStyle={{
+                        zIndex: 1,
+                        alignSelf: "center",
+                        justifyContent: "center",
+                      }}
+                      color={colors.black}
+                    />
+                  ) : (
+                    <Image
+                      source={{ uri: image }}
+                      style={styles.uploadedPhoto}
+                    />
+                  )}
+                </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
