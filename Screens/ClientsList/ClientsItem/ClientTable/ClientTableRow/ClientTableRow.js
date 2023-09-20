@@ -23,7 +23,7 @@ const ClientTableRow = ({ rowData, headers }) => {
                     onPress={() => action.action(rowData)}
                     key={action.id}
                     disabled={!action.isActive(rowData)}
-                    style={{opacity: action.isActive(rowData) ? 1 : 0.2}}
+                    style={{ opacity: action.isActive(rowData) ? 1 : 0.2 }}
                   >
                     <Image source={action.icon} style={styles.imgIcon} />
                   </TouchableOpacity>
@@ -56,7 +56,7 @@ const ClientTableRow = ({ rowData, headers }) => {
 export default React.memo(ClientTableRow);
 
 const styles = StyleSheet.create({
-  imgIcon: { width: 10, height: 12 },
+  imgIcon: { width: 16, height: 18 },
   actionsContainer: { flexDirection: "row", flexBasis: 120, gap: 16 },
   tableRow: {
     fontSize: 16,

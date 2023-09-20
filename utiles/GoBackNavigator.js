@@ -2,11 +2,17 @@ import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
 import React from "react";
 import useScreenNavigator from "../Hooks/useScreenNavigator";
 import fonts from "../styles/fonts";
-const GoBackNavigator = ({ text, containerStyling }) => {
+const GoBackNavigator = ({ text, containerStyling, onBackPress = false }) => {
   const { navigateTogoBack } = useScreenNavigator();
+  const handleNavigation = () => {
+    if (onBackPress) {
+      onBackPress();
+    }
+    navigateTogoBack();
+  };
   return (
     <View style={[styles.container, containerStyling ?? ""]}>
-      <TouchableOpacity onPress={navigateTogoBack}>
+      <TouchableOpacity onPress={handleNavigation}>
         <Image
           source={require("../assets/imgs/rightDirIcon.png")}
           style={styles.goBackIcon}

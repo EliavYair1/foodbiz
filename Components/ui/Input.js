@@ -27,6 +27,7 @@ const Input = ({
   defaultValue,
   numeric = false,
   onBlurFunction = false,
+  value,
 }) => {
   return (
     <>
@@ -41,10 +42,7 @@ const Input = ({
             isNumeric: (value) => (numeric ? !isNaN(parseFloat(value)) : true),
           },
         }}
-        render={({
-          field: { onChange, onBlur, value },
-          fieldState: { error },
-        }) => (
+        render={({ field: { onChange, onBlur }, fieldState: { error } }) => (
           <>
             <TextInput
               ref={proxyRef}
@@ -70,7 +68,7 @@ const Input = ({
                 console.log(`field ${name} : ${value}`);
               }}
               // onBlur={onBlur}
-              // value={defaultValue ?? value} // replacing withe defaultValue
+              value={value} // replacing withe defaultValue
               mode={mode}
               activeOutlineColor={activeOutlineColor}
               outlineColor={outlineColor}

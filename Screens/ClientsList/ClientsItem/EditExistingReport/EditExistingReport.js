@@ -64,7 +64,7 @@ const EditExistingReport = () => {
   const matchedNames = currentCategories.categories.map(
     (obj) => globalStateCategories.find((obj2) => obj == obj2.id).name
   );
-
+  // console.log(currentCategories.categories);
   // for drawer usage
   const lastIndexOfCategories =
     Object.keys(currentCategories.categories).length - 1;
@@ -344,19 +344,19 @@ const EditExistingReport = () => {
 
   let categoriesModal = [];
 
-  if(categoryNames[1].length > 0) {
+  if (categoryNames[1].length > 0) {
     categoriesModal.push({
       subheader: "ביקורת בטיחות מזון",
       options: categoryNames[1],
     });
   }
-  if(categoryNames[2].length > 0) {
+  if (categoryNames[2].length > 0) {
     categoriesModal.push({
       subheader: "ביקורת קולינארית",
       options: categoryNames[2],
     });
   }
-  if(categoryNames[3].length > 0) {
+  if (categoryNames[3].length > 0) {
     categoriesModal.push({
       subheader: "ביקורת תזונה",
       options: categoryNames[3],
@@ -510,6 +510,7 @@ const EditExistingReport = () => {
     // console.log("Rendering item:", item.id);
     return <CategoryAccordion item={item} />;
   };
+  // console.log(currentCategories.categories[currentCategoryIndex]);
 
   return (
     <>
@@ -522,6 +523,9 @@ const EditExistingReport = () => {
           containerStyling={{
             marginBottom: 16,
             marginTop: 16,
+          }}
+          onBackPress={() => {
+            debounce(saveReport(), 300);
           }}
         />
         <View style={styles.headerWrapper}>
@@ -551,15 +555,15 @@ const EditExistingReport = () => {
               setCategoryGrade(value);
             }}
             onMajorCategoryGradeChange={(value) => {
-              // console.log("major category grade", value);
+              // console.log("major category grade", value, categoryType);
               // setCategoryGrade(value);
               // setMajorCategoryGrade(value);
-              if (currentCategories.categories[currentCategoryIndex] == 5) {
-                setFoodSafety(value);
+              if (currentCategories.categories[currentCategoryIndex] == 2) {
+                setCulinary(value);
               } else if (
                 currentCategories.categories[currentCategoryIndex] == 1
               ) {
-                setCulinary(value);
+                setFoodSafety(value);
               } else {
                 setNutrition(value);
               }
@@ -570,7 +574,6 @@ const EditExistingReport = () => {
               setReportGrade(value);
             }}
           />
-
           <View
             style={{
               flex: 1,

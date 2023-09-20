@@ -156,7 +156,7 @@ const CategoryTempAccordionItem = ({
       });
     }, 300); // Adjust the delay (in milliseconds) as needed
   }, [reportItemState]);
-
+  // console.log(reportItemState);
   // console.log(selectedOption);
   const toggleAccordion = useCallback(() => {
     setOpen(!open);
@@ -186,6 +186,7 @@ const CategoryTempAccordionItem = ({
     (option) => option.value == reportItemState.TempMeasured
   );
   // console.log(reportItemState.grade == undefined);
+  // todo add the image to the accordion after picked
   return (
     <View
       style={[

@@ -13,7 +13,7 @@ import {
   Assistant_800ExtraBold,
 } from "@expo-google-fonts/assistant";
 import { I18nManager, AppRegistry } from "react-native";
-
+import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 export default function App() {
   AppRegistry.registerComponent("main", () => App);
   I18nManager.allowRTL(true);
@@ -32,13 +32,15 @@ export default function App() {
   return (
     <>
       <StatusBar style="auto" />
-      <Provider store={store}>
-        <NavigationContainer>
-          <PaperProvider>
-            <FoodbizNavigator />
-          </PaperProvider>
-        </NavigationContainer>
-      </Provider>
+      <ActionSheetProvider>
+        <Provider store={store}>
+          <NavigationContainer>
+            <PaperProvider>
+              <FoodbizNavigator />
+            </PaperProvider>
+          </NavigationContainer>
+        </Provider>
+      </ActionSheetProvider>
     </>
   );
 }

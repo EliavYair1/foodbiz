@@ -25,23 +25,24 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import ReportCard from "./ReportCard";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { HelperText } from "react-native-paper";
 import Input from "../../../../../Components/ui/Input";
 import SummaryDrawer from "../innerComponents/SummeryDrawer";
 import useScreenNavigator from "../../../../../Hooks/useScreenNavigator";
-
-
-
+import useSaveReport from "../../../../../Hooks/useSaveReport";
+import { setCurrentReport } from "../../../../../store/redux/reducers/getCurrentReport";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateTogoBack } = useScreenNavigator();
 
-
+  const { dispatch } = useDispatch();
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
   const categoriesToPassSummeryScreen = useSelector((state) => state.summary);
+  const globalCategories = useSelector((state) => state.globalCategories);
+
   const foodSafety =
     categoriesToPassSummeryScreen && categoriesToPassSummeryScreen[0];
   const nutritionGrade =
@@ -60,14 +61,15 @@ const SummeryScreen = () => {
   const drawerRef = useRef();
   const inputRef = useRef();
   const [content, setContent] = useState("");
-  const globalCategories = useSelector((state) => state.globalCategories);
-
+  const { saveReport, isLoading } = useSaveReport();
   const memoizedCategories = useMemo(
     () => globalCategories,
     [globalCategories]
   );
-
-
+  const categoriesDataFromReport = currentReport.getCategoriesData();
+  // console.log(currentReport.getData("status"));
+  // console.log("categoriesToPassSummeryScreen:", categoriesToPassSummeryScreen);
+  // console.log(categoriesToPassSummeryScreen);
   const schema = yup.object().shape({
     positiveFeedback: yup.string().required("positiveFeedback is required"),
     file1: yup.string().required("file1 is required"),
@@ -121,11 +123,36 @@ const SummeryScreen = () => {
         setIsSchemaValid(false);
       });
   }, [SummeryForm, schema]);
+  // console.log(currentReport.getData("data"));
+  // console.log("categoriesDataFromReport", categoriesDataFromReport);
 
-  const sendForManagerApproval = () => {
+  const handleSaveReport = async () => {
+    const bodyFormData = new FormData();
+    bodyFormData.append("id", currentReport.getData("id"));
+    bodyFormData.append("workerId", currentReport.getData("workerId"));
+    bodyFormData.append("clientId", currentReport.getData("clientId"));
+    bodyFormData.append("status", currentReport.getData("status"));
+    bodyFormData.append("newCategorys", currentReport.getData("categorys"));
+    bodyFormData.append("newGeneralCommentTopText", content);
+    bodyFormData.append("data", categoriesDataFromReport);
+    const reportSaved = await saveReport(bodyFormData);
+    if (reportSaved) {
+      currentReport.setData("status", 2);
+      currentReport.setData("positiveFeedback", SummeryForm.positiveFeedback);
+      currentReport.setData("file1", SummeryForm.file1);
+      currentReport.setData("file2", SummeryForm.file2);
+      dispatch(setCurrentReport(currentReport));
+    }
+  };
+  const sendForManagerApproval = async () => {
     console.log(" נשלח למנהל");
     console.log("SummeryForm:", SummeryForm);
     console.log("isSchemaValid:", isSchemaValid);
+    if (isSchemaValid) {
+      console.log("scheme is valid");
+      const res = await handleSaveReport();
+      console.log("sendForManagerApproval", res);
+    }
   };
   // todo list
   // * positive feedback coming from current report
@@ -242,7 +269,10 @@ const SummeryScreen = () => {
           onPress={() => {
             handleSubmit(sendForManagerApproval());
           }}
-          style={styles.sendToManagerButton}
+          style={[
+            styles.sendToManagerButton,
+            !isSchemaValid && { opacity: 0.6 },
+          ]}
         >
           <LinearGradient
             colors={["#5368B4", "#2A3E8B"]}
@@ -263,13 +293,12 @@ const SummeryScreen = () => {
           alignSelf: "center",
         }}
       >
-
         <SummaryDrawer
           onPrevCategory={navigateTogoBack}
           prevCategoryText={"לקטגוריה הקודמת"}
-            onSetContent={(value) => setContent(value)}
-            memoizedCategories={memoizedCategories}
-         />
+          onSetContent={(value) => setContent(value)}
+          memoizedCategories={memoizedCategories}
+        />
       </SafeAreaView>
     </ScreenWrapper>
   );
@@ -282,7 +311,6 @@ const styles = StyleSheet.create({
     // height: 48,
     justifyContent: "center",
     alignItems: "center",
-
     alignSelf: "center",
     elevation: 5,
     shadowColor: "rgba(181, 195, 245, 0.91)",
