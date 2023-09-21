@@ -421,6 +421,7 @@ const WorkerNewReport = () => {
     trigger("categorys");
     setCheckboxStatus(newOrderedCategories);
   };
+
   // console.log(checkboxStatus);
   // * get the array of categories from the report and updates the state
   const handleCategoriesCheckboxesToggle = (category, checked, label) => {
@@ -790,7 +791,7 @@ const WorkerNewReport = () => {
     // dispatch(getCurrentCategories(formData.categorys));
     // dispatch(getCurrentReport(currentReport));
     dispatch(getCurrentCategory(formData.categorys[0]));
-    navigateToRoute(routes.ONBOARDING.EditExistingReport);
+    navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
   // console.log(currentReport.getData("viewUrl"));
   // console.log(currentReportTime);
@@ -1487,6 +1488,7 @@ const WorkerNewReport = () => {
         return section;
       })
     : NewReportAccordionContent;
+
   // todo make the modal work
   const categoriesModal = [
     {
@@ -1502,6 +1504,7 @@ const WorkerNewReport = () => {
       options: checkboxStatus.nutritionReviewCbStatus,
     },
   ];
+  // console.log(currentCategories.categories);
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
@@ -1554,7 +1557,7 @@ const WorkerNewReport = () => {
                 }
                 iconList={currentReport}
                 onCategoriesIconPress={() => {
-                  // navigateToRoute(routes.ONBOARDING.EditExistingReport);
+                  // navigateToRoute(routes.ONBOARDING.CategoryEdit);
                   setModalVisible(true);
                 }}
               />

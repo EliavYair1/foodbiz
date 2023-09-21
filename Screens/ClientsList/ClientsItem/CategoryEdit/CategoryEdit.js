@@ -31,7 +31,7 @@ import Header from "../../../../Components/ui/Header";
 import { setSummary } from "../../../../store/redux/reducers/summerySlice";
 import SummaryDrawer from "./innerComponents/SummeryDrawer";
 
-const EditExistingReport = () => {
+const CategoryEdit = () => {
   // console.log("EditExistingReport");
   const { navigateToRoute } = useScreenNavigator();
   // ! redux stpre fetching
@@ -397,8 +397,6 @@ const EditExistingReport = () => {
   // ! random function end
 
   // todo need to verify
-
-  // console.log("currentCategoryIndex:", currentCategoryIndex);
   // * post request on the changes of the report edit
   const saveReport = async () => {
     const targetId = currentCategories.categories[currentCategoryIndex];
@@ -484,10 +482,6 @@ const EditExistingReport = () => {
     ];
     try {
       if (currentCategoryIndex === lastIndexOfCategories) {
-        // console.log(
-        //   "categoriesToPassSummeryScreen",
-        //   categoriesToPassSummeryScreen
-        // );
         console.log(
           "Reached the last category:",
           currentCategories.categories[currentCategoryIndex]
@@ -643,7 +637,7 @@ const EditExistingReport = () => {
   );
 };
 
-export default React.memo(EditExistingReport);
+export default React.memo(CategoryEdit);
 
 const styles = StyleSheet.create({
   goBackWrapper: {

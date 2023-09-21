@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import React from "react";
 import fonts from "../../styles/fonts";
-import IconList from "../../Screens/ClientsList/ClientsItem/EditExistingReport/innerComponents/IconList";
+import IconList from "../../Screens/ClientsList/ClientsItem/CategoryEdit/innerComponents/IconList";
 const Header = ({
   HeaderText,
   subHeader = false,

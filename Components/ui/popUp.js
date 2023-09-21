@@ -6,8 +6,15 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { BlurView } from "expo-blur";
 import colors from "../../styles/colors";
@@ -15,7 +22,7 @@ import fonts from "../../styles/fonts";
 import CloseIcon from "../../assets/imgs/CloseModalIcon.png";
 import SelectMenu from "./SelectMenu";
 import { FlatList } from "react-native-gesture-handler";
-import { PaperProvider } from "react-native-paper";
+import { HelperText, PaperProvider } from "react-native-paper";
 import Input from "./Input";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
@@ -26,6 +33,7 @@ import useMediaPicker from "../../Hooks/useMediaPicker";
 import { Camera } from "expo-camera";
 import Loader from "../../utiles/Loader";
 import * as ImagePicker from "expo-image-picker";
+import useSaveReport from "../../Hooks/useSaveReport";
 const PopUp = ({
   animationType,
   modalHeaderText,
@@ -52,6 +60,10 @@ const PopUp = ({
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({});
   const [imageCapture, setImageCapture] = useState(null);
+  const { saveReport, isLoading } = useSaveReport();
+  const [activeOption, setActiveOption] = useState(null);
+  // console.log("render");
+
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -59,15 +71,25 @@ const PopUp = ({
     })();
   }, []);
 
-  const schema = yup.object().shape({
-    station: yup.string().required("station is required"),
-    fileName: yup.string().required("file name is required"),
-    authorName: yup.string().required("author name is required"),
-    date: yup.string().required("date is required"),
-    imagePicker: yup.string().required("imagePicker is required"),
-    cameraPhoto: yup.string().required("cameraPhoto is required"),
-    remarks: yup.string(),
-  });
+  const schema = useMemo(() => {
+    let schemaBuilder = yup.object().shape({
+      remarks: yup.string(),
+      date: yup.string().required("date is required"),
+      authorName: yup.string().required("author name is required"),
+      fileName: yup.string().required("file name is required"),
+      station: yup.string().required("station is required"),
+    });
+
+    if (!formData.imagePicker) {
+      schemaBuilder = schemaBuilder.shape({
+        imagePicker: yup
+          .string()
+          .required("pick a image or capture a photo is required"),
+      });
+    }
+    return schemaBuilder;
+  }, [formData]);
+
   const {
     control,
     handleSubmit,
@@ -75,6 +97,7 @@ const PopUp = ({
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   // validate the scheme on every change of the state
   useEffect(() => {
     schema
@@ -85,6 +108,7 @@ const PopUp = ({
         setIsSchemaValid(false);
       });
   }, [formData, schema]);
+
   const inputRef = useRef();
   const popUpInputInformation = [
     {
@@ -183,29 +207,33 @@ const PopUp = ({
       inputStyle: styles.inputStyling,
     },
   ];
-
   // handling the form changes
-  const handleFormChange = (name, value) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+  const handleFormChange = useCallback(
+    (name, value) => {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        [name]: value,
+      }));
 
-    setIsSchemaValid(true);
-    console.log("isschemaValid", isSchemaValid);
-    console.log("formData:", formData);
-  };
+      setIsSchemaValid(true);
+      // console.log("isschemaValid", isSchemaValid);
+      // console.log("formData:", formData);
+    },
+    [formData]
+  );
+
+  // console.log("formData", formData);
+  // console.log("activeOption", activeOption);
   // todo the imagepicker keep showing up even after picking an image
   const [media, pickMedia, mediaError] = useMediaPicker();
   // handling image pick
   const handleImagePick = () => {
     const pickedImage = pickMedia("image");
     if (pickedImage) {
-      console.log("pickedImage", pickedImage);
       const { uri } = pickedImage;
       handleFormChange("imagePicker", media);
       setImagePicked(true);
-      console.log("imagePicked", imagePicked);
+      setActiveOption("image");
     } else {
       console.error(`[Error] Media selection canceled due to: ${mediaError}`);
     }
@@ -222,9 +250,12 @@ const PopUp = ({
         const selectedMedia = result.assets[0].uri;
         setCameraCaptureImageUrl(selectedMedia);
         handleFormChange("cameraPhoto", selectedMedia);
+        setActiveOption("photo");
       }
     }
   };
+  // todo send post request for a new file info.
+  const saveFileInfo = () => {};
 
   const onSubmitForm = () => {
     // checking if scheme is valid
@@ -260,7 +291,7 @@ const PopUp = ({
                 flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                zIndex: 10,
+                // zIndex: 10,
               }}
             >
               <View
@@ -273,9 +304,16 @@ const PopUp = ({
                   zIndex: 10,
                 }}
               >
-                <TouchableOpacity onPress={onCloseModal} style={{}}>
+                <TouchableOpacity
+                  onPress={() => {
+                    onCloseModal();
+                  }}
+                  style={{}}
+                  underlayColor="transparent"
+                >
                   <Image source={CloseIcon} style={styles.closeIconStyle} />
                 </TouchableOpacity>
+
                 {/* HEADER */}
                 <Text style={styles.textStyle}>{modalHeaderText}</Text>
                 {/* selector */}
@@ -332,10 +370,11 @@ const PopUp = ({
                     activeOutlineColor={"grey"}
                     control={control}
                     mode={"outlined"}
+                    inputStyle={{ backgroundColor: "white" }}
                     onChangeFunction={(value) => {
+                      // console.log("authorName:", value);
                       handleFormChange("authorName", value);
                     }}
-                    inputStyle={{ backgroundColor: "white" }}
                   />
                   <Text style={styles.subtextStyle}>{thirdInputText}</Text>
                   <DatePicker
@@ -362,12 +401,13 @@ const PopUp = ({
                         iconStyle={styles.IconStyle}
                         buttonTextStyle={styles.buttonText}
                         buttonText={buttonText1}
+                        disableLogic={activeOption === "photo"}
                         buttonWidth={184}
-                        errorMessage={
-                          !imagePicked
-                            ? errors.imagePicker && errors.imagePicker.message
-                            : null
-                        }
+                        // errorMessage={
+                        //   !imagePicked
+                        //     ? errors.imagePicker && errors.imagePicker.message
+                        //     : null
+                        // }
                       />
                       {/* {imagePicked && (
                         <Image
@@ -381,7 +421,7 @@ const PopUp = ({
                       <Camera
                         style={{
                           borderRadius: 8,
-                          backgroundColor: "transparent",
+                          // backgroundColor: "transparent",
                           height: 46,
                         }}
                         type={Camera.Constants.Type.back}
@@ -396,24 +436,30 @@ const PopUp = ({
                           buttonFunction={handleTakePhoto}
                           icon={true}
                           iconPath={icon2}
+                          disableLogic={activeOption === "image"}
                           iconStyle={styles.IconStyle}
                           buttonTextStyle={styles.buttonText}
                           buttonText={buttonText2}
-                          errorMessage={
-                            !CameraCaptureImageUrl
-                              ? errors.cameraPhoto && errors.cameraPhoto.message
-                              : null
-                          }
+                          // errorMessage={
+                          //   !CameraCaptureImageUrl
+                          //     ? errors.cameraPhoto && errors.cameraPhoto.message
+                          //     : null
+                          // }
                         />
                       </Camera>
-                      {CameraCaptureImageUrl && (
-                        <Image
-                          source={{ uri: CameraCaptureImageUrl }}
-                          style={{ width: 100, height: 100 }}
-                        />
-                      )}
                     </View>
                   </View>
+                  <HelperText
+                    type="error"
+                    style={{
+                      textAlign: "center",
+                      marginVertical: 0,
+                    }}
+                  >
+                    {!imagePicked && !CameraCaptureImageUrl
+                      ? errors.imagePicker && errors.imagePicker.message
+                      : null}
+                  </HelperText>
                 </View>
                 {/* input remarks */}
                 <View style={styles.remarksInputWrapper}>
@@ -533,4 +579,4 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 });
-export default PopUp;
+export default React.memo(PopUp);

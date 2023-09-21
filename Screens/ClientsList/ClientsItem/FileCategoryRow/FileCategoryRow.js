@@ -111,7 +111,6 @@ const FileCategoryRow = ({
       ],
     },
   ];
-
   const renderItem = ({ item }) => {
     const isOpen = item.id === openId;
     const files = item.getFiles();

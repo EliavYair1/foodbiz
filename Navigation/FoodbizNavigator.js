@@ -3,9 +3,9 @@ import Login from "../Screens/Login/login";
 import ClientsList from "../Screens/ClientsList/ClientsList";
 import Home from "../Screens/Home/Home";
 import WorkerNewReport from "../Screens/WorkerNewReport/WorkerNewReport";
-import EditExistingReport from "../Screens/ClientsList/ClientsItem/EditExistingReport/EditExistingReport";
+import CategoryEdit from "../Screens/ClientsList/ClientsItem/CategoryEdit/CategoryEdit";
 import React from "react";
-import SummeryScreen from "../Screens/ClientsList/ClientsItem/EditExistingReport/SummeryScreen/SummeryScreen";
+import SummeryScreen from "../Screens/ClientsList/ClientsItem/CategoryEdit/SummeryScreen/SummeryScreen";
 const Stack = createStackNavigator();
 const FoodbizNavigator = () => {
   return (
@@ -31,9 +31,9 @@ const FoodbizNavigator = () => {
         component={WorkerNewReport}
       />
       <Stack.Screen
-        name="EditExistingReport"
+        name="CategoryEdit"
         options={{ headerShown: false }}
-        component={EditExistingReport}
+        component={CategoryEdit}
       />
       <Stack.Screen
         name="SummeryScreen"

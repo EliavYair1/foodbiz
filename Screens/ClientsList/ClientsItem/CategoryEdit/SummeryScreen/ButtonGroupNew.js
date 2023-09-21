@@ -10,13 +10,13 @@ import useMediaPicker from "../../../../../Hooks/useMediaPicker";
 import { Camera } from "expo-camera";
 import { Controller } from "react-hook-form";
 import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { HelperText } from "react-native-paper";
 const ButtonGroup = ({
   control,
   headerText,
   handleFormChange,
   errors,
-  // uploadImageErrorMsg,
   imageCaptureErrMsg,
   fileUploadErrMsg,
   imagePickedField,
@@ -24,11 +24,13 @@ const ButtonGroup = ({
   cameraPhotoField,
   onImagePickChange,
   handleFileUploadCallback,
+  onPhotoCapture,
 }) => {
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [imagePicked, setImagePicked] = useState(false);
   const [fileSelected, setFileSelected] = useState(null);
+  const [activeOption, setActiveOption] = useState(null);
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -38,14 +40,21 @@ const ButtonGroup = ({
 
   const handleTakePhoto = async () => {
     if (hasPermission) {
-      const { uri } = await camera.takePictureAsync();
-      // setCameraCaptureImageUrl(uri);
-      console.log("image captured...");
-      handleFormChange("cameraPhoto", uri);
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      if (!result.canceled) {
+        const selectedMedia = result.assets[0].uri;
+        setCameraCaptureImageUrl(selectedMedia);
+        onPhotoCapture(selectedMedia);
+        handleFormChange("cameraPhoto", selectedMedia);
+        setActiveOption("photo");
+      }
     }
   };
-
-  // console.log(CameraCaptureImageUrl);
 
   const [media, pickMedia, mediaError] = useMediaPicker();
 
@@ -54,6 +63,7 @@ const ButtonGroup = ({
     if (pickedImage) {
       const { uri } = pickedImage;
       onImagePickChange(media);
+      setActiveOption("image");
       setImagePicked(true);
     } else {
       console.error(`[Error] Media selection canceled due to: ${mediaError}`);
@@ -68,6 +78,7 @@ const ButtonGroup = ({
         console.log("Selected file:", { uri, name, type });
         handleFileUploadCallback(uri);
         setFileSelected(uri);
+        setActiveOption("file");
       } else {
         console.log("File selection canceled");
       }
@@ -104,11 +115,14 @@ const ButtonGroup = ({
                 buttonTextStyle={styles.buttonText}
                 buttonText={"בחירת קובץ"}
                 buttonWidth={260}
-                errorMessage={
-                  !fileSelected
-                    ? errors.fileField && errors.fileField.message
-                    : null
+                disableLogic={
+                  activeOption === "photo" || activeOption === "image"
                 }
+                // errorMessage={
+                //   !fileSelected
+                //     ? errors.fileField && errors.fileField.message
+                //     : null
+                // }
                 // errorMessage={fileUploadErrMsg}
               />
             </View>
@@ -136,26 +150,22 @@ const ButtonGroup = ({
                 iconPath={uploadIcon2}
                 iconStyle={styles.IconStyle}
                 buttonTextStyle={styles.buttonText}
+                disableLogic={
+                  activeOption === "photo" || activeOption === "file"
+                }
                 buttonText={"מספריית התמונות"}
                 buttonWidth={260}
-                errorMessage={
-                  !imagePicked
-                    ? errors.imagePickedField && errors.imagePickedField.message
-                    : null
-                }
+                // errorMessage={
+                //   !imagePicked
+                //     ? errors.imagePickedField && errors.imagePickedField.message
+                //     : null
+                // }
                 // errorMessage={uploadImageErrorMsg}
               />
             </View>
           )}
         />
-        {/* {imagePicked && (
-          <View>
-            <Image
-              source={{ uri: media }}
-              style={{ width: 100, height: 100 }}
-            />
-          </View>
-        )} */}
+
         <View
           style={{
             flexDirection: "column",
@@ -171,43 +181,52 @@ const ButtonGroup = ({
               fieldState: { error },
             }) => (
               <View style={{ flexDirection: "column" }}>
-                {/* {CameraCaptureImageUrl && (
-            <Image
-              source={{ uri: CameraCaptureImageUrl }}
-              style={{ width: 100, height: 100, marginBottom: 10 }}
-            />
-          )} */}
-                {/* <Camera
-            style={{
-              borderRadius: 8,
-              backgroundColor: "transparent",
-              height: 46,
-            }}
-            type={Camera.Constants.Type.back}
-            ref={(ref) => (camera = ref)}
-          > */}
-                <Button
-                  buttonStyle={styles.button}
-                  icon={true}
-                  buttonFunction={handleTakePhoto}
-                  iconPath={uploadIcon3}
-                  iconStyle={styles.IconStyle}
-                  buttonTextStyle={styles.buttonText}
-                  buttonText={"מצלמה"}
-                  buttonWidth={260}
-                  // errorMessage={
-                  //   !CameraCaptureImageUrl
-                  //     ? errors.cameraPhoto && errors.cameraPhoto.message
-                  //     : null
-                  // }
-                  errorMessage={imageCaptureErrMsg}
-                />
-                {/* </Camera> */}
+                <Camera
+                  style={{
+                    borderRadius: 8,
+                    // backgroundColor: "transparent",
+                    height: 46,
+                  }}
+                  type={Camera.Constants.Type.back}
+                  ref={(ref) => (camera = ref)}
+                >
+                  <Button
+                    buttonStyle={[
+                      styles.button,
+                      {
+                        backgroundColor: "white",
+                      },
+                    ]}
+                    icon={true}
+                    buttonFunction={handleTakePhoto}
+                    iconPath={uploadIcon3}
+                    iconStyle={styles.IconStyle}
+                    buttonTextStyle={styles.buttonText}
+                    disableLogic={
+                      activeOption === "file" || activeOption === "image"
+                    }
+                    buttonText={"מצלמה"}
+                    buttonWidth={260}
+                    // errorMessage={
+                    //   !CameraCaptureImageUrl
+                    //     ? errors.cameraPhoto && errors.cameraPhoto.message
+                    //     : null
+                    // }
+                    // errorMessage={imageCaptureErrMsg}
+                  />
+                </Camera>
               </View>
             )}
           />
         </View>
       </View>
+      {errors.fileField && errors.fileField.message && (
+        <HelperText type="error">
+          {!CameraCaptureImageUrl && !imagePicked && !fileSelected
+            ? errors.fileField && errors.fileField.message
+            : null}
+        </HelperText>
+      )}
     </View>
   );
 };

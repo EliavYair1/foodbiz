@@ -43,19 +43,8 @@ const SummeryScreen = () => {
   );
   const categoriesToPassSummeryScreen = useSelector((state) => state.summary);
   const globalCategories = useSelector((state) => state.globalCategories);
-  // console.log(categoriesToPassSummeryScreen);
-  const foodSafety =
-    categoriesToPassSummeryScreen && categoriesToPassSummeryScreen[0];
-  const nutritionGrade =
-    categoriesToPassSummeryScreen && categoriesToPassSummeryScreen[1];
-  const culinaryGrade =
-    categoriesToPassSummeryScreen && categoriesToPassSummeryScreen[2];
-  const reportGrade =
-    categoriesToPassSummeryScreen && categoriesToPassSummeryScreen[3];
-  const file1 = currentReport.getData("file1");
-  const file2 = currentReport.getData("file2");
+  const userId = useSelector((state) => state.user);
   const positiveFeedback = currentReport.getData("positiveFeedback");
-  // console.log("current Report:", file1, file2, positiveFeedback);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [SummeryForm, setSummeryForm] = useState({});
   const [isSchemaValid, setIsSchemaValid] = useState(false);
@@ -67,43 +56,23 @@ const SummeryScreen = () => {
     () => globalCategories,
     [globalCategories]
   );
-  const categoriesDataFromReport = currentReport.getCategoriesData();
-  // console.log(currentReport.getData("status"));
-  // console.log("categoriesToPassSummeryScreen:", categoriesToPassSummeryScreen);
-  // console.log(categoriesToPassSummeryScreen);
-  const schema = yup.object().shape({
-    positiveFeedback: yup.string().required("positiveFeedback is required"),
-    file1: yup.string().required("file1 is required"),
-    file2: yup.string().required("file2 is required"),
-    imagePicked: yup.string().required("imagePicked is required"),
-    imagePicked2: yup.string().required("imagePicked2 is required"),
-    cameraPhoto: yup.string(),
-    cameraPhoto2: yup.string(),
-  });
 
+  const schema = useMemo(() => {
+    let schemaBuilder = yup.object().shape({
+      positiveFeedback: yup.string().required("positiveFeedback is required"),
+      file1: yup.string().required("file1 is required"),
+      file2: yup.string().required("file2 is required"),
+    });
+    return schemaBuilder;
+  }, [SummeryForm]);
   const {
     control,
     handleSubmit,
     formState: { errors },
-    getValues,
-    setValue,
-    watch,
-    trigger,
   } = useForm({
     resolver: yupResolver(schema),
   });
 
-  //   ? drawer logic
-  // * Drawer
-  const handleDrawerToggle = (isOpen) => {
-    setIsDrawerOpen(isOpen);
-  };
-  const closeDrawer = () => {
-    if (drawerRef.current) {
-      drawerRef.current.closeDrawer();
-      setIsDrawerOpen(false);
-    }
-  };
   // handling the form changes
   const handleFormChange = (name, value) => {
     setSummeryForm((prevFormData) => ({
@@ -126,6 +95,7 @@ const SummeryScreen = () => {
   }, [SummeryForm, schema]);
   // console.log(currentReport.getData("data"));
   // console.log("categoriesDataFromReport", categoriesDataFromReport);
+  console.log(currentReport.getData("id"));
   const handleSaveReport = async () => {
     const bodyFormData = new FormData();
     bodyFormData.append("id", currentReport.getData("id"));
@@ -137,11 +107,9 @@ const SummeryScreen = () => {
       SummeryForm.newGeneralCommentTopText
     );
     bodyFormData.append("newCategorys", currentReport.getData("categorys"));
-    bodyFormData.append("positiveFeedback", positiveFeedback);
+    bodyFormData.append("positiveFeedback", SummeryForm.positiveFeedback);
     bodyFormData.append("file1", SummeryForm.file1);
-    bodyFormData.append("file1 u-2", SummeryForm.imagePicked);
     bodyFormData.append("file2", SummeryForm.file2);
-    bodyFormData.append("file2 u-2", SummeryForm.imagePicked2);
     bodyFormData.append("data", []);
 
     const reportSaved = await saveReport(bodyFormData);
@@ -151,7 +119,7 @@ const SummeryScreen = () => {
       currentReport.setData("file1", SummeryForm.file1);
       currentReport.setData("file2", SummeryForm.file2);
       dispatch(setCurrentReport(currentReport));
-      console.log("[SummeryScreen]response:", reportSaved);
+      // console.log("[SummeryScreen]response:", reportSaved);
     }
   };
 
@@ -170,12 +138,6 @@ const SummeryScreen = () => {
     }
   };
   // todo list
-  // * positive feedback coming from current report
-  // * file1 and file2 current report to use expo document picker you have to choose only one choice or pick image or take pic ect...
-  // * grades coming from the grades from edit report
-  //*  send to manger button will send the form with all the info as a request
-  // * summery and nots drawer its the same info coming from the edit report
-
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
@@ -197,31 +159,34 @@ const SummeryScreen = () => {
           <SummaryAndNote
             header={"פידבק חיובי"}
             height={160}
-            verticalSpace={16}
+            verticalSpace={0}
             summaryAndNoteContent={
               <>
                 <Input
+                  proxyRef={inputRef}
                   name="positiveFeedback"
                   control={control}
-                  proxyRef={inputRef}
                   activeOutlineColor={"grey"}
                   outlineColor={"grey"}
                   mode={"outlined"}
                   inputStyle={{
                     backgroundColor: "transparent",
+                    height: 150,
                   }}
                   onChangeFunction={(value) => {
                     handleFormChange("positiveFeedback", value);
                   }}
-                  defaultValue={positiveFeedback == "" ? "hello" : "bye"} // test
+                  defaultValue={positiveFeedback ?? ""}
+                  // label={positiveFeedback}
                 />
-                {/* <HelperText type="error">
-                {errors.positiveFeedback && errors.positiveFeedback.message}
-              </HelperText> */}
               </>
             }
           />
-
+          {errors.positiveFeedback && (
+            <HelperText type="error">
+              {errors.positiveFeedback.message}
+            </HelperText>
+          )}
           <View style={{}}>
             <ButtonGroup
               control={control}
@@ -235,11 +200,16 @@ const SummeryScreen = () => {
               }}
               imagePickedField={"imagePicked"}
               onImagePickChange={(value) => {
-                handleFormChange("imagePicked", value);
+                handleFormChange("file1", value);
               }}
-              imageCaptureErrMsg={
-                errors.cameraPhoto && errors.cameraPhoto.message
-              }
+              onPhotoCapture={(value) => {
+                // console.log(value);
+                handleFormChange("file1", value);
+              }}
+              // imageCaptureErrMsg={
+              //   errors.cameraPhoto && errors.cameraPhoto.message
+              // }
+
               cameraPhotoField={"cameraPhoto"}
             />
             <ButtonGroup
@@ -247,12 +217,14 @@ const SummeryScreen = () => {
               headerText={"העלאת קבצים 2"}
               handleFormChange={handleFormChange}
               imagePickedField={"imagePicked2"}
-              onImagePickChange={(value) =>
-                handleFormChange("imagePicked2", value)
-              }
               errors={errors}
+              onImagePickChange={(value) => handleFormChange("file2", value)}
               handleFileUploadCallback={(value) => {
                 // console.log("here", value);
+                handleFormChange("file2", value);
+              }}
+              onPhotoCapture={(value) => {
+                // console.log(value);
                 handleFormChange("file2", value);
               }}
               imageCaptureErrMsg={

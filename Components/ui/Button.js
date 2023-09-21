@@ -42,7 +42,7 @@ export default function Button({
         <TouchableOpacity
           style={[buttonStyle, styles.button]}
           onPress={() => buttonFunction()}
-          // disabled={disableLogic ?? ""}
+          disabled={disableLogic}
         >
           {icon && <Image style={iconStyle ?? ""} source={iconPath} />}
 

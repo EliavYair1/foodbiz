@@ -87,7 +87,6 @@ const CategoryAccordionItem = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageLoader, setImageLoader] = useState(false);
-
   // * image picker
   const showImagePickerOptions = useCallback(async () => {
     const options = ["Take a Photo", "Choose from Library", "Cancel"];
@@ -160,7 +159,6 @@ const CategoryAccordionItem = ({
               setImageLoader(false);
               Alert.alert("Error", responseBody.info);
             } else {
-              setImageLoader(false);
               // Check and push the image into the appropriate field
               if (images.length === 0) {
                 handleReportChange("uploads/" + responseBody.name, "image");
@@ -170,8 +168,11 @@ const CategoryAccordionItem = ({
                 handleReportChange("uploads/" + responseBody.name, "image3");
               }
               setImages((prevImages) => [...prevImages, fileToUpload.uri]);
+              setImageLoader(false);
+
               console.log("images", fileToUpload.uri);
             }
+            console.log("response.data", response.data);
           }
         }
       }
@@ -214,42 +215,36 @@ const CategoryAccordionItem = ({
   // * change handler
   const handleReportChange = useCallback(
     debounce((value, label) => {
-      setReportItemState((prev) => {
-        const temp = { ...prev };
-        temp[label] = value;
+      const temp = { ...reportItemState };
+      temp[label] = value;
 
-        // * Update comment and showOnComment based on the grade number value
-        if (label === "grade") {
-          temp["comment"] = item["grade" + value];
+      // * Update comment and showOnComment based on the grade number value
+      if (label === "grade") {
+        temp["comment"] = item["grade" + value];
 
-          relevantOptions.forEach((option) => {
-            temp[option.value] =
-              prev[option.value] || prev[option.value] == 1 ? 1 : 0;
-          });
-          temp["charge"] =
-            temp["charge"] != "" ? temp["charge"] : chargeSelections[0];
-          temp["lastDate"] =
-            temp["lastDate"] != "" ? temp["lastDate"] : selectedDates[0];
-          temp["showOnComment"] = value == 0 || value == 1 ? 1 : 0;
-        }
+        relevantOptions.forEach((option) => {
+          temp[option.value] =
+            reportItemState[option.value] || reportItemState[option.value] == 1
+              ? 1
+              : 0;
+        });
+        temp["charge"] =
+          temp["charge"] != "" ? temp["charge"] : chargeSelections[0];
+        temp["lastDate"] =
+          temp["lastDate"] != "" ? temp["lastDate"] : selectedDates[0];
+        temp["showOnComment"] = value == 0 || value == 1 ? 1 : 0;
+      }
 
-        // * Set grade and comment for noRelevant case
-        if (label === "noRelevant" && value) {
-          temp["grade"] = "3";
-          temp["comment"] = item["grade3"];
-        }
-
-        onReportChange(temp);
-
-        return temp;
-      });
+      // * Set grade and comment for noRelevant case
+      if (label === "noRelevant" && value) {
+        temp["grade"] = "3";
+        temp["comment"] = item["grade3"];
+      }
+      onReportChange(temp);
+      setReportItemState(temp);
     }, 0),
     [item]
   );
-
-  // useEffect(() => {
-  //   onReportChange({ ...reportItemState });
-  // }, [reportItemState]);
 
   // * adding days for the lastDate selectMenu
   const addDaysToDate = (numberOfDays) => {
