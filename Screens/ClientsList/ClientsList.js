@@ -41,8 +41,8 @@ const ClientsList = () => {
   const flatListRef = useRef(null);
 
   useEffect(() => {
-    if(clients && clients.length > 0) {
-      setFilteredClients(clients)
+    if (clients && clients.length > 0) {
+      setFilteredClients(clients);
     }
   }, [clients]);
 

@@ -34,6 +34,10 @@ import { Camera } from "expo-camera";
 import Loader from "../../utiles/Loader";
 import * as ImagePicker from "expo-image-picker";
 import useSaveReport from "../../Hooks/useSaveReport";
+import axios from "axios";
+import useSaveNewFile from "../../Hooks/useSaveNewFile";
+import { useSelector } from "react-redux";
+
 const PopUp = ({
   animationType,
   modalHeaderText,
@@ -53,6 +57,7 @@ const PopUp = ({
   firstInputText, //temp
   secondInputText, //temp
   thirdInputText, //temp
+  categoryId,
 }) => {
   const [imagePicked, setImagePicked] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
@@ -60,17 +65,17 @@ const PopUp = ({
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({});
   const [imageCapture, setImageCapture] = useState(null);
-  const { saveReport, isLoading } = useSaveReport();
+  const [clientId, setClientId] = useState(null);
+  // const { saveReport, isLoading } = useSaveReport();
+  const userId = useSelector((state) => state.user);
+  const { saveNewFile, isLoading } = useSaveNewFile(onCloseModal);
   const [activeOption, setActiveOption] = useState(null);
-  // console.log("render");
-
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
     })();
   }, []);
-
   const schema = useMemo(() => {
     let schemaBuilder = yup.object().shape({
       remarks: yup.string(),
@@ -104,7 +109,7 @@ const PopUp = ({
       .validate(formData)
       .then(() => setIsSchemaValid(true))
       .catch((err) => {
-        console.log("err:", err);
+        // console.log("err:", err);
         setIsSchemaValid(false);
       });
   }, [formData, schema]);
@@ -216,22 +221,19 @@ const PopUp = ({
       }));
 
       setIsSchemaValid(true);
-      // console.log("isschemaValid", isSchemaValid);
-      // console.log("formData:", formData);
     },
     [formData]
   );
 
-  // console.log("formData", formData);
-  // console.log("activeOption", activeOption);
   // todo the imagepicker keep showing up even after picking an image
-  const [media, pickMedia, mediaError] = useMediaPicker();
+  const [media, pickMedia, mediaError, BinaryMedia] = useMediaPicker();
   // handling image pick
   const handleImagePick = () => {
     const pickedImage = pickMedia("image");
     if (pickedImage) {
-      const { uri } = pickedImage;
-      handleFormChange("imagePicker", media);
+      // const { uri, type, name } = pickedImage;
+      handleFormChange("imagePicker", BinaryMedia);
+      // console.log("media", BinaryMedia);
       setImagePicked(true);
       setActiveOption("image");
     } else {
@@ -254,15 +256,37 @@ const PopUp = ({
       }
     }
   };
+  console.log(formData, categoryId, clientId);
   // todo send post request for a new file info.
-  const saveFileInfo = () => {};
+  const saveFileInfo = async () => {
+    const bodyFormData = new FormData();
+    bodyFormData.append("id", userId);
+    bodyFormData.append("stationId", formData.station);
+    bodyFormData.append("authorName", formData.authorName);
+    bodyFormData.append("date", formData.date);
+    bodyFormData.append("comments", formData.remarks);
+    bodyFormData.append("url", formData.imagePicker);
+    bodyFormData.append("fileName", formData.fileName);
+    bodyFormData.append("clientId", clientId);
+    bodyFormData.append("categoryId", categoryId);
 
-  const onSubmitForm = () => {
+    const newFileSaved = await saveNewFile(bodyFormData);
+    if (newFileSaved) {
+      // console.log("newFileSaved", newFileSaved);
+    }
+  };
+
+  const onSubmitForm = async () => {
     // checking if scheme is valid
 
     if (isSchemaValid) {
       console.log("(onSubmitForm)formData", formData);
       console.log("scheme is valid");
+      try {
+        await saveFileInfo();
+      } catch (error) {
+        console.log("err", error);
+      }
     }
   };
 
@@ -343,9 +367,12 @@ const PopUp = ({
                     name={"station"}
                     errorMessage={errors.station && errors.station.message}
                     onChange={(value) => {
-                      handleFormChange("station", value);
+                      handleFormChange("station", value.id);
+                      // console.log(value.clientId);
+                      setClientId(value.clientId);
                     }}
                     propertyName="company"
+                    returnObject={true}
                   />
                   <Text style={styles.subtextStyle}>{firstInputText}</Text>
                   <Input

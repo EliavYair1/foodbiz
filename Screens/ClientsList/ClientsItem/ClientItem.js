@@ -112,7 +112,6 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           { id: userId }
         );
         if (responseClients.success) {
-
           let clients = [];
           responseClients.data.forEach((element) => {
             clients.push(new Client(element));
@@ -140,7 +139,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     {
       id: 0,
       label: "תחנה",
-      width: "12.5%",
+      width: "10%",
       data: "station_name",
     },
     {
@@ -152,7 +151,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     {
       id: 2,
       label: "מלווה",
-      width: "12.5%",
+      width: "15%",
       data: "accompany",
     },
     {
@@ -248,7 +247,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
               [
                 {
                   text: "כן",
-                  style: 'destructive',
+                  style: "destructive",
                   onPress: () => {
                     DeleteReport(userId, report.getData("id"));
                   },
@@ -299,8 +298,15 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       width: "16.6666667%",
       data: "email",
       formatter: (value) => {
-        return <TouchableOpacity onPress={() => Linking.openURL('mailto:' + value.trim())} style={{fontSize: 10}}><Text  selectable={true}>{value}</Text></TouchableOpacity>
-      }
+        return (
+          <TouchableOpacity
+            onPress={() => Linking.openURL("mailto:" + value.trim())}
+            style={{ fontSize: 10 }}
+          >
+            <Text selectable={true}>{value}</Text>
+          </TouchableOpacity>
+        );
+      },
     },
     {
       id: 3,
@@ -308,8 +314,15 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       width: "16.6666667%",
       data: "phone",
       formatter: (value) => {
-        return <TouchableOpacity onPress={() => Linking.openURL('tel:' + value.trim())} style={{fontSize: 10}}><Text  selectable={true}>{value}</Text></TouchableOpacity>
-      }
+        return (
+          <TouchableOpacity
+            onPress={() => Linking.openURL("tel:" + value.trim())}
+            style={{ fontSize: 10 }}
+          >
+            <Text selectable={true}>{value}</Text>
+          </TouchableOpacity>
+        );
+      },
     },
     {
       id: 4,
@@ -324,7 +337,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       data: "station",
     },
   ];
-
+  // console.log(client);
   // handling nested tables
   const handleDisplayedTab = useMemo(() => {
     if (activeTab === "דוחות") {
@@ -333,12 +346,15 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     } else if (activeTab === "קבצים") {
       const files = client.getFilesCategory();
       const stations = client.getStations();
+      const company = client.getCompany();
+      // console.log(stations[]);
       return (
         <FileCategoryRow
           stations={stations}
           items={files}
           icon={fileIcon}
           tableHeadText={"קבצים"}
+          company={company}
         ></FileCategoryRow>
       );
     } else {
@@ -374,7 +390,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   return (
     <>
       <TouchableOpacity
-        style={[styles.itemContainer, { maxWidth: windowWidth - 20 }]}
+        style={[styles.itemContainer, { maxWidth: windowWidth }]}
         onPress={handleAccordionOpening}
       >
         <View
@@ -427,6 +443,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
         </View>
 
         <ReportDetails
+          wrapperWidth={"14.5%"}
           lastReport={lastReport}
           haveGrade={haveGrade}
           haveNutritionGrade={haveNutritionGrade}
@@ -436,15 +453,20 @@ const ClientItem = ({ client, tablePadding, logo }) => {
 
         <View
           style={{
+            width: "45.5%",
             flexDirection: "row",
             alignSelf: "center",
             flex: 1,
             gap: 52,
-            width: "40%",
+            justifyContent: "space-around",
           }}
         >
           <LastFiveReportDetails lastFiveReport={lastFiveReport} />
-          <View style={{ alignSelf: "center" }}>
+          <View
+            style={{
+              alignSelf: "center",
+            }}
+          >
             <Button
               buttonText={"דוח חדש"}
               buttonStyle={styles.newReportButton}
@@ -457,7 +479,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
             />
           </View>
 
-          <View style={{ alignSelf: "center", width: 52 }}>
+          <View style={{ alignSelf: "center" }}>
             <Text>
               {open ? (
                 <Image

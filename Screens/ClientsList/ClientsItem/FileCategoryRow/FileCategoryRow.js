@@ -27,10 +27,13 @@ const FileCategoryRow = ({
   icon,
   tableHeadText,
   stations,
+  company,
 }) => {
   const heightAnim = useRef(new Animated.Value(0)).current;
   const [openId, setOpenId] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [isEditFile, setIsEditFile] = useState(false);
+  const [categoryId, setCategoryId] = useState(null);
   const onCloseNewFileModal = () => {
     setModalVisible(!modalVisible);
   };
@@ -96,6 +99,8 @@ const FileCategoryRow = ({
           },
           action: (file) => {
             console.log("Edit_icon", file.getData("url"));
+            setIsEditFile(true);
+            setModalVisible(true);
           },
         },
         {
@@ -115,7 +120,7 @@ const FileCategoryRow = ({
     const isOpen = item.id === openId;
     const files = item.getFiles();
     // console.log(files);
-
+    // console.log(item.id);
     const handleEmptyFiles = () => {
       if (files.length === 0) {
         return null;
@@ -126,7 +131,6 @@ const FileCategoryRow = ({
       }
     };
     let arr = stations.map((element) => element);
-    // console.log("arr:", arr);
     return (
       <>
         <TouchableOpacity
@@ -162,7 +166,11 @@ const FileCategoryRow = ({
                 iconPath={plusIconBlack}
                 iconStyle={{ width: 16, height: 16 }}
                 buttonWidth={113}
-                buttonFunction={() => setModalVisible(!modalVisible)}
+                buttonFunction={() => {
+                  setModalVisible(!modalVisible);
+                  setIsEditFile(false);
+                  setCategoryId(item.id);
+                }}
               />
             </View>
           </View>
@@ -181,9 +189,12 @@ const FileCategoryRow = ({
             modalHeight={686}
             modalWidth={480}
             modalHeaderText={
-              "הוספה / עריכה של קובץ בתיקיית אישורים\n עבור בנק הפועלים"
+              isEditFile
+                ? `עריכה של קובץ בתיקיית אישורים\n עבור ${company}`
+                : `הוספה של קובץ בתיקיית אישורים\n עבור ${company}`
             }
             selectWidth={400}
+            categoryId={categoryId}
             selectOptions={arr}
             animationType={"fade"}
             secondButtonFunction={() => {

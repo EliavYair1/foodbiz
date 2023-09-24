@@ -95,7 +95,7 @@ const SummeryScreen = () => {
   }, [SummeryForm, schema]);
   // console.log(currentReport.getData("data"));
   // console.log("categoriesDataFromReport", categoriesDataFromReport);
-  console.log(currentReport.getData("id"));
+  // console.log(currentReport.getData("id"));
   const handleSaveReport = async () => {
     const bodyFormData = new FormData();
     bodyFormData.append("id", currentReport.getData("id"));
@@ -153,7 +153,7 @@ const SummeryScreen = () => {
         />
       </View>
       {isLoading ? (
-        <Loader visible={isLoading} />
+        <Loader visible={isLoading} isSetting={false} />
       ) : (
         <View style={{ flex: 1 }}>
           <SummaryAndNote

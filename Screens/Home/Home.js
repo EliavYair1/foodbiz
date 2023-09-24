@@ -84,7 +84,7 @@ const Home = () => {
       {appIsReady && (
         <ScreenWrapper isConnectedUser={true}>
           <View style={styles.container}>
-            <Loader visible={appIsReady} color={colors.blue} />
+            <Loader visible={appIsReady} color={colors.blue} isSetting={true} />
           </View>
         </ScreenWrapper>
       )}

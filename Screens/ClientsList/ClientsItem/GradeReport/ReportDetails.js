@@ -7,9 +7,10 @@ const ReportDetails = ({
   haveNutritionGrade,
   haveSafetyGrade,
   haveCulinaryGrade,
+  wrapperWidth,
 }) => {
   return (
-    <View style={{ alignSelf: "center", width: "15%" }}>
+    <View style={{ alignSelf: "center", width: wrapperWidth }}>
       {haveGrade && <GradeDetails title="כללי" grade={lastReport.data.grade} />}
       {haveSafetyGrade && (
         <GradeDetails title="בטיחות מזון" grade={lastReport.data.safetyGrade} />
@@ -18,10 +19,7 @@ const ReportDetails = ({
         <GradeDetails title="קולינארי" grade={lastReport.data.culinaryGrade} />
       )}
       {haveNutritionGrade && (
-        <GradeDetails
-          title="תזונה"
-          grade={lastReport.data.nutritionGrade}
-        />
+        <GradeDetails title="תזונה" grade={lastReport.data.nutritionGrade} />
       )}
     </View>
   );

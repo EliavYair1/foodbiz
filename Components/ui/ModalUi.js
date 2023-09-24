@@ -5,7 +5,13 @@ import { FlatList } from "react-native-gesture-handler";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
 
-const ModalUi = ({ header, onClose, handleOptionClick, modalContent }) => {
+const ModalUi = ({
+  header,
+  onClose,
+  handleOptionClick,
+  modalContent,
+  categoryEdit = false,
+}) => {
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Text style={styles.sectionHeader}>{item.subheader}</Text>

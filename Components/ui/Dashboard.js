@@ -26,41 +26,6 @@ const Dashboard = ({ tablePadding, data, onSearch, filterFunction }) => {
     return filteredData;
   };
 
-  const styles = StyleSheet.create({
-    dashboardContainer: {
-      flexDirection: "column",
-      width: "100%",
-    },
-    container: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      height: 136,
-      // backgroundColor: colors.toggleColor1,
-      width: "100%",
-      paddingHorizontal: 24,
-    },
-    header: {
-      fontFamily: fonts.ASemiBold,
-      fontSize: 26,
-      color: colors.white,
-    },
-    subHeaderContainer: {
-      flexDirection: "row",
-      backgroundColor: colors.toggleColor1,
-      paddingVertical: 12,
-      paddingHorizontal: tablePadding,
-    },
-
-    subHeaderText: {
-      fontFamily: fonts.ASemiBold,
-      color: colors.white,
-      fontSize: 15,
-      textAlign: "left",
-    },
-    searchInput: {},
-  });
-
   return (
     <View style={styles.dashboardContainer}>
       <LinearGradient
@@ -99,7 +64,9 @@ const Dashboard = ({ tablePadding, data, onSearch, filterFunction }) => {
         </View>
       </LinearGradient>
 
-      <View style={styles.subHeaderContainer}>
+      <View
+        style={[styles.subHeaderContainer, { paddingHorizontal: tablePadding }]}
+      >
         <Text
           style={{
             fontFamily: fonts.ASemiBold,
@@ -148,5 +115,37 @@ const Dashboard = ({ tablePadding, data, onSearch, filterFunction }) => {
     </View>
   );
 };
+const styles = StyleSheet.create({
+  dashboardContainer: {
+    flexDirection: "column",
+    width: "100%",
+  },
+  container: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    height: 136,
+    // backgroundColor: colors.toggleColor1,
+    width: "100%",
+    paddingHorizontal: 24,
+  },
+  header: {
+    fontFamily: fonts.ASemiBold,
+    fontSize: 26,
+    color: colors.white,
+  },
+  subHeaderContainer: {
+    flexDirection: "row",
+    backgroundColor: colors.toggleColor1,
+    paddingVertical: 12,
+  },
 
+  subHeaderText: {
+    fontFamily: fonts.ASemiBold,
+    color: colors.white,
+    fontSize: 15,
+    textAlign: "left",
+  },
+  searchInput: {},
+});
 export default Dashboard;

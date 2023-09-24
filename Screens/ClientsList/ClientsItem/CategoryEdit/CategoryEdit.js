@@ -147,7 +147,6 @@ const CategoryEdit = () => {
     return newCategoryNames;
   }, []);
   const [categoryNames, setCategoryNames] = useState(findCategoriesNames);
-
   // * category header
   const [categoryHeader, setCategoryHeader] = useState(
     findParentAndChildCategories.parent.name
@@ -580,7 +579,7 @@ const CategoryEdit = () => {
             }}
           >
             {isLoading ? (
-              <Loader visible={isLoading} />
+              <Loader visible={isLoading} isSetting={false} />
             ) : (
               <FlatList
                 data={dataForFlatListToDisplay}
@@ -597,6 +596,7 @@ const CategoryEdit = () => {
         {modalVisible && (
           <View>
             <ModalUi
+              categoryEdit={true}
               header="קטגוריות"
               modalContent={categoriesModal}
               onClose={handleModalClose}

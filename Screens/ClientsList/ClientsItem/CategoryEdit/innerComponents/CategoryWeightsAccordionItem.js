@@ -601,6 +601,7 @@ const CategoryWeightsAccordionItem = ({
                 >
                   {imageLoader ? (
                     <Loader
+                      isSetting={false}
                       visible={imageLoader}
                       loaderStyling={{
                         width: 12,

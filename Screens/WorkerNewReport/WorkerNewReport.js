@@ -90,7 +90,7 @@ const WorkerNewReport = () => {
     [globalCategories]
   );
 
-  // console.log("currentCategories", currentCategories);
+  // console.log("currentCategories", currentCategories.categories);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [IsRearrangement, setIsRearrangement] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -187,7 +187,6 @@ const WorkerNewReport = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-
   useEffect(() => {
     schema
       .validate(formData)
@@ -198,6 +197,41 @@ const WorkerNewReport = () => {
       });
     setValue("clientId", currentClient?.id);
   }, [formData, schema]);
+  // console.log(currentCategories.categories);
+  // console.log(formData.categorys);
+
+  function sortAndFilterByIdType(data, ids) {
+    const type1Ids = [];
+    const type2Ids = [];
+    const type3Ids = [];
+    if (ids) {
+      for (const item of data) {
+        if (ids.includes(parseInt(item.id))) {
+          switch (item.type) {
+            case "1":
+              type1Ids.push({ id: item.id, name: item.name });
+              break;
+            case "2":
+              type2Ids.push({ id: item.id, name: item.name });
+              break;
+            case "3":
+              type3Ids.push({ id: item.id, name: item.name });
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    }
+
+    const result = {
+      type1: type1Ids,
+      type2: type2Ids,
+      type3: type3Ids,
+    };
+
+    return result;
+  }
 
   const findReportTimeName = (data) => {
     const reportTimeId = currentReport?.getReportTime();
@@ -513,7 +547,7 @@ const WorkerNewReport = () => {
   //  * handling report time
   const handleReportTime = (selectedReport) => {
     const reportTimeDisplayed = selectedReport.getData("reportTime");
-
+    console.log("reportTimeDisplayed", reportTimeDisplayed);
     setValue("reportTime", reportTimeDisplayed);
     trigger("reportTime");
   };
@@ -1489,33 +1523,45 @@ const WorkerNewReport = () => {
       })
     : NewReportAccordionContent;
 
-  // todo make the modal work
-  const categoriesModal = [
-    {
+  let categoriesModal = [];
+  const sortedCategories = sortAndFilterByIdType(
+    globalCategoriesObj,
+    formData.categorys
+  );
+  if (sortedCategories.type1.length > 0) {
+    categoriesModal.push({
       subheader: "ביקורת בטיחות מזון",
-      options: checkboxStatus.foodSafetyReviewCbStatus,
-    },
-    {
+      options: sortedCategories.type1,
+    });
+  }
+  if (sortedCategories.type2.length > 0) {
+    categoriesModal.push({
       subheader: "ביקורת קולינארית",
-      options: checkboxStatus.culinaryReviewCbStatus,
-    },
-    {
+      options: sortedCategories.type2,
+    });
+  }
+  if (sortedCategories.type3.length > 0) {
+    categoriesModal.push({
       subheader: "ביקורת תזונה",
-      options: checkboxStatus.nutritionReviewCbStatus,
-    },
-  ];
-  // console.log(currentCategories.categories);
+      options: sortedCategories.type3,
+    });
+  }
+
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
   };
   // * modal pick handler
   const handleOptionClick = (option) => {
-    const indexOfCategory = currentCategories.categories.findIndex(
-      (category) => category == option
-    );
-    console.log("indexOfCategory", indexOfCategory);
+    console.log("Clicked option:", option);
+    // console.log(sortedCategories);
+    // const indexOfCategory = formData.categorys.findIndex(
+    //   (category) => category == option
+    // );
+    // console.log("indexOfCategory", indexOfCategory);
     // setCurrentCategoryIndex(indexOfCategory);
+    dispatch(getCurrentCategory(option));
+    navigateToRoute(routes.ONBOARDING.CategoryEdit);
     handleModalClose();
     // if (selectedModalCategory) {
     //   console.log("modal option choice:", option);
@@ -1527,7 +1573,7 @@ const WorkerNewReport = () => {
   return (
     <>
       {isLoading ? (
-        <Loader visible={isLoading} />
+        <Loader visible={isLoading} isSetting={true} />
       ) : (
         <ScreenWrapper
           newReportBackGroundImg={true}
@@ -1674,6 +1720,7 @@ const WorkerNewReport = () => {
           {modalVisible && (
             <View>
               <ModalUi
+                categoryEdit={false}
                 header="קטגוריות"
                 modalContent={categoriesModal}
                 onClose={handleModalClose}
