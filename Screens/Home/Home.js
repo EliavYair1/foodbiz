@@ -83,9 +83,7 @@ const Home = () => {
     <>
       {appIsReady && (
         <ScreenWrapper isConnectedUser={true}>
-          <View style={styles.container}>
-            <Loader visible={appIsReady} color={colors.blue} isSetting={true} />
-          </View>
+          <Loader visible={appIsReady} color={colors.blue} isSetting={true} />
         </ScreenWrapper>
       )}
     </>
@@ -95,7 +93,7 @@ const Home = () => {
 export default Home;
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    // flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",

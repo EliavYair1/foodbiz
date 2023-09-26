@@ -34,9 +34,11 @@ import useSaveReport from "../../../../../Hooks/useSaveReport";
 import { setCurrentReport } from "../../../../../store/redux/reducers/getCurrentReport";
 import Loader from "../../../../../utiles/Loader";
 import ModalUi from "../../../../../Components/ui/ModalUi";
+import routes from "../../../../../Navigation/routes";
+import { setIndex } from "../../../../../store/redux/reducers/indexSlice";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
-  const { navigateTogoBack } = useScreenNavigator();
+  const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
 
   const { dispatch } = useDispatch();
   const currentReport = useSelector(
@@ -47,7 +49,7 @@ const SummeryScreen = () => {
   const userId = useSelector((state) => state.user);
   const positiveFeedback = currentReport.getData("positiveFeedback");
   const categoryNames = categoriesToPassSummeryScreen[5].categoryNames;
-
+  const currentCategories = useSelector((state) => state.currentCategories);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [SummeryForm, setSummeryForm] = useState({});
   const [isSchemaValid, setIsSchemaValid] = useState(false);
@@ -152,11 +154,16 @@ const SummeryScreen = () => {
   }
   // * modal pick handler
   const handleOptionClick = (option) => {
-    // const indexOfCategory = currentCategories.categories.findIndex(
-    //   (category) => category == option
-    // );
-    // setCurrentCategoryIndex(indexOfCategory);
-    console.log("option clicked", option);
+    // setIsLoading(true);
+
+    const indexOfCategory = currentCategories.categories.findIndex(
+      (category) => category == option
+    );
+    // console.log(indexOfCategory);
+    dispatch(setIndex(indexOfCategory));
+    // dispatch(setCurrentCategories(formData.categorys));
+
+    navigateToRoute(routes.ONBOARDING.CategoryEdit);
     handleModalClose();
     // if (selectedModalCategory) {
     //   console.log("modal option choice:", option);

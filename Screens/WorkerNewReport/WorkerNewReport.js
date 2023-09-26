@@ -61,6 +61,7 @@ import {
 import FetchDataService from "../../Services/FetchDataService";
 import Report from "../../Components/modals/report";
 import ModalUi from "../../Components/ui/ModalUi";
+import { setIndex } from "../../store/redux/reducers/indexSlice";
 
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
@@ -197,10 +198,8 @@ const WorkerNewReport = () => {
       });
     setValue("clientId", currentClient?.id);
   }, [formData, schema]);
-  // console.log(currentCategories.categories);
-  // console.log(formData.categorys);
 
-  function sortAndFilterByIdType(data, ids) {
+  function sortSubCategoriesByType(data, ids) {
     const type1Ids = [];
     const type2Ids = [];
     const type3Ids = [];
@@ -232,14 +231,12 @@ const WorkerNewReport = () => {
 
     return result;
   }
-
   const findReportTimeName = (data) => {
     const reportTimeId = currentReport?.getReportTime();
 
     const reportTime = data.find((item) => item.id === reportTimeId);
     return reportTime ? reportTime.name : "";
   };
-  // console.log("reportsTimes", reportsTimes);
   //  * edit mode existing current report initialization
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
@@ -323,11 +320,6 @@ const WorkerNewReport = () => {
 
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
-    // console.log(content);
-    // console.log(content);
-    // const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
-
-    // richText.current?.setContentHTML(strippedContent);
     setValue("newGeneralCommentTopText", content);
     trigger("newGeneralCommentTopText");
     setFormData((prevFormData) => ({
@@ -543,12 +535,14 @@ const WorkerNewReport = () => {
       }));
     }
   };
-
   //  * handling report time
   const handleReportTime = (selectedReport) => {
     const reportTimeDisplayed = selectedReport.getData("reportTime");
-    console.log("reportTimeDisplayed", reportTimeDisplayed);
-    setValue("reportTime", reportTimeDisplayed);
+    const reportTime = reportsTimes.find(
+      (item) => item.id === reportTimeDisplayed
+    );
+
+    setValue("reportTime", reportTime.name);
     trigger("reportTime");
   };
   // * general handle form change
@@ -576,7 +570,7 @@ const WorkerNewReport = () => {
         // console.log("Setting newSwitchStates and formData");
         setCheckboxStatus(newCheckboxStatus);
         setSwitchStates(newSwitchStates);
-
+        setValue("reportTime", "בחירה");
         setFormData((prevFormData) => ({
           ...prevFormData,
           oldReportId: "0",
@@ -791,28 +785,8 @@ const WorkerNewReport = () => {
     setIsDrawerOpen(isOpen);
   };
 
-  // * paginations between categories names : Prev
-  // const handlePrevCategory = () => {
-  //   setCurrentCategoryIndex((prevIndex) => {
-  //     const newIndex = prevIndex > 0 ? prevIndex - 1 : prevIndex;
-  //     const currentItem = checkedCategoryNameById[newIndex];
-  //     // dispatch(setCurrentCategory(currentItem));
-  //     return newIndex;
-  //   });
-  // };
-
   // * paginations between categories names : Next
-  const handleNextCategory = async () => {
-    // setCurrentCategoryIndex((prevIndex) => {
-    //   const newIndex =
-    //     prevIndex < checkedCategoryNameById.length - 1
-    //       ? prevIndex + 1
-    //       : prevIndex;
-    //   const currentItem = checkedCategoryNameById[newIndex];
-    //   // dispatch(setCurrentCategory(currentItem));
-    //   // console.log(currentItem);
-    //   return newIndex;
-    // });
+  const saveEditEdReportAndNavigate = async () => {
     if (currentReport) {
       try {
         const response = await saveEditedReport();
@@ -821,14 +795,10 @@ const WorkerNewReport = () => {
         console.error("Error posting data:", error);
       }
     }
-
-    // dispatch(getCurrentCategories(formData.categorys));
-    // dispatch(getCurrentReport(currentReport));
     dispatch(getCurrentCategory(formData.categorys[0]));
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
-  // console.log(currentReport.getData("viewUrl"));
-  // console.log(currentReportTime);
+
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {
@@ -922,7 +892,7 @@ const WorkerNewReport = () => {
                 // setSelectedReport(value);
                 setValue("previousReports", value);
                 trigger("previousReports");
-                console.log("value-previousReports:", value);
+                console.log("previousReports:", value);
               }}
               propertyName="timeOfReport"
             />
@@ -1080,7 +1050,7 @@ const WorkerNewReport = () => {
                 handleFormChange("reportTime", value.id);
                 setValue("reportTime");
                 trigger("reportTime");
-                console.log("reportTime:", value.id);
+                console.log("reportTime:", value);
               }}
               propertyName={"name"}
               returnObject={true}
@@ -1517,7 +1487,7 @@ const WorkerNewReport = () => {
     : NewReportAccordionContent;
 
   let categoriesModal = [];
-  const sortedCategories = sortAndFilterByIdType(
+  const sortedCategories = sortSubCategoriesByType(
     globalCategoriesObj,
     formData.categorys
   );
@@ -1543,17 +1513,17 @@ const WorkerNewReport = () => {
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
+    setIsLoading(false);
   };
   // * modal pick handler
   const handleOptionClick = (option) => {
-    console.log("Clicked option:", option);
-    // console.log(sortedCategories);
-    // const indexOfCategory = formData.categorys.findIndex(
-    //   (category) => category == option
-    // );
-    // console.log("indexOfCategory", indexOfCategory);
-    // setCurrentCategoryIndex(indexOfCategory);
-    dispatch(getCurrentCategory(option));
+    setIsLoading(true);
+    const indexOfCategory = formData.categorys.findIndex(
+      (category) => category == option
+    );
+    dispatch(setIndex(indexOfCategory));
+    dispatch(setCurrentCategories(formData.categorys));
+
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
     handleModalClose();
     // if (selectedModalCategory) {
@@ -1646,7 +1616,7 @@ const WorkerNewReport = () => {
                         formData.categorys &&
                         formData.categorys[0] && (
                           <TouchableOpacity
-                            onPress={handleNextCategory}
+                            onPress={saveEditEdReportAndNavigate}
                             style={{
                               alignSelf: "center",
                               justifyContent: "center",
@@ -1713,6 +1683,7 @@ const WorkerNewReport = () => {
           {modalVisible && (
             <View>
               <ModalUi
+                isLoading={isLoading}
                 categoryEdit={false}
                 header="קטגוריות"
                 modalContent={categoriesModal}

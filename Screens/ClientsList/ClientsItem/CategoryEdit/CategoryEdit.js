@@ -48,7 +48,11 @@ const CategoryEdit = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
+  const initialIndexOfSubCategory = useSelector((state) => state.categoryIndex);
 
+  // console.log(currentSubCategoryId);
+  // console.log("initialIndexOfSubCategory", initialIndexOfSubCategory);
+  // console.log("currentCategories", currentCategories.categories);
   // const memoizedCategories = useMemo(() => categories, [categories]);
 
   const memoizedCategories = useMemo(
@@ -70,7 +74,10 @@ const CategoryEdit = () => {
     Object.keys(currentCategories.categories).length - 1;
   const passedDownCategoryId = currentSubCategoryId.currentCategory;
   // ! redux stpre fetching end
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(
+    initialIndexOfSubCategory ?? 0
+  );
+
   const findParentAndChildCategories = useMemo(() => {
     // console.log();
     let parentCategory = false;
@@ -95,6 +102,7 @@ const CategoryEdit = () => {
         ],
     };
   }, [currentCategoryIndex]);
+  // console.log(currentCategory);
   const [categoryGrade, setCategoryGrade] = useState(0);
   const [reportGrade, setReportGrade] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
@@ -383,6 +391,7 @@ const CategoryEdit = () => {
     const indexOfCategory = currentCategories.categories.findIndex(
       (category) => category == option
     );
+    console.log(currentCategories.categories, indexOfCategory);
     setCurrentCategoryIndex(indexOfCategory);
     handleModalClose();
     if (selectedModalCategory) {
@@ -473,6 +482,7 @@ const CategoryEdit = () => {
       culinary,
       reportGrade,
       majorCategoryHeadersToPass,
+
       { categoryNames: categoryNames },
     ];
     try {

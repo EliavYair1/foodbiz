@@ -10,7 +10,7 @@ import currentCategoriesSlice from "./getCurrentCategories";
 import summerySlice from "./summerySlice";
 import reportsTimesSlice from "./reportsTimesSlice";
 import globalCategories from "./globalCategories";
-
+import indexSlice from "./indexSlice";
 const rootReducer = combineReducers({
   user: userReducer,
   clients: ClientSlice,
@@ -23,6 +23,7 @@ const rootReducer = combineReducers({
   summary: summerySlice,
   reportsTimes: reportsTimesSlice,
   globalCategories: globalCategories,
+  categoryIndex: indexSlice,
 });
 
 export default rootReducer;

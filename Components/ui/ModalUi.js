@@ -4,6 +4,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { FlatList } from "react-native-gesture-handler";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
+import Loader from "../../utiles/Loader";
 
 const ModalUi = ({
   header,
