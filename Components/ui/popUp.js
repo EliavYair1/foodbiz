@@ -37,7 +37,8 @@ import useSaveReport from "../../Hooks/useSaveReport";
 import axios from "axios";
 import useSaveNewFile from "../../Hooks/useSaveNewFile";
 import { useSelector } from "react-redux";
-
+import useScreenNavigator from "../../Hooks/useScreenNavigator";
+import routes from "../../Navigation/routes";
 const PopUp = ({
   animationType,
   modalHeaderText,
@@ -58,17 +59,28 @@ const PopUp = ({
   secondInputText, //temp
   thirdInputText, //temp
   categoryId,
+  editFileObject = false,
 }) => {
   const [imagePicked, setImagePicked] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    station: "",
+    fileName: "",
+    authorName: "",
+    date: "",
+    comments: "",
+    imagePicker: "",
+  });
   const [imageCapture, setImageCapture] = useState(null);
   const [clientId, setClientId] = useState(null);
   // const { saveReport, isLoading } = useSaveReport();
+  const { navigateToRoute } = useScreenNavigator();
+
   const userId = useSelector((state) => state.user);
   const { saveNewFile, isLoading } = useSaveNewFile(onCloseModal);
+  // console.log(editFileObject);
   const [activeOption, setActiveOption] = useState(null);
   useEffect(() => {
     (async () => {
@@ -78,7 +90,7 @@ const PopUp = ({
   }, []);
   const schema = useMemo(() => {
     let schemaBuilder = yup.object().shape({
-      remarks: yup.string(),
+      comments: yup.string(),
       date: yup.string().required("date is required"),
       authorName: yup.string().required("author name is required"),
       fileName: yup.string().required("file name is required"),
@@ -94,7 +106,6 @@ const PopUp = ({
     }
     return schemaBuilder;
   }, [formData]);
-
   const {
     control,
     handleSubmit,
@@ -102,17 +113,34 @@ const PopUp = ({
   } = useForm({
     resolver: yupResolver(schema),
   });
-
   // validate the scheme on every change of the state
   useEffect(() => {
     schema
       .validate(formData)
       .then(() => setIsSchemaValid(true))
       .catch((err) => {
-        // console.log("err:", err);
+        console.log("err:", err);
         setIsSchemaValid(false);
       });
   }, [formData, schema]);
+  // console.log("errors", errors);
+  // useEffect(() => {
+  //   if (editFileObject) {
+  //     handleFormChange("station", editFileObject.station_name || "");
+  //     handleFormChange("fileName", editFileObject.fileName || "");
+  //     handleFormChange("authorName", editFileObject.authorName || "");
+  //     handleFormChange("date", editFileObject.date || "");
+  //     handleFormChange("imagePicker", editFileObject.imagePicker || "");
+  //     setFormData({
+  //       station: editFileObject.station_name || "",
+  //       fileName: editFileObject.fileName || "",
+  //       authorName: editFileObject.authorName || "",
+  //       date: editFileObject.date || "",
+  //     });
+  //   }
+  // }, [editFileObject]);
+
+  // console.log("formData", formData);
 
   const inputRef = useRef();
   const popUpInputInformation = [
@@ -212,6 +240,7 @@ const PopUp = ({
       inputStyle: styles.inputStyling,
     },
   ];
+  console.log(errors);
   // handling the form changes
   const handleFormChange = useCallback(
     (name, value) => {
@@ -227,6 +256,7 @@ const PopUp = ({
 
   // todo the imagepicker keep showing up even after picking an image
   const [media, pickMedia, mediaError, BinaryMedia] = useMediaPicker();
+  // todo to condiftion the view of the image on edit file
   // handling image pick
   const handleImagePick = () => {
     const pickedImage = pickMedia("image");
@@ -256,7 +286,7 @@ const PopUp = ({
       }
     }
   };
-  console.log(formData, categoryId, clientId);
+  // console.log("categoryId", categoryId);
   // todo send post request for a new file info.
   const saveFileInfo = async () => {
     const bodyFormData = new FormData();
@@ -264,15 +294,23 @@ const PopUp = ({
     bodyFormData.append("stationId", formData.station);
     bodyFormData.append("authorName", formData.authorName);
     bodyFormData.append("date", formData.date);
-    bodyFormData.append("comments", formData.remarks);
+    bodyFormData.append("comments", formData.comments);
     bodyFormData.append("url", formData.imagePicker);
     bodyFormData.append("fileName", formData.fileName);
     bodyFormData.append("clientId", clientId);
     bodyFormData.append("categoryId", categoryId);
-
+    if (editFileObject) {
+      bodyFormData.append("id3", editFileObject.id);
+    }
+    console.log("bodyFormData", bodyFormData);
     const newFileSaved = await saveNewFile(bodyFormData);
     if (newFileSaved) {
       // console.log("newFileSaved", newFileSaved);
+      console.log(
+        editFileObject !== null ? "edited file save" : "new file saved"
+      );
+      onCloseModal();
+      // navigateToRoute(routes.ONBOARDING.ClientsList);
     }
   };
 
@@ -280,13 +318,9 @@ const PopUp = ({
     // checking if scheme is valid
 
     if (isSchemaValid) {
-      console.log("(onSubmitForm)formData", formData);
-      console.log("scheme is valid");
-      try {
-        await saveFileInfo();
-      } catch (error) {
-        console.log("err", error);
-      }
+      // console.log("(onSubmitForm)formData", formData);
+      // console.log("scheme is valid");
+      await saveFileInfo();
     }
   };
 
@@ -297,6 +331,7 @@ const PopUp = ({
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
+  // console.log(errors);
   return (
     <Modal
       visible={visible}
@@ -355,7 +390,11 @@ const PopUp = ({
                       alignItems: "flex-start",
                       marginBottom: 0,
                     }}
-                    defaultText={"בחירה"}
+                    defaultText={
+                      editFileObject !== null
+                        ? editFileObject.station_name
+                        : "בחירה"
+                    }
                     optionsHeight={250}
                     centeredViewStyling={
                       {
@@ -381,6 +420,9 @@ const PopUp = ({
                     // label={firstInputText}
                     activeOutlineColor={"grey"}
                     outlineColor={"grey"}
+                    defaultValue={
+                      editFileObject !== null ? editFileObject.fileName : ""
+                    }
                     control={control}
                     mode={"outlined"}
                     inputStyle={{ backgroundColor: "white" }}
@@ -394,6 +436,9 @@ const PopUp = ({
                     name={"authorName"}
                     // label={secondInputText}
                     outlineColor={"grey"}
+                    defaultValue={
+                      editFileObject !== null ? editFileObject.authorName : ""
+                    }
                     activeOutlineColor={"grey"}
                     control={control}
                     mode={"outlined"}
@@ -407,11 +452,20 @@ const PopUp = ({
                   <DatePicker
                     label={thirdInputText}
                     control={control}
+                    defaultDate={
+                      editFileObject !== null
+                        ? editFileObject.date
+                        : "בחר תאריך"
+                    }
                     name={"date"}
                     dateInputWidth={"100%"}
                     errorMessage={errors.date && errors.date.message}
                     onchange={(value) => {
-                      handleFormChange("date", value);
+                      const date = new Date(value);
+                      const formattedDate = date.toLocaleDateString("en-GB");
+                      console.log(formattedDate);
+
+                      handleFormChange("date", formattedDate);
                     }}
                   />
                 </View>
@@ -463,7 +517,9 @@ const PopUp = ({
                           buttonFunction={handleTakePhoto}
                           icon={true}
                           iconPath={icon2}
-                          disableLogic={activeOption === "image"}
+                          disableLogic={
+                            activeOption === "image" || editFileObject?.url
+                          }
                           iconStyle={styles.IconStyle}
                           buttonTextStyle={styles.buttonText}
                           buttonText={buttonText2}
@@ -493,13 +549,16 @@ const PopUp = ({
                   <Text style={styles.subtextStyle}>{remarksInputText}</Text>
                   <Input
                     control={control}
-                    name={"remarks"}
+                    name={"comments"}
                     multiline
                     numberOfLines={4}
+                    defaultValue={
+                      editFileObject !== null ? editFileObject.comments : ""
+                    }
                     maxLength={40}
                     mode="outlined"
                     onChangeFunction={(value) => {
-                      handleFormChange("remarks", value);
+                      handleFormChange("comments", value);
                     }}
                     activeOutlineColor="grey"
                     inputStyle={{

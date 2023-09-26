@@ -147,6 +147,7 @@ const CategoryEdit = () => {
     return newCategoryNames;
   }, []);
   const [categoryNames, setCategoryNames] = useState(findCategoriesNames);
+  // console.log("findCategoriesNames", findCategoriesNames);
   // * category header
   const [categoryHeader, setCategoryHeader] = useState(
     findParentAndChildCategories.parent.name
@@ -391,11 +392,6 @@ const CategoryEdit = () => {
     }
   };
 
-  // ? random functions
-
-  // ! random function end
-
-  // todo need to verify
   // * post request on the changes of the report edit
   const saveReport = async () => {
     const targetId = currentCategories.categories[currentCategoryIndex];
@@ -465,7 +461,6 @@ const CategoryEdit = () => {
     }
   };
 
-  // console.log("categorys",currentReport.getData("categorys"));
   // * pagination's between categories names : Next
   const nextCategory = async () => {
     debounce(saveReport(), 300);
@@ -478,6 +473,7 @@ const CategoryEdit = () => {
       culinary,
       reportGrade,
       majorCategoryHeadersToPass,
+      { categoryNames: categoryNames },
     ];
     try {
       if (currentCategoryIndex === lastIndexOfCategories) {

@@ -44,7 +44,6 @@ import { setCurrentCategories } from "../../../store/redux/reducers/getCurrentCa
 import Client from "../../../Components/modals/client";
 import { setClients } from "../../../store/redux/reducers/clientSlice";
 import FetchDataService from "../../../Services/FetchDataService";
-
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   const contentRef = useRef();
@@ -59,6 +58,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const userId = useSelector((state) => state.user);
+  const [tabHeight, setTabHeight] = useState(0);
   // tabs handler
   const handleTabPress = useCallback((tab) => {
     setActiveTab(tab);
@@ -68,15 +68,24 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const handleAccordionOpening = () => {
     setOpen(!open);
   };
-
+  useEffect(() => {
+    if (activeTab === "דוחות") {
+      setTabHeight(800);
+    } else if (activeTab === "קבצים") {
+      setTabHeight(450);
+    } else {
+      // Set a default height for other tabs
+      setTabHeight(500); // Replace DEFAULT_HEIGHT with your desired default height
+    }
+  }, [activeTab]);
   // accordion animation
   useEffect(() => {
     Animated.timing(heightAnim, {
-      toValue: open ? 800 : 0,
+      toValue: open ? tabHeight : 0,
       duration: 250,
       useNativeDriver: false,
     }).start();
-  }, [open, heightAnim]);
+  }, [open, heightAnim, tabHeight]);
 
   // defining the color of the last report status background color
   const statusBgColor = (status) => {
@@ -94,7 +103,6 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   };
   // console.log(currentReport.getData("id"));
   // console.log(userId);
-  // todo to apply delete post.
   const DeleteReport = async (userId, reportId) => {
     try {
       setIsLoading(true);

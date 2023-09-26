@@ -1072,13 +1072,6 @@ const WorkerNewReport = () => {
                 justifyContent: "center",
                 alignItems: "flex-start",
               }}
-              centeredViewStyling={
-                {
-                  // marginRight: 12,
-                  // alignItems: "flex-end",
-                  // marginTop: 300,
-                }
-              }
               selectOptions={reportsTimes}
               name={"reportTime"}
               errorMessage={errors.reportTime && errors.reportTime.message}

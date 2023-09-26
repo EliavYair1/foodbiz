@@ -8,7 +8,7 @@ import { setClients } from "../store/redux/reducers/clientSlice";
 import { useDispatch, useSelector } from "react-redux";
 import FetchDataService from "../Services/FetchDataService";
 import Client from "../Components/modals/client";
-const useSaveNewFile = ({ onCloseModal }) => {
+const useSaveNewFile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { navigateToRoute } = useScreenNavigator();
   const { dispatch } = useDispatch();
@@ -17,26 +17,10 @@ const useSaveNewFile = ({ onCloseModal }) => {
   const saveNewFile = async (reportData) => {
     try {
       setIsLoading(true);
-      const apiUrl = process.env.API_BASE_URL + "api/newfile.php";
+      const apiUrl = process.env.API_BASE_URL + "api/newfilejson.php";
       const response = await axios.post(apiUrl, reportData);
       if (response.status == 200 || response.status == 201) {
         setIsLoading(false);
-        console.log("[useSaveNewFile] Response.data", response.data);
-        // todo to debug the update of the clients
-        // if (userId) {
-        //   const responseClients = await fetchData(
-        //     process.env.API_BASE_URL + "api/clients.php",
-        //     { id: userId }
-        //   );
-        //   if (responseClients.success) {
-        //     let clients = [];
-        //     responseClients.data.forEach((element) => {
-        //       clients.push(new Client(element));
-        //     });
-        //     dispatch(setClients({ clients: clients }));
-        //     console.log("responseClients", responseClients.data);
-        //   }
-        // }
 
         Alert.alert(
           "Success",
@@ -46,7 +30,8 @@ const useSaveNewFile = ({ onCloseModal }) => {
               text: "ok",
               onPress: () => {
                 // navigateToRoute(routes.ONBOARDING.ClientsList);
-                onCloseModal();
+                // onCloseModal();
+                // {"authorName": "Sddf", "categoryId": "4", "clientId": "34", "comments": "Dfsdf", "createTime": "1695724119", "date": "2023-09-26", "fileName": "Dads", "id": "554", "stationId": "66", "station_name": "תחנה להדגמה", "url": "http://system.foodbiz.co.il/uploads/1695724114.jpg"}
               },
             },
             {
@@ -60,9 +45,9 @@ const useSaveNewFile = ({ onCloseModal }) => {
         return response.data;
       }
     } catch (error) {
-      setIsLoading(false);
-      console.error("Error making new file request:", error);
-      return false;
+      if (error.response) {
+        console.log(error.response.data);
+      }
     }
   };
 

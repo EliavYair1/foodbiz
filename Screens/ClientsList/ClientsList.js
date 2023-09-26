@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Dimensions,
   SectionList,
+  Platform,
 } from "react-native";
 import React, {
   useEffect,
@@ -15,7 +16,7 @@ import React, {
 } from "react";
 import Dashboard from "../../Components/ui/Dashboard";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
-import { FlatList } from "react-native-gesture-handler";
+import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import colors from "../../styles/colors";
 import Loader from "../../utiles/Loader";
 import ClientItem from "./ClientsItem/ClientItem";
@@ -25,8 +26,10 @@ import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import { removeData } from "../../Services/StorageService";
 import routes from "../../Navigation/routes";
 import { setUser } from "../../store/redux/reducers/userSlice";
-
 import uuid from "uuid-random";
+import FetchDataService from "../../Services/FetchDataService";
+import Client from "../../Components/modals/client";
+import { setClients } from "../../store/redux/reducers/clientSlice";
 const windowWidth = Dimensions.get("screen").width;
 const windowHeight = Dimensions.get("window").height;
 const ClientsList = () => {
@@ -35,6 +38,8 @@ const ClientsList = () => {
   const { navigateToRoute } = useScreenNavigator();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { fetchData } = FetchDataService();
 
   // const [filteredClients, setFilteredClients] = useState(clients);
   const [filteredClients, setFilteredClients] = useState(clients);
@@ -81,6 +86,30 @@ const ClientsList = () => {
     // Scroll to the top of the screen
     flatListRef.current.scrollToOffset({ offset: 0, animated: true });
   };
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+
+    try {
+      const responseClients = await fetchData(
+        process.env.API_BASE_URL + "api/clients.php",
+        { id: user }
+      );
+
+      if (responseClients.success) {
+        setIsRefreshing(false);
+        let clients = [];
+        responseClients.data.forEach((element) => {
+          clients.push(new Client(element));
+        });
+        dispatch(setClients({ clients: clients }));
+      }
+    } catch (error) {
+      setIsRefreshing(false);
+      console.log("error", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <ScreenWrapper
@@ -107,6 +136,16 @@ const ClientsList = () => {
               ref={flatListRef}
               style={{ flexGrow: 0 }}
               data={filteredClients}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  colors={[colors.lightBlue]}
+                  progressBackgroundColor={
+                    Platform.OS === "android" ? colors.white : undefined
+                  }
+                />
+              }
               renderItem={({ item }) => {
                 return (
                   <ClientItem

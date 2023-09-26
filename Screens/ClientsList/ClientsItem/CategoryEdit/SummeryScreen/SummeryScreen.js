@@ -33,6 +33,7 @@ import useScreenNavigator from "../../../../../Hooks/useScreenNavigator";
 import useSaveReport from "../../../../../Hooks/useSaveReport";
 import { setCurrentReport } from "../../../../../store/redux/reducers/getCurrentReport";
 import Loader from "../../../../../utiles/Loader";
+import ModalUi from "../../../../../Components/ui/ModalUi";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateTogoBack } = useScreenNavigator();
@@ -45,18 +46,20 @@ const SummeryScreen = () => {
   const globalCategories = useSelector((state) => state.globalCategories);
   const userId = useSelector((state) => state.user);
   const positiveFeedback = currentReport.getData("positiveFeedback");
+  const categoryNames = categoriesToPassSummeryScreen[5].categoryNames;
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [SummeryForm, setSummeryForm] = useState({});
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const drawerRef = useRef();
   const inputRef = useRef();
   const [content, setContent] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
   const { saveReport, isLoading } = useSaveReport();
   const memoizedCategories = useMemo(
     () => globalCategories,
     [globalCategories]
   );
-
   const schema = useMemo(() => {
     let schemaBuilder = yup.object().shape({
       positiveFeedback: yup.string().required("positiveFeedback is required"),
@@ -122,6 +125,45 @@ const SummeryScreen = () => {
       // console.log("[SummeryScreen]response:", reportSaved);
     }
   };
+  // * categories picker close function
+  const handleModalClose = () => {
+    setModalVisible(false);
+  };
+
+  let categoriesModal = [];
+
+  if (categoryNames[1].length > 0) {
+    categoriesModal.push({
+      subheader: "ביקורת בטיחות מזון",
+      options: categoryNames[1],
+    });
+  }
+  if (categoryNames[2].length > 0) {
+    categoriesModal.push({
+      subheader: "ביקורת קולינארית",
+      options: categoryNames[2],
+    });
+  }
+  if (categoryNames[3].length > 0) {
+    categoriesModal.push({
+      subheader: "ביקורת תזונה",
+      options: categoryNames[3],
+    });
+  }
+  // * modal pick handler
+  const handleOptionClick = (option) => {
+    // const indexOfCategory = currentCategories.categories.findIndex(
+    //   (category) => category == option
+    // );
+    // setCurrentCategoryIndex(indexOfCategory);
+    console.log("option clicked", option);
+    handleModalClose();
+    // if (selectedModalCategory) {
+    //   console.log("modal option choice:", option);
+    //   // debounce(saveReport(), 300);
+    //   saveReport();
+    // }
+  };
 
   const sendForManagerApproval = async () => {
     console.log(" נשלח למנהל");
@@ -137,7 +179,6 @@ const SummeryScreen = () => {
       }
     }
   };
-  // todo list
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
@@ -149,7 +190,7 @@ const SummeryScreen = () => {
           HeaderText={"מסך סיכום"}
           containerStyling={{ marginTop: 27.5, marginBottom: 23.5 }}
           iconList={true}
-          onCategoriesIconPress={() => console.log("categories pressed")}
+          onCategoriesIconPress={() => setModalVisible(true)}
         />
       </View>
       {isLoading ? (
@@ -271,7 +312,17 @@ const SummeryScreen = () => {
           </TouchableOpacity>
         </View>
       )}
-
+      {modalVisible && (
+        <View>
+          <ModalUi
+            categoryEdit={true}
+            header="קטגוריות"
+            modalContent={categoriesModal}
+            onClose={handleModalClose}
+            handleOptionClick={handleOptionClick}
+          />
+        </View>
+      )}
       <SafeAreaView
         style={{
           // flex: 1,

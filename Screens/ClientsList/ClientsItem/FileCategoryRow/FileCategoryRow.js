@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Animated,
   TouchableOpacity,
+  Alert,
   Image,
 } from "react-native";
 import { List, Divider } from "react-native-paper";
@@ -21,6 +22,9 @@ import CameraIcon from "../../../../assets/imgs/CameraIcon.png";
 import libraryIcon from "../../../../assets/imgs/libraryIcon.png";
 import PopUp from "../../../../Components/ui/popUp";
 import SelectMenu from "../../../../Components/ui/SelectMenu";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import Loader from "../../../../utiles/Loader";
 const FileCategoryRow = ({
   children,
   items,
@@ -30,15 +34,39 @@ const FileCategoryRow = ({
   company,
 }) => {
   const heightAnim = useRef(new Animated.Value(0)).current;
+  const userId = useSelector((state) => state.user);
   const [openId, setOpenId] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [isEditFile, setIsEditFile] = useState(false);
   const [categoryId, setCategoryId] = useState(null);
+  const [fileObj, setFileObj] = useState(null);
+  const handleDeleteFile = async (userId, fileId) => {
+    // console.log("userId /fileId", userId, fileId);
+    try {
+      const response = await axios.post(
+        process.env.API_BASE_URL + "api/deleteFile.php",
+        {
+          userId: userId,
+          fileId: fileId,
+        }
+      );
+
+      if (response.status == 200 || response.status == 201) {
+        Alert.alert("הצלחה", "הקובץ נמחק בהצלחה");
+      } else {
+        Alert.alert("Error", "Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
   const onCloseNewFileModal = () => {
     setModalVisible(!modalVisible);
   };
+  // console.log(isEditFile);
   const handleItemClick = (itemId) => {
     setOpenId(itemId === openId ? null : itemId);
+    setCategoryId(itemId);
   };
   useEffect(() => {
     Animated.timing(heightAnim, {
@@ -99,6 +127,9 @@ const FileCategoryRow = ({
           },
           action: (file) => {
             console.log("Edit_icon", file.getData("url"));
+            console.log("file", file.data);
+            setIsEditFile(true);
+            setFileObj(file.data);
             setIsEditFile(true);
             setModalVisible(true);
           },
@@ -110,6 +141,8 @@ const FileCategoryRow = ({
             return true;
           },
           action: (file) => {
+            // console.log("trash file", userId, file.data.id);
+            handleDeleteFile(userId, file.data.id);
             console.log("Trash_icon");
           },
         },
@@ -131,6 +164,7 @@ const FileCategoryRow = ({
       }
     };
     let arr = stations.map((element) => element);
+
     return (
       <>
         <TouchableOpacity
@@ -177,7 +211,7 @@ const FileCategoryRow = ({
         </TouchableOpacity>
         <Divider />
         {isOpen && (
-          <View style={{ height: "100%" }}>
+          <View style={{}}>
             <ClientTable rowsData={item.getFiles()} headers={filesTable} />
           </View>
         )}
@@ -188,6 +222,7 @@ const FileCategoryRow = ({
             onCloseModal={onCloseNewFileModal}
             modalHeight={686}
             modalWidth={480}
+            editFileObject={isEditFile ? fileObj : null}
             modalHeaderText={
               isEditFile
                 ? `עריכה של קובץ בתיקיית אישורים\n עבור ${company}`
