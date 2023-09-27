@@ -83,15 +83,18 @@ const CategoryAccordionItem = ({
   const heightAnim = useState(new Animated.Value(0))[0];
   const [accordionBg, setAccordionBg] = useState(colors.white);
   const [reportItemState, setReportItemState] = useState(reportItem || {});
-  const [images, setImages] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageLoader, setImageLoader] = useState(false);
   // * image picker
-  const showImagePickerOptions = useCallback(async () => {
+  const showImagePickerOptions = async () => {
     const options = ["Take a Photo", "Choose from Library", "Cancel"];
 
-    if (images.length >= 3) {
+    if (
+      reportItemState.image !== "" &&
+      reportItemState.image2 !== "" &&
+      reportItemState.image3 !== ""
+    ) {
       alert("You can only select up to 3 images.");
       return;
     }
@@ -108,79 +111,84 @@ const CategoryAccordionItem = ({
           }
         );
       });
-
+      let result = false;
       if (buttonIndex === 0) {
         // Take a photo
-        const result = await ImagePicker.launchCameraAsync({
+        result = await ImagePicker.launchCameraAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
           aspect: [4, 3],
           quality: 1,
         });
-
-        if (!result.cancelled) {
-          setImages((prevImages) => [...prevImages, result.uri]);
-        }
       } else if (buttonIndex === 1) {
         // Choose from library
-        const result = await ImagePicker.launchImageLibraryAsync({
+        result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: false,
           aspect: [4, 3],
           quality: 1,
         });
-        if (!result.canceled) {
-          setImageLoader(true);
-          const selectedAssets = result.assets;
+      }
 
-          let fileName = selectedAssets[0].fileName;
-          let fileSize = selectedAssets[0].fileSize;
-          const fileToUpload = selectedAssets[0];
-          const apiUrl =
-            process.env.API_BASE_URL +
-            "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
-            fileName +
-            "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
-            fileSize +
-            "&ax-start-byte=0&isLast=true";
-          const response = await FileSystem.uploadAsync(
-            apiUrl,
-            fileToUpload.uri,
-            {
-              fieldName: "ax-file-name",
-              httpMethod: "POST",
-              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-            }
-          );
+      if (result && !result.canceled) {
+        setImageLoader(true);
+        const selectedAssets = result.assets;
 
-          if (response.status == 200) {
-            let responseBody = JSON.parse(response.body);
-            if (responseBody.status == "error") {
-              setImageLoader(false);
-              Alert.alert("Error", responseBody.info);
-            } else {
-              // Check and push the image into the appropriate field
-              if (images.length === 0) {
-                handleReportChange("uploads/" + responseBody.name, "image");
-              } else if (images.length === 1) {
-                handleReportChange("uploads/" + responseBody.name, "image2");
-              } else if (images.length === 2) {
-                handleReportChange("uploads/" + responseBody.name, "image3");
-              }
-              setImages((prevImages) => [...prevImages, fileToUpload.uri]);
-              setImageLoader(false);
-
-              console.log("images", fileToUpload.uri);
-            }
-            console.log("response.data", response.data);
+        let fileName = selectedAssets[0].fileName;
+        let fileSize = selectedAssets[0].fileSize;
+        const fileToUpload = selectedAssets[0];
+        const apiUrl =
+          process.env.API_BASE_URL +
+          "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
+          fileName +
+          "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
+          fileSize +
+          "&ax-start-byte=0&isLast=true";
+        const response = await FileSystem.uploadAsync(
+          apiUrl,
+          fileToUpload.uri,
+          {
+            fieldName: "ax-file-name",
+            httpMethod: "POST",
+            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
           }
+        );
+        // console.log("status:", response.status);
+        if (response.status == 200) {
+          let responseBody = JSON.parse(response.body);
+          if (responseBody.status == "error") {
+            setImageLoader(false);
+            Alert.alert("Error", responseBody.info);
+          } else {
+            // Check and push the image into the appropriate field
+            console.log(
+              "reportItemState2",
+              reportItemState,
+              reportItemState.image
+            );
+            if (reportItemState.image == "") {
+              console.log(1);
+              handleReportChange("uploads/" + responseBody.name, "image");
+            } else if (reportItemState.image2 == "") {
+              console.log(2);
+              handleReportChange("uploads/" + responseBody.name, "image2");
+            } else if (reportItemState.image3 == "") {
+              console.log(3);
+              handleReportChange("uploads/" + responseBody.name, "image3");
+            }
+            setImageLoader(false);
+
+            console.log("images", fileToUpload.uri);
+          }
+          console.log("response.data", response.data);
         }
       }
     } catch (error) {
       console.error("Error while showing image picker:", error);
     }
-  }, [images]);
+  };
   const openModal = (index) => {
+    console.log("index", index);
     setSelectedImageIndex(index);
     setModalVisible(true);
   };
@@ -213,20 +221,18 @@ const CategoryAccordionItem = ({
   }, [open]);
 
   // * change handler
-  const handleReportChange = useCallback(
-    debounce((value, label) => {
-      const temp = { ...reportItemState };
-      temp[label] = value;
 
+  const handleReportChange = debounce((value, label) => {
+    setReportItemState((prev) => {
+      const temp = { ...prev };
+      console.log("temp1", temp);
+      temp[label] = value;
       // * Update comment and showOnComment based on the grade number value
       if (label === "grade") {
         temp["comment"] = item["grade" + value];
-
         relevantOptions.forEach((option) => {
           temp[option.value] =
-            reportItemState[option.value] || reportItemState[option.value] == 1
-              ? 1
-              : 0;
+            prev[option.value] || prev[option.value] == 1 ? 1 : 0;
         });
         temp["charge"] =
           temp["charge"] != "" ? temp["charge"] : chargeSelections[0];
@@ -234,18 +240,19 @@ const CategoryAccordionItem = ({
           temp["lastDate"] != "" ? temp["lastDate"] : selectedDates[0];
         temp["showOnComment"] = value == 0 || value == 1 ? 1 : 0;
       }
-
       // * Set grade and comment for noRelevant case
       if (label === "noRelevant" && value) {
         temp["grade"] = "3";
         temp["comment"] = item["grade3"];
       }
-      onReportChange(temp);
-      setReportItemState(temp);
-    }, 0),
-    [item]
-  );
+      console.log("temp2", temp);
 
+      onReportChange(temp);
+      return temp;
+    });
+  }, 0);
+  console.log("reportItemState", reportItemState);
+  // console.log(images);
   // * adding days for the lastDate selectMenu
   const addDaysToDate = (numberOfDays) => {
     let timeOfReport = dateSelected;
@@ -495,38 +502,49 @@ const CategoryAccordionItem = ({
           <View style={styles.headerWrapper}>
             <Text style={styles.header}>תמונות:</Text>
 
-            <TouchableOpacity onPress={showImagePickerOptions}>
-              <Text style={styles.ImageUploadText}>הוספת תמונה</Text>
-            </TouchableOpacity>
+            {imageLoader ? (
+              <Loader
+                isSetting={false}
+                visible={imageLoader}
+                loaderStyling={{
+                  width: 12,
+                  height: 12,
+                }}
+                loaderWrapperStyle={{
+                  zIndex: 1,
+                  alignSelf: "center",
+                  justifyContent: "center",
+                }}
+                color={colors.black}
+              />
+            ) : (
+              <TouchableOpacity onPress={showImagePickerOptions}>
+                <Text style={styles.ImageUploadText}>הוספת תמונה</Text>
+              </TouchableOpacity>
+            )}
             <ScrollView horizontal>
-              {images.map((image, index) => (
-                <TouchableOpacity
-                  key={uuid()}
-                  onPress={(value) => console.log("open modal", value)}
-                >
-                  {imageLoader ? (
-                    <Loader
-                      isSetting={false}
-                      visible={imageLoader}
-                      loaderStyling={{
-                        width: 12,
-                        height: 12,
+              {[
+                reportItemState.image,
+                reportItemState.image2,
+                reportItemState.image3,
+              ].map((image, index) => {
+                if (image !== "") {
+                  return (
+                    <TouchableOpacity
+                      key={uuid()}
+                      onPress={() => {
+                        console.log("value", index);
+                        openModal(index);
                       }}
-                      loaderWrapperStyle={{
-                        zIndex: 1,
-                        alignSelf: "center",
-                        justifyContent: "center",
-                      }}
-                      color={colors.black}
-                    />
-                  ) : (
-                    <Image
-                      source={{ uri: image }}
-                      style={styles.uploadedPhoto}
-                    />
-                  )}
-                </TouchableOpacity>
-              ))}
+                    >
+                      <Image
+                        source={{ uri: `${process.env.API_BASE_URL}${image}` }}
+                        style={styles.uploadedPhoto}
+                      />
+                    </TouchableOpacity>
+                  );
+                }
+              })}
             </ScrollView>
 
             {modalVisible && (
@@ -554,31 +572,42 @@ const CategoryAccordionItem = ({
                       backgroundColor: "white",
                     }}
                   >
+                    {/*  finish logic and restyle the modal */}
                     <FlatList
-                      data={images}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          style={{
-                            justifyContent: "center",
-                            alignItems: "center",
-                            gap: 30,
+                      data={[
+                        reportItemState.image,
+                        reportItemState.image2,
+                        reportItemState.image3,
+                      ]}
+                      renderItem={({ item }) => {
+                        if (item !== "") {
+                          return (
+                            <TouchableOpacity
+                              style={{
+                                justifyContent: "center",
+                                alignItems: "center",
+                                gap: 30,
 
-                            // width: "100%",
-                          }}
-                          onPress={() => {
-                            setModalVisible(false);
-                          }}
-                        >
-                          <Image
-                            source={{ uri: item }}
-                            style={{
-                              width: 300,
-                              height: 300,
-                              resizeMode: "contain",
-                            }}
-                          />
-                        </TouchableOpacity>
-                      )}
+                                // width: "100%",
+                              }}
+                              onPress={() => {
+                                setModalVisible(false);
+                              }}
+                            >
+                              <Image
+                                source={{
+                                  uri: `${process.env.API_BASE_URL}${item}`,
+                                }}
+                                style={{
+                                  width: 300,
+                                  height: 300,
+                                  resizeMode: "contain",
+                                }}
+                              />
+                            </TouchableOpacity>
+                          );
+                        }
+                      }}
                       horizontal
                       pagingEnabled
                       initialScrollIndex={selectedImageIndex}

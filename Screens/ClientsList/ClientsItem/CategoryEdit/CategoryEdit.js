@@ -30,7 +30,7 @@ import GoBackNavigator from "../../../../utiles/GoBackNavigator";
 import Header from "../../../../Components/ui/Header";
 import { setSummary } from "../../../../store/redux/reducers/summerySlice";
 import SummaryDrawer from "./innerComponents/SummeryDrawer";
-
+import { setCurrentCategories } from "../../../../store/redux/reducers/getCurrentCategories";
 const CategoryEdit = () => {
   // console.log("EditExistingReport");
   const { navigateToRoute } = useScreenNavigator();
@@ -51,6 +51,7 @@ const CategoryEdit = () => {
   const initialIndexOfSubCategory = useSelector((state) => state.categoryIndex);
 
   // console.log(currentSubCategoryId);
+
   // console.log("initialIndexOfSubCategory", initialIndexOfSubCategory);
   // console.log("currentCategories", currentCategories.categories);
   // const memoizedCategories = useMemo(() => categories, [categories]);
@@ -485,6 +486,7 @@ const CategoryEdit = () => {
 
       { categoryNames: categoryNames },
     ];
+
     try {
       if (currentCategoryIndex === lastIndexOfCategories) {
         console.log(
@@ -492,12 +494,13 @@ const CategoryEdit = () => {
           currentCategories.categories[currentCategoryIndex]
         );
         navigateToRoute(routes.ONBOARDING.SummeryScreen);
-
+        dispatch(setCurrentCategories(currentCategories.categories));
         dispatch(setSummary(categoriesToPassSummeryScreen));
         // todo to send foward these params : positiveFeedback, grades, summeryAndNotes, file1 , file2
         // navigateToRoute(routes.ONBOARDING.SummeryScreen);
         return;
       }
+
       setCurrentCategoryIndex((prevIndex) => prevIndex + 1);
 
       console.log("Moving to the next category");

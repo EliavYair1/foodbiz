@@ -62,6 +62,7 @@ const SummeryScreen = () => {
     () => globalCategories,
     [globalCategories]
   );
+
   const schema = useMemo(() => {
     let schemaBuilder = yup.object().shape({
       positiveFeedback: yup.string().required("positiveFeedback is required"),
@@ -159,11 +160,13 @@ const SummeryScreen = () => {
     const indexOfCategory = currentCategories.categories.findIndex(
       (category) => category == option
     );
-    // console.log(indexOfCategory);
+    console.log(currentCategories.categories);
+    console.log("indexOfCategory", indexOfCategory);
+    console.log("option", option);
     dispatch(setIndex(indexOfCategory));
     // dispatch(setCurrentCategories(formData.categorys));
 
-    navigateToRoute(routes.ONBOARDING.CategoryEdit);
+    // navigateToRoute(routes.ONBOARDING.CategoryEdit);
     handleModalClose();
     // if (selectedModalCategory) {
     //   console.log("modal option choice:", option);

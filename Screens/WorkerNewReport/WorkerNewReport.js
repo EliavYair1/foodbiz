@@ -1135,6 +1135,7 @@ const WorkerNewReport = () => {
               )}
               onDragEndCb={(data) => {
                 let originalData = [...foodSafetyReviewTexts];
+                console.log("originalData", originalData);
                 const movedData = originalData[data.from];
                 originalData.splice(data.from, 1);
                 const newData = [
@@ -1142,6 +1143,8 @@ const WorkerNewReport = () => {
                   movedData,
                   ...originalData.slice(data.to),
                 ];
+                console.log("newData", newData);
+
                 let newCategoryArrangemnet = [];
                 newData.forEach((item) => {
                   const index = checkboxStatus[
@@ -1151,6 +1154,8 @@ const WorkerNewReport = () => {
 
                   // console.log(item);
                 });
+                console.log("newCategoryArrangemnet", newCategoryArrangemnet);
+
                 setCheckboxStatus((prev) => ({
                   ...prev,
                   foodSafetyReviewCbStatus: newCategoryArrangemnet,
