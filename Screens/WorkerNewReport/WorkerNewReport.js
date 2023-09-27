@@ -1134,6 +1134,7 @@ const WorkerNewReport = () => {
                 "foodSafetyReviewCb"
               )}
               onDragEndCb={(data) => {
+                // todo when adding a new todo the order is not reordering to be fix
                 let originalData = [...foodSafetyReviewTexts];
                 console.log("originalData", originalData);
                 const movedData = originalData[data.from];

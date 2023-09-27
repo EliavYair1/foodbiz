@@ -31,6 +31,7 @@ import "@env";
 import * as FileSystem from "expo-file-system";
 import axios from "axios";
 import { useActionSheet } from "@expo/react-native-action-sheet";
+import { BlurView } from "expo-blur";
 import Loader from "../../../../../utiles/Loader";
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
@@ -86,6 +87,12 @@ const CategoryAccordionItem = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageLoader, setImageLoader] = useState(false);
+
+  let images = [
+    reportItemState.image,
+    reportItemState.image2,
+    reportItemState.image3,
+  ].filter((image) => !!image);
   // * image picker
   const showImagePickerOptions = async () => {
     const options = ["Take a Photo", "Choose from Library", "Cancel"];
@@ -160,12 +167,6 @@ const CategoryAccordionItem = ({
             setImageLoader(false);
             Alert.alert("Error", responseBody.info);
           } else {
-            // Check and push the image into the appropriate field
-            console.log(
-              "reportItemState2",
-              reportItemState,
-              reportItemState.image
-            );
             if (reportItemState.image == "") {
               console.log(1);
               handleReportChange("uploads/" + responseBody.name, "image");
@@ -188,10 +189,22 @@ const CategoryAccordionItem = ({
     }
   };
   const openModal = (index) => {
-    console.log("index", index);
+    // console.log("index", index);
     setSelectedImageIndex(index);
     setModalVisible(true);
   };
+  const handlePreviousImage = () => {
+    if (selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1);
+    }
+  };
+
+  const handleNextImage = () => {
+    if (selectedImageIndex < images.length - 1) {
+      setSelectedImageIndex(selectedImageIndex + 1);
+    }
+  };
+
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;
@@ -219,13 +232,11 @@ const CategoryAccordionItem = ({
       useNativeDriver: false,
     }).start();
   }, [open]);
-
+  console.log("images", images);
   // * change handler
-
   const handleReportChange = debounce((value, label) => {
     setReportItemState((prev) => {
       const temp = { ...prev };
-      console.log("temp1", temp);
       temp[label] = value;
       // * Update comment and showOnComment based on the grade number value
       if (label === "grade") {
@@ -245,13 +256,12 @@ const CategoryAccordionItem = ({
         temp["grade"] = "3";
         temp["comment"] = item["grade3"];
       }
-      console.log("temp2", temp);
 
       onReportChange(temp);
+
       return temp;
     });
   }, 0);
-  console.log("reportItemState", reportItemState);
   // console.log(images);
   // * adding days for the lastDate selectMenu
   const addDaysToDate = (numberOfDays) => {
@@ -523,17 +533,13 @@ const CategoryAccordionItem = ({
               </TouchableOpacity>
             )}
             <ScrollView horizontal>
-              {[
-                reportItemState.image,
-                reportItemState.image2,
-                reportItemState.image3,
-              ].map((image, index) => {
+              {images.map((image, index) => {
                 if (image !== "") {
                   return (
                     <TouchableOpacity
                       key={uuid()}
                       onPress={() => {
-                        console.log("value", index);
+                        // console.log("value", index);
                         openModal(index);
                       }}
                     >
@@ -547,75 +553,170 @@ const CategoryAccordionItem = ({
               })}
             </ScrollView>
 
-            {modalVisible && (
-              <Modal
-                animationType="slide"
-                transparent={false}
-                visible={modalVisible}
-                // style={{ width: 380, height: 346 }}
-                onRequestClose={() => {
-                  setModalVisible(!modalVisible);
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => {
+                setModalVisible(!modalVisible);
+              }}
+            >
+              <BlurView
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
+                intensity={50}
+                tint="light"
               >
+                {/* background */}
                 <View
                   style={{
-                    flex: 1,
+                    width: 400,
+                    height: 366,
+                    backgroundColor: "white",
                     justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    // backgroundColor: "rgba(0, 0, 0, 0.08)",
+                    // paddingVertical: 12,
+                    borderRadius: 16,
+                    padding: 20,
                   }}
                 >
-                  <View
-                    style={{
-                      width: 380,
-                      height: 346,
-                      backgroundColor: "white",
+                  <TouchableOpacity
+                    style={{}}
+                    onPress={() => {
+                      setModalVisible(false);
                     }}
                   >
-                    {/*  finish logic and restyle the modal */}
-                    <FlatList
-                      data={[
-                        reportItemState.image,
-                        reportItemState.image2,
-                        reportItemState.image3,
-                      ]}
-                      renderItem={({ item }) => {
-                        if (item !== "") {
-                          return (
-                            <TouchableOpacity
-                              style={{
-                                justifyContent: "center",
-                                alignItems: "center",
-                                gap: 30,
+                    <Image
+                      source={require("../../../../../assets/imgs/cancelSlide.jpg")}
+                      style={{
+                        width: 12.5,
+                        height: 12.5,
+                      }}
+                    />
+                  </TouchableOpacity>
+                  {/* image size */}
+                  <View style={{ paddingHorizontal: 15 }}>
+                    <Image
+                      source={{
+                        uri: `${process.env.API_BASE_URL}${images[selectedImageIndex]}`,
+                      }}
+                      style={{
+                        marginTop: 12,
+                        width: 300,
+                        height: 203,
+                        resizeMode: "contain",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        alignSelf: "center",
+                        backgroundColor: colors.lightBlue,
+                      }}
+                    />
 
-                                // width: "100%",
-                              }}
-                              onPress={() => {
-                                setModalVisible(false);
-                              }}
-                            >
-                              <Image
-                                source={{
-                                  uri: `${process.env.API_BASE_URL}${item}`,
-                                }}
-                                style={{
-                                  width: 300,
-                                  height: 300,
-                                  resizeMode: "contain",
-                                }}
-                              />
-                            </TouchableOpacity>
-                          );
+                    <TouchableOpacity
+                      onPress={() => {
+                        const imageLabelToDelete =
+                          selectedImageIndex === 0
+                            ? "image"
+                            : `image${selectedImageIndex + 1}`;
+                        handleReportChange("", imageLabelToDelete);
+                        if (images.length <= 1) {
+                          console.log("images", images);
+                          setModalVisible(false);
+                          setSelectedImageIndex(0);
                         }
                       }}
-                      horizontal
-                      pagingEnabled
-                      initialScrollIndex={selectedImageIndex}
-                    />
+                      style={{
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginVertical: 12,
+                      }}
+                      // disabled={selectedImageIndex === 0}
+                    >
+                      <Text
+                        style={{
+                          textDecorationLine: "underline",
+                          color: colors.black,
+                          fontFamily: fonts.ARegular,
+                          fontSize: 20,
+                        }}
+                      >
+                        מחיקת תמונה
+                      </Text>
+                    </TouchableOpacity>
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        paddingHorizontal: 20,
+                        marginTop: 10,
+                      }}
+                    >
+                      <TouchableOpacity
+                        onPress={handlePreviousImage}
+                        disabled={selectedImageIndex === 0}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 12,
+                          opacity: selectedImageIndex === 0 ? 0.2 : 1,
+                        }}
+                      >
+                        <Image
+                          source={require("../../../../../assets/icons/iconImgs/prevSlide.jpg")}
+                          style={{
+                            width: 10,
+                            height: 12,
+                            resizeMode: "contain",
+                          }}
+                        />
+                        <Text
+                          style={{
+                            color: colors.black,
+                            fontFamily: fonts.ARegular,
+                            fontSize: 20,
+                          }}
+                        >
+                          הקודם
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleNextImage}
+                        disabled={selectedImageIndex === images.length - 1}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 12,
+                          opacity:
+                            selectedImageIndex === images.length - 1 ? 0.2 : 1,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: colors.black,
+                            fontFamily: fonts.ARegular,
+                            fontSize: 20,
+                          }}
+                        >
+                          הבא
+                        </Text>
+                        <Image
+                          source={require("../../../../../assets/icons/iconImgs/nextSlide.jpg")}
+                          style={{
+                            width: 10,
+                            height: 12,
+                            resizeMode: "contain",
+                          }}
+                        />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
-              </Modal>
-            )}
+              </BlurView>
+            </Modal>
           </View>
         </View>
       </Animated.View>

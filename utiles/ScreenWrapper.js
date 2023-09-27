@@ -3,7 +3,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { LinearGradient } from "expo-linear-gradient";
 import { ImageBackground, StyleSheet, Text, View } from "react-native";
 import React from "react";
-import background from "../assets/imgs/background.png";
+import background from "../assets/imgs/maskBackground.png";
 import newReportBackground from "../assets/imgs/newworkeReportBackgroundImg.png";
 const ScreenWrapper = ({
   children,
