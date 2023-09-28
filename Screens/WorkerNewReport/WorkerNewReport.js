@@ -795,6 +795,7 @@ const WorkerNewReport = () => {
         console.error("Error posting data:", error);
       }
     }
+    dispatch(setIndex(0));
     dispatch(getCurrentCategory(formData.categorys[0]));
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
@@ -1134,34 +1135,33 @@ const WorkerNewReport = () => {
                 "foodSafetyReviewCb"
               )}
               onDragEndCb={(data) => {
-                // todo when adding a new todo the order is not reordering to be fix
-                let originalData = [...foodSafetyReviewTexts];
-                console.log("originalData", originalData);
-                const movedData = originalData[data.from];
-                originalData.splice(data.from, 1);
-                const newData = [
-                  ...originalData.slice(0, data.to),
-                  movedData,
-                  ...originalData.slice(data.to),
+                const { from, to } = data;
+
+                // deepcopy the current checkboxStatus.foodSafetyReviewCbStatus array
+                const newCheckboxStatus = [
+                  ...checkboxStatus.foodSafetyReviewCbStatus,
                 ];
-                console.log("newData", newData);
 
-                let newCategoryArrangemnet = [];
-                newData.forEach((item) => {
-                  const index = checkboxStatus[
-                    "foodSafetyReviewCbStatus"
-                  ].findIndex((category) => category == item.id);
-                  index !== -1 && newCategoryArrangemnet.push(Number(item.id));
+                // reordering the checkbox statuses to match the new item order
+                newCheckboxStatus.splice(
+                  to,
+                  0,
+                  newCheckboxStatus.splice(from, 1)[0]
+                );
 
-                  // console.log(item);
+                // updateing the checkboxStatus state
+                setCheckboxStatus({
+                  ...checkboxStatus,
+                  foodSafetyReviewCbStatus: newCheckboxStatus,
                 });
-                console.log("newCategoryArrangemnet", newCategoryArrangemnet);
 
-                setCheckboxStatus((prev) => ({
-                  ...prev,
-                  foodSafetyReviewCbStatus: newCategoryArrangemnet,
-                }));
+                // reorder the items in foodSafetyReviewTexts to match the new order
+                const newData = [...foodSafetyReviewTexts];
+                newData.splice(to, 0, newData.splice(from, 1)[0]);
+
+                // update the newData state
                 setFoodSafetyReviewTexts(newData);
+
                 setIsRearrangement(true);
               }}
               contentItemStyling={{
@@ -1221,16 +1221,33 @@ const WorkerNewReport = () => {
                 "culinaryReviewCb"
               )}
               onDragEndCb={(data) => {
-                let originalData = [...culinaryReviewTexts];
-                const movedData = originalData[data.from];
-                originalData.splice(data.from, 1);
-                const newData = [
-                  ...originalData.slice(0, data.to),
-                  movedData,
-                  ...originalData.slice(data.to),
+                const { from, to } = data;
+
+                // deepcopy the current checkboxStatus.culinaryReviewCbStatus array
+                const newCheckboxStatus = [
+                  ...checkboxStatus.culinaryReviewCbStatus,
                 ];
 
+                // reordering the checkbox statuses to match the new item order
+                newCheckboxStatus.splice(
+                  to,
+                  0,
+                  newCheckboxStatus.splice(from, 1)[0]
+                );
+
+                // updateing the checkboxStatus state
+                setCheckboxStatus({
+                  ...checkboxStatus,
+                  culinaryReviewCbStatus: newCheckboxStatus,
+                });
+
+                // reorder the items in culinaryReviewTexts to match the new order
+                const newData = [...culinaryReviewTexts];
+                newData.splice(to, 0, newData.splice(from, 1)[0]);
+
+                // update the newData state
                 setCulinaryReviewTexts(newData);
+
                 setIsRearrangement(true);
               }}
               contentItemStyling={{
@@ -1291,15 +1308,33 @@ const WorkerNewReport = () => {
                   "nutritionReviewCb"
                 )}
                 onDragEndCb={(data) => {
-                  let originalData = [...nutritionReviewTexts];
-                  const movedData = originalData[data.from];
-                  originalData.splice(data.from, 1);
-                  const newData = [
-                    ...originalData.slice(0, data.to),
-                    movedData,
-                    ...originalData.slice(data.to),
+                  const { from, to } = data;
+
+                  // deepcopy the current checkboxStatus.nutritionReviewCbStatus array
+                  const newCheckboxStatus = [
+                    ...checkboxStatus.nutritionReviewCbStatus,
                   ];
+
+                  // reordering the checkbox statuses to match the new item order
+                  newCheckboxStatus.splice(
+                    to,
+                    0,
+                    newCheckboxStatus.splice(from, 1)[0]
+                  );
+
+                  // updateing the checkboxStatus state
+                  setCheckboxStatus({
+                    ...checkboxStatus,
+                    nutritionReviewCbStatus: newCheckboxStatus,
+                  });
+
+                  // reorder the items in nutritionReviewTexts to match the new order
+                  const newData = [...nutritionReviewTexts];
+                  newData.splice(to, 0, newData.splice(from, 1)[0]);
+
+                  // update the newData state
                   setNutritionReviewTexts(newData);
+
                   setIsRearrangement(true);
                 }}
                 contentItemStyling={{
@@ -1532,13 +1567,8 @@ const WorkerNewReport = () => {
 
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
     handleModalClose();
-    // if (selectedModalCategory) {
-    //   console.log("modal option choice:", option);
-    //   // debounce(saveReport(), 300);
-    //   // saveReport();
-    // }
   };
-  // console.log(foodSafetyReviewTexts,culinaryReviewTexts,nutritionReviewTexts);
+
   return (
     <>
       {isLoading ? (

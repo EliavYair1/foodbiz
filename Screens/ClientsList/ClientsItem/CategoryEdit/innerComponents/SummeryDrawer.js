@@ -91,9 +91,6 @@ const SummaryDrawer = ({
 
   // * newGeneralCommentTopText drawer change handler
   const handleContentChange = debounce((content) => {
-    // console.log("content:", content);
-    // const strippedContent = content.replace(/<\/?div[^>]*>/g, "");
-    // richText.current?.setContentHTML(strippedContent);
     setContent(content);
     onSetContent(content);
   }, 300);
@@ -201,6 +198,7 @@ const SummaryDrawer = ({
             {isDrawerOpen && (
               <TouchableOpacity
                 onPress={() => drawerRef.current.toggleDrawer()}
+                style={{ position: "absolute", left: 0, top: 5, zIndex: 1 }}
               >
                 <Image
                   source={CloseDrawerIcon}
@@ -215,8 +213,12 @@ const SummaryDrawer = ({
                 style={{
                   alignSelf: "center",
                   flexDirection: "row",
-                  alignItems: "center",
                   gap: 5,
+                  alignItems: "center",
+                  position: "absolute",
+                  left: 0,
+                  top: 10,
+                  zIndex: 1,
                 }}
               >
                 <Image
@@ -231,32 +233,40 @@ const SummaryDrawer = ({
                 <Text style={styles.categoryDirButton}>{prevCategoryText}</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity
-              onPress={() => {
-                drawerRef.current.toggleDrawer();
-              }}
+            <View
               style={{
-                flexDirection: "row",
+                flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                textAlign: "center",
-                flex: 1,
-                gap: 12,
               }}
             >
-              <Image source={FileIcon} style={{ width: 24, height: 24 }} />
-              <Text
+              <TouchableOpacity
+                onPress={() => {
+                  drawerRef.current.toggleDrawer();
+                }}
                 style={{
+                  flexDirection: "row",
                   justifyContent: "center",
-                  alignSelf: "center",
-                  color: colors.white,
-                  fontSize: 24,
-                  fontFamily: fonts.ABold,
+                  alignItems: "center",
+                  textAlign: "center",
+                  // flex: 1,
+                  gap: 12,
                 }}
               >
-                תמצית והערות
-              </Text>
-            </TouchableOpacity>
+                <Image source={FileIcon} style={{ width: 24, height: 24 }} />
+                <Text
+                  style={{
+                    justifyContent: "center",
+                    alignSelf: "center",
+                    color: colors.white,
+                    fontSize: 24,
+                    fontFamily: fonts.ABold,
+                  }}
+                >
+                  תמצית והערות
+                </Text>
+              </TouchableOpacity>
+            </View>
             {!isDrawerOpen && onNextCategory && (
               <TouchableOpacity
                 onPress={onNextCategory}
@@ -265,6 +275,10 @@ const SummaryDrawer = ({
                   flexDirection: "row",
                   gap: 5,
                   alignItems: "center",
+                  // flex: 0,
+                  position: "absolute",
+                  right: 0,
+                  top: 10,
                 }}
               >
                 <Text style={styles.categoryDirButton}>{nextCategoryText}</Text>

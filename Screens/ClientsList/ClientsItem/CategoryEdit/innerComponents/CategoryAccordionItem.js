@@ -232,7 +232,6 @@ const CategoryAccordionItem = ({
       useNativeDriver: false,
     }).start();
   }, [open]);
-  console.log("images", images);
   // * change handler
   const handleReportChange = debounce((value, label) => {
     setReportItemState((prev) => {

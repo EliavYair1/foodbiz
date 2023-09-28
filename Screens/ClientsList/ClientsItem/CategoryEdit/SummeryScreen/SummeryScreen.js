@@ -34,13 +34,13 @@ import useSaveReport from "../../../../../Hooks/useSaveReport";
 import { setCurrentReport } from "../../../../../store/redux/reducers/getCurrentReport";
 import Loader from "../../../../../utiles/Loader";
 import ModalUi from "../../../../../Components/ui/ModalUi";
-import routes from "../../../../../Navigation/routes";
 import { setIndex } from "../../../../../store/redux/reducers/indexSlice";
+import routes from "../../../../../Navigation/routes";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
 
-  const { dispatch } = useDispatch();
+  const dispatch = useDispatch();
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
@@ -160,19 +160,11 @@ const SummeryScreen = () => {
     const indexOfCategory = currentCategories.categories.findIndex(
       (category) => category == option
     );
-    console.log(currentCategories.categories);
-    console.log("indexOfCategory", indexOfCategory);
-    console.log("option", option);
+    // console.log("from a", indexOfCategory);
     dispatch(setIndex(indexOfCategory));
-    // dispatch(setCurrentCategories(formData.categorys));
 
-    // navigateToRoute(routes.ONBOARDING.CategoryEdit);
     handleModalClose();
-    // if (selectedModalCategory) {
-    //   console.log("modal option choice:", option);
-    //   // debounce(saveReport(), 300);
-    //   saveReport();
-    // }
+    navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
 
   const sendForManagerApproval = async () => {

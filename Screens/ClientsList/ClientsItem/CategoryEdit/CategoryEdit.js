@@ -50,11 +50,7 @@ const CategoryEdit = () => {
   );
   const initialIndexOfSubCategory = useSelector((state) => state.categoryIndex);
 
-  // console.log(currentSubCategoryId);
-
-  // console.log("initialIndexOfSubCategory", initialIndexOfSubCategory);
-  // console.log("currentCategories", currentCategories.categories);
-  // const memoizedCategories = useMemo(() => categories, [categories]);
+  // console.log("to b", initialIndexOfSubCategory);
 
   const memoizedCategories = useMemo(
     () => globalCategories,
@@ -76,8 +72,13 @@ const CategoryEdit = () => {
   const passedDownCategoryId = currentSubCategoryId.currentCategory;
   // ! redux stpre fetching end
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(
-    initialIndexOfSubCategory ?? 0
+    initialIndexOfSubCategory
   );
+  // console.log("currentCategoryIndex", currentCategoryIndex);
+
+  useEffect(() => {
+    setCurrentCategoryIndex(initialIndexOfSubCategory);
+  }, [initialIndexOfSubCategory]);
 
   const findParentAndChildCategories = useMemo(() => {
     // console.log();
@@ -392,7 +393,6 @@ const CategoryEdit = () => {
     const indexOfCategory = currentCategories.categories.findIndex(
       (category) => category == option
     );
-    console.log(currentCategories.categories, indexOfCategory);
     setCurrentCategoryIndex(indexOfCategory);
     handleModalClose();
     if (selectedModalCategory) {
