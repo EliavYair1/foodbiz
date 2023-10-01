@@ -16,6 +16,13 @@ const useMediaPicker = (handleInputChange = false) => {
         result = await VideoPicker.launchImageLibraryAsync({
           mediaTypes: VideoPicker.MediaTypeOptions.Videos,
         });
+      } else if (mediaType === "camera") {
+        result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          aspect: [4, 3],
+          quality: 1,
+        });
       } else {
         throw new Error(`Invalid media type: ${mediaType}`);
       }

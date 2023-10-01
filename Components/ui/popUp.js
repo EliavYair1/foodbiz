@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import React, {
   useEffect,
@@ -15,7 +16,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { TouchableOpacity } from "react-native-gesture-handler";
+// import { TouchableOpacity } from "react-native-gesture-handler";
 import { BlurView } from "expo-blur";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
@@ -39,6 +40,8 @@ import useSaveNewFile from "../../Hooks/useSaveNewFile";
 import { useSelector } from "react-redux";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import routes from "../../Navigation/routes";
+import Icon from "react-native-vector-icons/MaterialIcons";
+
 const PopUp = ({
   animationType,
   modalHeaderText,
@@ -52,7 +55,7 @@ const PopUp = ({
   categoryId,
   editFileObject = false,
 }) => {
-  const [imagePicked, setImagePicked] = useState(false);
+  const [imagePicked, setImagePicked] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
@@ -64,14 +67,12 @@ const PopUp = ({
     comments: "",
     imagePicker: "",
   });
-  const [imageCapture, setImageCapture] = useState(null);
+  const [isLoading, setisLoading] = useState(false);
   const [clientId, setClientId] = useState(null);
-  // const { saveReport, isLoading } = useSaveReport();
   const { navigateToRoute } = useScreenNavigator();
 
   const userId = useSelector((state) => state.user);
-  const { saveNewFile, isLoading } = useSaveNewFile(onCloseModal);
-  // console.log(editFileObject);
+  const { saveNewFile } = useSaveNewFile(onCloseModal);
   const [activeOption, setActiveOption] = useState(null);
   useEffect(() => {
     (async () => {
@@ -233,31 +234,40 @@ const PopUp = ({
   // handling image pick
   const handleImagePick = () => {
     const pickedImage = pickMedia("image");
+    setisLoading(true);
+
     if (pickedImage) {
       // const { uri, type, name } = pickedImage;
       handleFormChange("imagePicker", BinaryMedia);
-      // console.log("media", BinaryMedia);
+      console.log("pickedImage", BinaryMedia);
       setImagePicked(true);
+      setisLoading(false);
       setActiveOption("image");
     } else {
+      setisLoading(false);
       console.error(`[Error] Media selection canceled due to: ${mediaError}`);
     }
   };
   const handleTakePhoto = async () => {
     if (hasPermission) {
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
-        aspect: [4, 3],
-        quality: 1,
-      });
-      if (!result.canceled) {
-        const selectedMedia = result.assets[0].uri;
-        setCameraCaptureImageUrl(selectedMedia);
-        handleFormChange("cameraPhoto", selectedMedia);
+      const captureImg = pickMedia("camera");
+      if (captureImg) {
+        // const { uri, type, name } = pickedImage;
+        handleFormChange("imagePicker", BinaryMedia);
+        // console.log("captureImg", BinaryMedia);
+        setImagePicked(true);
+        setisLoading(false);
         setActiveOption("photo");
+      } else {
+        setisLoading(false);
+        console.error(`[Error] Media selection canceled due to: ${mediaError}`);
       }
     }
+  };
+  const handleDeleteImg = () => {
+    console.log("inside");
+    handleFormChange("imagePicker", null);
+    setImagePicked(false);
   };
   // console.log("categoryId", categoryId);
   // todo send post request for a new file info.
@@ -448,15 +458,112 @@ const PopUp = ({
                 <View>
                   <Text style={styles.subtextStyle}>העלאת קובץ</Text>
                   <View style={styles.buttonWrapper}>
-                    {/* {imagePicked ? 
+                    {isLoading ? (
+                      <Loader visible={isLoading} size={30} />
+                    ) : imagePicked ? (
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          width: "100%",
+                        }}
+                      >
+                        {media && (
+                          <TouchableOpacity
+                            onPress={() => {
+                              handleDeleteImg();
+                            }}
+                            style={{
+                              justifyContent: "center",
+                              alignItems: "center",
+                              marginRight: 85,
+                            }}
+                          >
+                            <Icon
+                              name="delete-forever"
+                              size={30}
+                              color={colors.red}
+                            />
+                          </TouchableOpacity>
+                        )}
+
                         <Image
                           source={{ uri: media }}
-                          style={{ width: 100, height: 100 }}
+                          style={{
+                            width: 100,
+                            height: 100,
+                            alignSelf: "center",
+                          }}
                         />
-                        :
-<Loader visible={isLoading}/>
+                      </View>
+                    ) : (
+                      <>
+                        <View
+                          style={{ flexDirection: "column", flexWrap: "wrap" }}
+                        >
+                          <Button
+                            buttonStyle={styles.button}
+                            icon={true}
+                            buttonFunction={handleImagePick}
+                            iconPath={icon1}
+                            iconStyle={styles.IconStyle}
+                            buttonTextStyle={styles.buttonText}
+                            buttonText={"מספריית התמונות"}
+                            disableLogic={activeOption === "photo"}
+                            buttonWidth={184}
+                            // errorMessage={
+                            //   !imagePicked
+                            //     ? errors.imagePicker && errors.imagePicker.message
+                            //     : null
+                            // }
+                          />
+                        </View>
 
-                    } */}
+                        <View
+                          style={{ flexDirection: "column", flexWrap: "wrap" }}
+                        >
+                          <Camera
+                            style={{
+                              borderRadius: 8,
+                              // backgroundColor: "transparent",
+                              height: 46,
+                            }}
+                            type={Camera.Constants.Type.back}
+                            ref={(ref) => (camera = ref)}
+                          >
+                            <Button
+                              buttonWidth={194}
+                              buttonStyle={[
+                                styles.button,
+                                { backgroundColor: "white" },
+                              ]}
+                              buttonFunction={handleTakePhoto}
+                              icon={true}
+                              iconPath={icon2}
+                              disableLogic={
+                                activeOption === "image" || editFileObject?.url
+                              }
+                              iconStyle={styles.IconStyle}
+                              buttonTextStyle={styles.buttonText}
+                              buttonText={"מצלמה"}
+                              // errorMessage={
+                              //   !CameraCaptureImageUrl
+                              //     ? errors.cameraPhoto && errors.cameraPhoto.message
+                              //     : null
+                              // }
+                            />
+                          </Camera>
+                        </View>
+                      </>
+                    )}
+
+                    {/* {imagePicked ? (
+                      <Image
+                        source={{ uri: media }}
+                        style={{ width: 100, height: 100 }}
+                      />
+                    ) : (
+                      <Loader visible={isLoading} />
+                    )}
                     <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
                       <Button
                         buttonStyle={styles.button}
@@ -508,7 +615,7 @@ const PopUp = ({
                           // }
                         />
                       </Camera>
-                    </View>
+                    </View> */}
                   </View>
                   <HelperText
                     type="error"
@@ -517,7 +624,7 @@ const PopUp = ({
                       marginVertical: 0,
                     }}
                   >
-                    {!imagePicked && !CameraCaptureImageUrl
+                    {!imagePicked
                       ? errors.imagePicker && errors.imagePicker.message
                       : null}
                   </HelperText>
@@ -557,9 +664,12 @@ const PopUp = ({
                     <Text style={styles.submitButtonText}>שמירה</Text>
                   </TouchableOpacity>
                 ) : (
-                  <View style={styles.disabled}>
+                  <TouchableOpacity
+                    onPress={handleSubmit(onSubmitForm)}
+                    style={styles.disabled}
+                  >
                     <Text style={styles.submitButtonText}>שמירה</Text>
-                  </View>
+                  </TouchableOpacity>
                 )}
               </View>
             </View>
