@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -40,6 +40,15 @@ const FileCategoryRow = ({
   const [isEditFile, setIsEditFile] = useState(false);
   const [categoryId, setCategoryId] = useState(null);
   const [fileObj, setFileObj] = useState(null);
+  const [selectedItemName, setSelectedItemName] = useState(null);
+  useMemo(() => {
+    if (categoryId) {
+      const selectedItem = items.find(
+        (item) => JSON.parse(item.id) == categoryId
+      );
+      setSelectedItemName(selectedItem ? selectedItem.name : null);
+    }
+  }, [categoryId]);
   const handleDeleteFile = async (userId, fileId) => {
     // console.log("userId /fileId", userId, fileId);
     try {
@@ -67,7 +76,10 @@ const FileCategoryRow = ({
   const handleItemClick = (itemId) => {
     setOpenId(itemId === openId ? null : itemId);
     setCategoryId(itemId);
+    const selectedItem = items.find((item) => JSON.parse(item.id) == itemId);
+    setSelectedItemName(selectedItem ? selectedItem.name : null);
   };
+
   useEffect(() => {
     Animated.timing(heightAnim, {
       toValue: openId ? 320 : 0,
@@ -163,8 +175,8 @@ const FileCategoryRow = ({
         return "<";
       }
     };
-    let arr = stations.map((element) => element);
-
+    // todo make the files names dynamic
+    // console.log("name:", item.name);
     return (
       <>
         <TouchableOpacity
@@ -215,43 +227,6 @@ const FileCategoryRow = ({
             <ClientTable rowsData={item.getFiles()} headers={filesTable} />
           </View>
         )}
-
-        {modalVisible && (
-          <PopUp
-            isVisible={modalVisible}
-            onCloseModal={onCloseNewFileModal}
-            modalHeight={686}
-            modalWidth={480}
-            editFileObject={isEditFile ? fileObj : null}
-            modalHeaderText={
-              isEditFile
-                ? `עריכה של קובץ בתיקיית אישורים\n עבור ${company}`
-                : `הוספה של קובץ בתיקיית אישורים\n עבור ${company}`
-            }
-            selectWidth={400}
-            categoryId={categoryId}
-            selectOptions={arr}
-            animationType={"fade"}
-            secondButtonFunction={() => {
-              console.log("image picked");
-            }}
-            buttonText1={"מספריית התמונות"}
-            buttonText2={"מצלמה"}
-            icon1={libraryIcon}
-            icon2={CameraIcon}
-            buttonHeaderText="העלאת קובץ"
-            selectHeader={"תחנה"}
-            // inputData={arr}
-            remarksInputText={"הערות"}
-            submitText="שמירה"
-            submitButtonFunction={() => {
-              console.log("data saved");
-            }}
-            firstInputText={"שם הקובץ"}
-            secondInputText={"שם הכותב"}
-            thirdInputText={"תאריך"}
-          />
-        )}
       </>
     );
   };
@@ -262,6 +237,25 @@ const FileCategoryRow = ({
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
       />
+      {modalVisible && (
+        <PopUp
+          onCloseModal={onCloseNewFileModal}
+          modalHeight={686}
+          modalWidth={480}
+          editFileObject={isEditFile ? fileObj : null}
+          modalHeaderText={
+            isEditFile
+              ? `עריכה של קובץ בתיקיית ${selectedItemName} \n עבור ${company}`
+              : `הוספה של קובץ בתיקיית ${selectedItemName}\n עבור ${company}`
+          }
+          selectWidth={400}
+          categoryId={categoryId}
+          stations={stations}
+          animationType={"fade"}
+          icon1={libraryIcon}
+          icon2={CameraIcon}
+        />
+      )}
     </View>
   );
 };

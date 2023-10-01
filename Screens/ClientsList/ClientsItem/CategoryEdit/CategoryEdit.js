@@ -537,6 +537,9 @@ const CategoryEdit = () => {
             subHeaderText={`${categoryHeader} >${categorySubHeader}`}
             iconList={true}
             onCategoriesIconPress={() => setModalVisible(true)}
+            onSummeryIconPress={() => {
+              console.log("s");
+            }}
           />
         </View>
 

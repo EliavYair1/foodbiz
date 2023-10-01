@@ -6,7 +6,7 @@ import routes from "../../../../../Navigation/routes";
 import useScreenNavigator from "../../../../../Hooks/useScreenNavigator";
 import * as WebBrowser from "expo-web-browser";
 import { useSelector } from "react-redux";
-const IconList = ({ onCategoriesIconPress }) => {
+const IconList = ({ onCategoriesIconPress, onSummeryIconPress = false }) => {
   // todo icon list
   // todo watch icon work same as watch report in the client list
   // todo categories opens a popup and navigate same as edit existing report
@@ -58,8 +58,9 @@ const IconList = ({ onCategoriesIconPress }) => {
       text: "סיכום",
       source: require("../../../../../assets/icons/iconImgs/notebook.png"),
       iconPress: () => {
+        onSummeryIconPress();
         navigateToRoute(routes.ONBOARDING.SummeryScreen);
-        console.log("notebook");
+        console.log("summery icon pressed");
       },
     },
     {

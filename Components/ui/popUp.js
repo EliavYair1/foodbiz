@@ -47,17 +47,8 @@ const PopUp = ({
   visible,
   icon1,
   icon2,
-  buttonText1,
-  buttonText2,
-  buttonHeaderText,
-  submitText,
   selectWidth,
-  selectOptions,
-  selectHeader,
-  remarksInputText,
-  firstInputText, //temp
-  secondInputText, //temp
-  thirdInputText, //temp
+  stations,
   categoryId,
   editFileObject = false,
 }) => {
@@ -106,6 +97,7 @@ const PopUp = ({
     }
     return schemaBuilder;
   }, [formData]);
+
   const {
     control,
     handleSubmit,
@@ -123,24 +115,6 @@ const PopUp = ({
         setIsSchemaValid(false);
       });
   }, [formData, schema]);
-  // console.log("errors", errors);
-  // useEffect(() => {
-  //   if (editFileObject) {
-  //     handleFormChange("station", editFileObject.station_name || "");
-  //     handleFormChange("fileName", editFileObject.fileName || "");
-  //     handleFormChange("authorName", editFileObject.authorName || "");
-  //     handleFormChange("date", editFileObject.date || "");
-  //     handleFormChange("imagePicker", editFileObject.imagePicker || "");
-  //     setFormData({
-  //       station: editFileObject.station_name || "",
-  //       fileName: editFileObject.fileName || "",
-  //       authorName: editFileObject.authorName || "",
-  //       date: editFileObject.date || "",
-  //     });
-  //   }
-  // }, [editFileObject]);
-
-  // console.log("formData", formData);
 
   const inputRef = useRef();
   const popUpInputInformation = [
@@ -240,7 +214,6 @@ const PopUp = ({
       inputStyle: styles.inputStyling,
     },
   ];
-  console.log(errors);
   // handling the form changes
   const handleFormChange = useCallback(
     (name, value) => {
@@ -253,7 +226,7 @@ const PopUp = ({
     },
     [formData]
   );
-
+  // console.log(formData, isSchemaValid);
   // todo the imagepicker keep showing up even after picking an image
   const [media, pickMedia, mediaError, BinaryMedia] = useMediaPicker();
   // todo to condiftion the view of the image on edit file
@@ -331,7 +304,9 @@ const PopUp = ({
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
-  // console.log(errors);
+  // todo fix the capture img bug
+  // todo to initiate a loader while uploading an image(on both actions) when image loads display it .
+  // todo when finish loading display the image instead of the two buttons
   return (
     <Modal
       visible={visible}
@@ -379,11 +354,11 @@ const PopUp = ({
 
                 {/* inputs */}
                 <View style={styles.inputWrapper}>
-                  <Text style={styles.subtextStyle}>{selectHeader}</Text>
+                  <Text style={styles.subtextStyle}>תחנה</Text>
                   <SelectMenu
                     control={control}
                     selectWidth={selectWidth}
-                    selectOptions={selectOptions}
+                    selectOptions={stations}
                     selectMenuStyling={{
                       flexDirection: "column",
                       justifyContent: "center",
@@ -413,7 +388,7 @@ const PopUp = ({
                     propertyName="company"
                     returnObject={true}
                   />
-                  <Text style={styles.subtextStyle}>{firstInputText}</Text>
+                  <Text style={styles.subtextStyle}>שם הקובץ</Text>
                   <Input
                     proxyRef={inputRef}
                     name={"fileName"}
@@ -430,7 +405,7 @@ const PopUp = ({
                       handleFormChange("fileName", value);
                     }}
                   />
-                  <Text style={styles.subtextStyle}>{secondInputText}</Text>
+                  <Text style={styles.subtextStyle}>שם הכותב</Text>
                   <Input
                     proxyRef={inputRef}
                     name={"authorName"}
@@ -448,9 +423,9 @@ const PopUp = ({
                       handleFormChange("authorName", value);
                     }}
                   />
-                  <Text style={styles.subtextStyle}>{thirdInputText}</Text>
+                  <Text style={styles.subtextStyle}>תאריך</Text>
                   <DatePicker
-                    label={thirdInputText}
+                    label={"תאריך"}
                     control={control}
                     defaultDate={
                       editFileObject !== null
@@ -471,8 +446,17 @@ const PopUp = ({
                 </View>
                 {/* upload buttons */}
                 <View>
-                  <Text style={styles.subtextStyle}>{buttonHeaderText}</Text>
+                  <Text style={styles.subtextStyle}>העלאת קובץ</Text>
                   <View style={styles.buttonWrapper}>
+                    {/* {imagePicked ? 
+                        <Image
+                          source={{ uri: media }}
+                          style={{ width: 100, height: 100 }}
+                        />
+                        :
+<Loader visible={isLoading}/>
+
+                    } */}
                     <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
                       <Button
                         buttonStyle={styles.button}
@@ -481,7 +465,7 @@ const PopUp = ({
                         iconPath={icon1}
                         iconStyle={styles.IconStyle}
                         buttonTextStyle={styles.buttonText}
-                        buttonText={buttonText1}
+                        buttonText={"מספריית התמונות"}
                         disableLogic={activeOption === "photo"}
                         buttonWidth={184}
                         // errorMessage={
@@ -490,12 +474,6 @@ const PopUp = ({
                         //     : null
                         // }
                       />
-                      {/* {imagePicked && (
-                        <Image
-                          source={{ uri: media }}
-                          style={{ width: 100, height: 100 }}
-                        />
-                      )} */}
                     </View>
 
                     <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
@@ -522,7 +500,7 @@ const PopUp = ({
                           }
                           iconStyle={styles.IconStyle}
                           buttonTextStyle={styles.buttonText}
-                          buttonText={buttonText2}
+                          buttonText={"מצלמה"}
                           // errorMessage={
                           //   !CameraCaptureImageUrl
                           //     ? errors.cameraPhoto && errors.cameraPhoto.message
@@ -546,7 +524,7 @@ const PopUp = ({
                 </View>
                 {/* input remarks */}
                 <View style={styles.remarksInputWrapper}>
-                  <Text style={styles.subtextStyle}>{remarksInputText}</Text>
+                  <Text style={styles.subtextStyle}>הערות</Text>
                   <Input
                     control={control}
                     name={"comments"}
@@ -571,13 +549,18 @@ const PopUp = ({
                   />
                 </View>
                 {/* submit button */}
-                <TouchableOpacity
-                  style={!isSchemaValid ? styles.disabled : styles.submitButton}
-                  onPress={handleSubmit(onSubmitForm)}
-                  // disabled={!isSchemaValid}
-                >
-                  <Text style={styles.submitButtonText}>{submitText}</Text>
-                </TouchableOpacity>
+                {isSchemaValid ? (
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleSubmit(onSubmitForm)}
+                  >
+                    <Text style={styles.submitButtonText}>שמירה</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.disabled}>
+                    <Text style={styles.submitButtonText}>שמירה</Text>
+                  </View>
+                )}
               </View>
             </View>
           </KeyboardAvoidingView>

@@ -1605,6 +1605,9 @@ const WorkerNewReport = () => {
                   // navigateToRoute(routes.ONBOARDING.CategoryEdit);
                   setModalVisible(true);
                 }}
+                onSummeryIconPress={() => {
+                  console.log("s");
+                }}
               />
             </View>
 
