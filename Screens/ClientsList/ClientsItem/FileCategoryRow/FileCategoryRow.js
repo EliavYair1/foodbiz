@@ -22,9 +22,13 @@ import CameraIcon from "../../../../assets/imgs/CameraIcon.png";
 import libraryIcon from "../../../../assets/imgs/libraryIcon.png";
 import PopUp from "../../../../Components/ui/popUp";
 import SelectMenu from "../../../../Components/ui/SelectMenu";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import Loader from "../../../../utiles/Loader";
+import { setClients } from "../../../../store/redux/reducers/clientSlice";
+import Client from "../../../../Components/modals/client";
+import FetchDataService from "../../../../Services/FetchDataService";
+
 const FileCategoryRow = ({
   children,
   items,
@@ -33,6 +37,9 @@ const FileCategoryRow = ({
   stations,
   company,
 }) => {
+  const { fetchData } = FetchDataService();
+  const dispatch = useDispatch();
+
   const heightAnim = useRef(new Animated.Value(0)).current;
   const userId = useSelector((state) => state.user);
   const [openId, setOpenId] = useState(null);
@@ -40,9 +47,13 @@ const FileCategoryRow = ({
   const [isEditFile, setIsEditFile] = useState(false);
   const [categoryId, setCategoryId] = useState(null);
   const [fileObj, setFileObj] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleDeleteFile = async (userId, fileId) => {
     // console.log("userId /fileId", userId, fileId);
     try {
+      setIsLoading(true);
+
       const response = await axios.post(
         process.env.API_BASE_URL + "api/deleteFile.php",
         {
@@ -52,6 +63,19 @@ const FileCategoryRow = ({
       );
 
       if (response.status == 200 || response.status == 201) {
+        const responseClients = await fetchData(
+          process.env.API_BASE_URL + "api/clients.php",
+          { id: userId }
+        );
+        if (responseClients.success) {
+          let clients = [];
+          responseClients.data.forEach((element) => {
+            clients.push(new Client(element));
+          });
+          dispatch(setClients({ clients: clients }));
+        }
+        setIsLoading(false);
+
         Alert.alert("הצלחה", "הקובץ נמחק בהצלחה");
       } else {
         Alert.alert("Error", "Failed to delete post");
@@ -142,8 +166,27 @@ const FileCategoryRow = ({
           },
           action: (file) => {
             // console.log("trash file", userId, file.data.id);
-            handleDeleteFile(userId, file.data.id);
             console.log("Trash_icon");
+
+            Alert.alert(
+              "מחיקת קובץ",
+              "האם אתה בטוח שברצונך למחוק את הקובץ?",
+              [
+                {
+                  text: "כן",
+                  style: "destructive",
+                  onPress: () => {
+                    handleDeleteFile(userId, file.data.id);
+                  },
+                },
+                {
+                  text: "לא",
+                  onPress: () => {},
+                  style: "cancel",
+                },
+              ],
+              { cancelable: false }
+            );
           },
         },
       ],
@@ -257,11 +300,15 @@ const FileCategoryRow = ({
   };
   return (
     <View style={styles.container}>
-      <FlatList
-        data={items}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-      />
+      {isLoading ? (
+        <Loader visible={isLoading} />
+      ) : (
+        <FlatList
+          data={items}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      )}
     </View>
   );
 };
