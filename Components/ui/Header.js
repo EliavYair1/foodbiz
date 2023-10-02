@@ -9,6 +9,7 @@ const Header = ({
   containerStyling,
   iconList = false,
   onCategoriesIconPress,
+  onSummeryIconPress = false,
 }) => {
   return (
     <View style={[styles.headerWrapper, containerStyling ?? ""]}>
@@ -19,7 +20,10 @@ const Header = ({
 
       {iconList && (
         <View style={styles.imageTextList}>
-          <IconList onCategoriesIconPress={onCategoriesIconPress} />
+          <IconList
+            onCategoriesIconPress={onCategoriesIconPress}
+            onSummeryIconPress={onSummeryIconPress}
+          />
         </View>
       )}
     </View>

@@ -325,11 +325,14 @@ const CategoryAccordionItem = ({
               style={{
                 width: 20,
                 height: 20,
-                transform: [{ rotate: "-90deg" }],
+                transform: [{ rotate: "-90deg", resizeMode: "contain" }],
               }}
             />
           ) : (
-            <Image source={ClientItemArrow} style={{ width: 20, height: 20 }} />
+            <Image
+              source={ClientItemArrow}
+              style={{ width: 20, height: 20, resizeMode: "contain" }}
+            />
           )}
         </View>
 

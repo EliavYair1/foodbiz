@@ -39,7 +39,10 @@ import routes from "../../../../../Navigation/routes";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
-
+  // todo after picking a file/img/capture a img the link should apear below the buttons with a X icon with option deleting it,
+  // todo and a loading till end of the upload , in addition clicking the link will open the file as image view(same as the eye icon).
+  // todo fix the capture img bug
+  console.log("here");
   const dispatch = useDispatch();
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport

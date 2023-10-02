@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import React, {
   useEffect,
@@ -15,7 +16,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { TouchableOpacity } from "react-native-gesture-handler";
+// import { TouchableOpacity } from "react-native-gesture-handler";
 import { BlurView } from "expo-blur";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
@@ -39,6 +40,8 @@ import useSaveNewFile from "../../Hooks/useSaveNewFile";
 import { useSelector } from "react-redux";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import routes from "../../Navigation/routes";
+import Icon from "react-native-vector-icons/MaterialIcons";
+
 const PopUp = ({
   animationType,
   modalHeaderText,
@@ -47,21 +50,12 @@ const PopUp = ({
   visible,
   icon1,
   icon2,
-  buttonText1,
-  buttonText2,
-  buttonHeaderText,
-  submitText,
   selectWidth,
-  selectOptions,
-  selectHeader,
-  remarksInputText,
-  firstInputText, //temp
-  secondInputText, //temp
-  thirdInputText, //temp
+  stations,
   categoryId,
   editFileObject = false,
 }) => {
-  const [imagePicked, setImagePicked] = useState(false);
+  const [imagePicked, setImagePicked] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
@@ -73,14 +67,12 @@ const PopUp = ({
     comments: "",
     imagePicker: "",
   });
-  const [imageCapture, setImageCapture] = useState(null);
+  const [isLoading, setisLoading] = useState(false);
   const [clientId, setClientId] = useState(null);
-  // const { saveReport, isLoading } = useSaveReport();
   const { navigateToRoute } = useScreenNavigator();
 
   const userId = useSelector((state) => state.user);
-  const { saveNewFile, isLoading } = useSaveNewFile(onCloseModal);
-  // console.log(editFileObject);
+  const { saveNewFile } = useSaveNewFile(onCloseModal);
   const [activeOption, setActiveOption] = useState(null);
   useEffect(() => {
     (async () => {
@@ -106,6 +98,7 @@ const PopUp = ({
     }
     return schemaBuilder;
   }, [formData]);
+
   const {
     control,
     handleSubmit,
@@ -123,24 +116,6 @@ const PopUp = ({
         setIsSchemaValid(false);
       });
   }, [formData, schema]);
-  // console.log("errors", errors);
-  // useEffect(() => {
-  //   if (editFileObject) {
-  //     handleFormChange("station", editFileObject.station_name || "");
-  //     handleFormChange("fileName", editFileObject.fileName || "");
-  //     handleFormChange("authorName", editFileObject.authorName || "");
-  //     handleFormChange("date", editFileObject.date || "");
-  //     handleFormChange("imagePicker", editFileObject.imagePicker || "");
-  //     setFormData({
-  //       station: editFileObject.station_name || "",
-  //       fileName: editFileObject.fileName || "",
-  //       authorName: editFileObject.authorName || "",
-  //       date: editFileObject.date || "",
-  //     });
-  //   }
-  // }, [editFileObject]);
-
-  // console.log("formData", formData);
 
   const inputRef = useRef();
   const popUpInputInformation = [
@@ -240,7 +215,6 @@ const PopUp = ({
       inputStyle: styles.inputStyling,
     },
   ];
-  console.log(errors);
   // handling the form changes
   const handleFormChange = useCallback(
     (name, value) => {
@@ -253,38 +227,47 @@ const PopUp = ({
     },
     [formData]
   );
-
+  // console.log(formData, isSchemaValid);
   // todo the imagepicker keep showing up even after picking an image
   const [media, pickMedia, mediaError, BinaryMedia] = useMediaPicker();
   // todo to condiftion the view of the image on edit file
   // handling image pick
   const handleImagePick = () => {
     const pickedImage = pickMedia("image");
+    setisLoading(true);
+
     if (pickedImage) {
       // const { uri, type, name } = pickedImage;
       handleFormChange("imagePicker", BinaryMedia);
-      // console.log("media", BinaryMedia);
+      console.log("pickedImage", BinaryMedia);
       setImagePicked(true);
+      setisLoading(false);
       setActiveOption("image");
     } else {
+      setisLoading(false);
       console.error(`[Error] Media selection canceled due to: ${mediaError}`);
     }
   };
   const handleTakePhoto = async () => {
     if (hasPermission) {
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
-        aspect: [4, 3],
-        quality: 1,
-      });
-      if (!result.canceled) {
-        const selectedMedia = result.assets[0].uri;
-        setCameraCaptureImageUrl(selectedMedia);
-        handleFormChange("cameraPhoto", selectedMedia);
+      const captureImg = pickMedia("camera");
+      if (captureImg) {
+        // const { uri, type, name } = pickedImage;
+        handleFormChange("imagePicker", BinaryMedia);
+        // console.log("captureImg", BinaryMedia);
+        setImagePicked(true);
+        setisLoading(false);
         setActiveOption("photo");
+      } else {
+        setisLoading(false);
+        console.error(`[Error] Media selection canceled due to: ${mediaError}`);
       }
     }
+  };
+  const handleDeleteImg = () => {
+    console.log("inside");
+    handleFormChange("imagePicker", null);
+    setImagePicked(false);
   };
   // console.log("categoryId", categoryId);
   // todo send post request for a new file info.
@@ -331,7 +314,9 @@ const PopUp = ({
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
-  // console.log(errors);
+  // todo fix the capture img bug
+  // todo to initiate a loader while uploading an image(on both actions) when image loads display it .
+  // todo when finish loading display the image instead of the two buttons
   return (
     <Modal
       visible={visible}
@@ -379,11 +364,11 @@ const PopUp = ({
 
                 {/* inputs */}
                 <View style={styles.inputWrapper}>
-                  <Text style={styles.subtextStyle}>{selectHeader}</Text>
+                  <Text style={styles.subtextStyle}>תחנה</Text>
                   <SelectMenu
                     control={control}
                     selectWidth={selectWidth}
-                    selectOptions={selectOptions}
+                    selectOptions={stations}
                     selectMenuStyling={{
                       flexDirection: "column",
                       justifyContent: "center",
@@ -413,7 +398,7 @@ const PopUp = ({
                     propertyName="company"
                     returnObject={true}
                   />
-                  <Text style={styles.subtextStyle}>{firstInputText}</Text>
+                  <Text style={styles.subtextStyle}>שם הקובץ</Text>
                   <Input
                     proxyRef={inputRef}
                     name={"fileName"}
@@ -430,7 +415,7 @@ const PopUp = ({
                       handleFormChange("fileName", value);
                     }}
                   />
-                  <Text style={styles.subtextStyle}>{secondInputText}</Text>
+                  <Text style={styles.subtextStyle}>שם הכותב</Text>
                   <Input
                     proxyRef={inputRef}
                     name={"authorName"}
@@ -448,9 +433,9 @@ const PopUp = ({
                       handleFormChange("authorName", value);
                     }}
                   />
-                  <Text style={styles.subtextStyle}>{thirdInputText}</Text>
+                  <Text style={styles.subtextStyle}>תאריך</Text>
                   <DatePicker
-                    label={thirdInputText}
+                    label={"תאריך"}
                     control={control}
                     defaultDate={
                       editFileObject !== null
@@ -471,8 +456,114 @@ const PopUp = ({
                 </View>
                 {/* upload buttons */}
                 <View>
-                  <Text style={styles.subtextStyle}>{buttonHeaderText}</Text>
+                  <Text style={styles.subtextStyle}>העלאת קובץ</Text>
                   <View style={styles.buttonWrapper}>
+                    {isLoading ? (
+                      <Loader visible={isLoading} size={30} />
+                    ) : imagePicked ? (
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          width: "100%",
+                        }}
+                      >
+                        {media && (
+                          <TouchableOpacity
+                            onPress={() => {
+                              handleDeleteImg();
+                            }}
+                            style={{
+                              justifyContent: "center",
+                              alignItems: "center",
+                              marginRight: 85,
+                            }}
+                          >
+                            <Icon
+                              name="delete-forever"
+                              size={30}
+                              color={colors.red}
+                            />
+                          </TouchableOpacity>
+                        )}
+
+                        <Image
+                          source={{ uri: media }}
+                          style={{
+                            width: 100,
+                            height: 100,
+                            alignSelf: "center",
+                          }}
+                        />
+                      </View>
+                    ) : (
+                      <>
+                        <View
+                          style={{ flexDirection: "column", flexWrap: "wrap" }}
+                        >
+                          <Button
+                            buttonStyle={styles.button}
+                            icon={true}
+                            buttonFunction={handleImagePick}
+                            iconPath={icon1}
+                            iconStyle={styles.IconStyle}
+                            buttonTextStyle={styles.buttonText}
+                            buttonText={"מספריית התמונות"}
+                            disableLogic={activeOption === "photo"}
+                            buttonWidth={184}
+                            // errorMessage={
+                            //   !imagePicked
+                            //     ? errors.imagePicker && errors.imagePicker.message
+                            //     : null
+                            // }
+                          />
+                        </View>
+
+                        <View
+                          style={{ flexDirection: "column", flexWrap: "wrap" }}
+                        >
+                          <Camera
+                            style={{
+                              borderRadius: 8,
+                              // backgroundColor: "transparent",
+                              height: 46,
+                            }}
+                            type={Camera.Constants.Type.back}
+                            ref={(ref) => (camera = ref)}
+                          >
+                            <Button
+                              buttonWidth={194}
+                              buttonStyle={[
+                                styles.button,
+                                { backgroundColor: "white" },
+                              ]}
+                              buttonFunction={handleTakePhoto}
+                              icon={true}
+                              iconPath={icon2}
+                              disableLogic={
+                                activeOption === "image" || editFileObject?.url
+                              }
+                              iconStyle={styles.IconStyle}
+                              buttonTextStyle={styles.buttonText}
+                              buttonText={"מצלמה"}
+                              // errorMessage={
+                              //   !CameraCaptureImageUrl
+                              //     ? errors.cameraPhoto && errors.cameraPhoto.message
+                              //     : null
+                              // }
+                            />
+                          </Camera>
+                        </View>
+                      </>
+                    )}
+
+                    {/* {imagePicked ? (
+                      <Image
+                        source={{ uri: media }}
+                        style={{ width: 100, height: 100 }}
+                      />
+                    ) : (
+                      <Loader visible={isLoading} />
+                    )}
                     <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
                       <Button
                         buttonStyle={styles.button}
@@ -481,7 +572,7 @@ const PopUp = ({
                         iconPath={icon1}
                         iconStyle={styles.IconStyle}
                         buttonTextStyle={styles.buttonText}
-                        buttonText={buttonText1}
+                        buttonText={"מספריית התמונות"}
                         disableLogic={activeOption === "photo"}
                         buttonWidth={184}
                         // errorMessage={
@@ -490,12 +581,6 @@ const PopUp = ({
                         //     : null
                         // }
                       />
-                      {/* {imagePicked && (
-                        <Image
-                          source={{ uri: media }}
-                          style={{ width: 100, height: 100 }}
-                        />
-                      )} */}
                     </View>
 
                     <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
@@ -522,7 +607,7 @@ const PopUp = ({
                           }
                           iconStyle={styles.IconStyle}
                           buttonTextStyle={styles.buttonText}
-                          buttonText={buttonText2}
+                          buttonText={"מצלמה"}
                           // errorMessage={
                           //   !CameraCaptureImageUrl
                           //     ? errors.cameraPhoto && errors.cameraPhoto.message
@@ -530,7 +615,7 @@ const PopUp = ({
                           // }
                         />
                       </Camera>
-                    </View>
+                    </View> */}
                   </View>
                   <HelperText
                     type="error"
@@ -539,14 +624,14 @@ const PopUp = ({
                       marginVertical: 0,
                     }}
                   >
-                    {!imagePicked && !CameraCaptureImageUrl
+                    {!imagePicked
                       ? errors.imagePicker && errors.imagePicker.message
                       : null}
                   </HelperText>
                 </View>
                 {/* input remarks */}
                 <View style={styles.remarksInputWrapper}>
-                  <Text style={styles.subtextStyle}>{remarksInputText}</Text>
+                  <Text style={styles.subtextStyle}>הערות</Text>
                   <Input
                     control={control}
                     name={"comments"}
@@ -571,13 +656,21 @@ const PopUp = ({
                   />
                 </View>
                 {/* submit button */}
-                <TouchableOpacity
-                  style={!isSchemaValid ? styles.disabled : styles.submitButton}
-                  onPress={handleSubmit(onSubmitForm)}
-                  // disabled={!isSchemaValid}
-                >
-                  <Text style={styles.submitButtonText}>{submitText}</Text>
-                </TouchableOpacity>
+                {isSchemaValid ? (
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleSubmit(onSubmitForm)}
+                  >
+                    <Text style={styles.submitButtonText}>שמירה</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={handleSubmit(onSubmitForm)}
+                    style={styles.disabled}
+                  >
+                    <Text style={styles.submitButtonText}>שמירה</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           </KeyboardAvoidingView>

@@ -22,7 +22,7 @@ const FoodbizNavigator = () => {
       />
       <Stack.Screen
         name="ClientsList"
-        options={{ headerShown: false }}
+        options={{ headerShown: false, gestureEnabled: false }}
         component={ClientsList}
       />
       <Stack.Screen
