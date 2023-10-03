@@ -6,7 +6,6 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   TouchableOpacity,
 } from "react-native";
 import React, {
@@ -16,13 +15,11 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-// import { TouchableOpacity } from "react-native-gesture-handler";
 import { BlurView } from "expo-blur";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
 import CloseIcon from "../../assets/imgs/CloseModalIcon.png";
 import SelectMenu from "./SelectMenu";
-import { FlatList } from "react-native-gesture-handler";
 import { HelperText, PaperProvider } from "react-native-paper";
 import Input from "./Input";
 import { useForm } from "react-hook-form";
@@ -33,19 +30,16 @@ import Button from "../ui/Button";
 import useMediaPicker from "../../Hooks/useMediaPicker";
 import { Camera } from "expo-camera";
 import Loader from "../../utiles/Loader";
-import * as ImagePicker from "expo-image-picker";
-import useSaveReport from "../../Hooks/useSaveReport";
-import axios from "axios";
 import useSaveNewFile from "../../Hooks/useSaveNewFile";
 import { useSelector } from "react-redux";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
-import routes from "../../Navigation/routes";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 const PopUp = ({
   animationType,
   modalHeaderText,
   onCloseModal = false,
+  onCloseModalButtonPress,
   modalWidth,
   visible,
   icon1,
@@ -74,12 +68,14 @@ const PopUp = ({
   const userId = useSelector((state) => state.user);
   const { saveNewFile } = useSaveNewFile(onCloseModal);
   const [activeOption, setActiveOption] = useState(null);
+
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
     })();
   }, []);
+
   const schema = useMemo(() => {
     let schemaBuilder = yup.object().shape({
       comments: yup.string(),
@@ -106,6 +102,7 @@ const PopUp = ({
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   // validate the scheme on every change of the state
   useEffect(() => {
     schema
@@ -215,62 +212,71 @@ const PopUp = ({
       inputStyle: styles.inputStyling,
     },
   ];
+
   // handling the form changes
-  const handleFormChange = useCallback(
-    (name, value) => {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [name]: value,
-      }));
+  const handleFormChange = (name, value) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
 
-      setIsSchemaValid(true);
-    },
-    [formData]
-  );
-  // console.log(formData, isSchemaValid);
-  // todo the imagepicker keep showing up even after picking an image
-  const [media, pickMedia, mediaError, BinaryMedia] = useMediaPicker();
-  // todo to condiftion the view of the image on edit file
-  // handling image pick
-  const handleImagePick = () => {
-    const pickedImage = pickMedia("image");
-    setisLoading(true);
-
-    if (pickedImage) {
-      // const { uri, type, name } = pickedImage;
-      handleFormChange("imagePicker", BinaryMedia);
-      console.log("pickedImage", BinaryMedia);
-      setImagePicked(true);
-      setisLoading(false);
-      setActiveOption("image");
-    } else {
-      setisLoading(false);
-      console.error(`[Error] Media selection canceled due to: ${mediaError}`);
-    }
+    setIsSchemaValid(true);
   };
-  const handleTakePhoto = async () => {
-    if (hasPermission) {
-      const captureImg = pickMedia("camera");
-      if (captureImg) {
-        // const { uri, type, name } = pickedImage;
+
+  const [media, pickMedia, mediaError, BinaryMedia] = useMediaPicker();
+
+  const handleImagePick = async () => {
+    setisLoading(true);
+    try {
+      const pickedImage = await pickMedia("image");
+      if (pickedImage) {
         handleFormChange("imagePicker", BinaryMedia);
-        // console.log("captureImg", BinaryMedia);
         setImagePicked(true);
+        setActiveOption("image");
         setisLoading(false);
-        setActiveOption("photo");
       } else {
         setisLoading(false);
         console.error(`[Error] Media selection canceled due to: ${mediaError}`);
       }
+    } catch (error) {
+      console.error(`[Error] An error occurred: ${error}`);
+    } finally {
+      setisLoading(false);
     }
   };
+
+  const handleTakePhoto = async () => {
+    if (hasPermission) {
+      setisLoading(true);
+      try {
+        const captureImg = await pickMedia("camera");
+        if (captureImg) {
+          handleFormChange("imagePicker", BinaryMedia);
+          setisLoading(false);
+          setImagePicked(true);
+          setActiveOption("photo");
+        } else {
+          setisLoading(false);
+          console.error(
+            `[Error] Media selection canceled due to: ${mediaError}`
+          );
+        }
+      } catch (error) {
+        setisLoading(false);
+        console.error(`[Error] An error occurred: ${error}`);
+      }
+    }
+  };
+
+  // todo the camera background apeared on the button after deleting the img
+
   const handleDeleteImg = () => {
     console.log("inside");
     handleFormChange("imagePicker", null);
     setImagePicked(false);
+    setActiveOption(null);
   };
-  // console.log("categoryId", categoryId);
-  // todo send post request for a new file info.
+
   const saveFileInfo = async () => {
     const bodyFormData = new FormData();
     bodyFormData.append("id", userId);
@@ -285,14 +291,10 @@ const PopUp = ({
     if (editFileObject) {
       bodyFormData.append("id3", editFileObject.id);
     }
-    console.log("bodyFormData", bodyFormData);
+    // console.log("bodyFormData", bodyFormData);
     const newFileSaved = await saveNewFile(bodyFormData);
     if (newFileSaved) {
-      // console.log("newFileSaved", newFileSaved);
-      console.log(
-        editFileObject !== null ? "edited file save" : "new file saved"
-      );
-      onCloseModal();
+      onCloseModalButtonPress();
       // navigateToRoute(routes.ONBOARDING.ClientsList);
     }
   };
@@ -301,8 +303,7 @@ const PopUp = ({
     // checking if scheme is valid
 
     if (isSchemaValid) {
-      // console.log("(onSubmitForm)formData", formData);
-      // console.log("scheme is valid");
+      console.log("(onSubmitForm)formData", formData);
       await saveFileInfo();
     }
   };
@@ -314,9 +315,7 @@ const PopUp = ({
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
-  // todo fix the capture img bug
-  // todo to initiate a loader while uploading an image(on both actions) when image loads display it .
-  // todo when finish loading display the image instead of the two buttons
+
   return (
     <Modal
       visible={visible}
@@ -351,6 +350,9 @@ const PopUp = ({
                 <TouchableOpacity
                   onPress={() => {
                     onCloseModal();
+                    handleFormChange("imagePicker", null);
+                    setImagePicked(false);
+                    setActiveOption(null);
                   }}
                   style={{}}
                   underlayColor="transparent"
@@ -458,6 +460,7 @@ const PopUp = ({
                 <View>
                   <Text style={styles.subtextStyle}>העלאת קובץ</Text>
                   <View style={styles.buttonWrapper}>
+                    {/* #################### */}
                     {isLoading ? (
                       <Loader visible={isLoading} size={30} />
                     ) : imagePicked ? (
@@ -556,66 +559,7 @@ const PopUp = ({
                       </>
                     )}
 
-                    {/* {imagePicked ? (
-                      <Image
-                        source={{ uri: media }}
-                        style={{ width: 100, height: 100 }}
-                      />
-                    ) : (
-                      <Loader visible={isLoading} />
-                    )}
-                    <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
-                      <Button
-                        buttonStyle={styles.button}
-                        icon={true}
-                        buttonFunction={handleImagePick}
-                        iconPath={icon1}
-                        iconStyle={styles.IconStyle}
-                        buttonTextStyle={styles.buttonText}
-                        buttonText={"מספריית התמונות"}
-                        disableLogic={activeOption === "photo"}
-                        buttonWidth={184}
-                        // errorMessage={
-                        //   !imagePicked
-                        //     ? errors.imagePicker && errors.imagePicker.message
-                        //     : null
-                        // }
-                      />
-                    </View>
-
-                    <View style={{ flexDirection: "column", flexWrap: "wrap" }}>
-                      <Camera
-                        style={{
-                          borderRadius: 8,
-                          // backgroundColor: "transparent",
-                          height: 46,
-                        }}
-                        type={Camera.Constants.Type.back}
-                        ref={(ref) => (camera = ref)}
-                      >
-                        <Button
-                          buttonWidth={194}
-                          buttonStyle={[
-                            styles.button,
-                            { backgroundColor: "white" },
-                          ]}
-                          buttonFunction={handleTakePhoto}
-                          icon={true}
-                          iconPath={icon2}
-                          disableLogic={
-                            activeOption === "image" || editFileObject?.url
-                          }
-                          iconStyle={styles.IconStyle}
-                          buttonTextStyle={styles.buttonText}
-                          buttonText={"מצלמה"}
-                          // errorMessage={
-                          //   !CameraCaptureImageUrl
-                          //     ? errors.cameraPhoto && errors.cameraPhoto.message
-                          //     : null
-                          // }
-                        />
-                      </Camera>
-                    </View> */}
+                    {/* #################### */}
                   </View>
                   <HelperText
                     type="error"

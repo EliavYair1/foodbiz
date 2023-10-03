@@ -168,13 +168,11 @@ const CategoryAccordionItem = ({
             Alert.alert("Error", responseBody.info);
           } else {
             if (reportItemState.image == "") {
-              console.log(1);
               handleReportChange("uploads/" + responseBody.name, "image");
             } else if (reportItemState.image2 == "") {
-              console.log(2);
+              // console.log(responseBody);
               handleReportChange("uploads/" + responseBody.name, "image2");
             } else if (reportItemState.image3 == "") {
-              console.log(3);
               handleReportChange("uploads/" + responseBody.name, "image3");
             }
             setImageLoader(false);
@@ -325,7 +323,8 @@ const CategoryAccordionItem = ({
               style={{
                 width: 20,
                 height: 20,
-                transform: [{ rotate: "-90deg", resizeMode: "contain" }],
+                transform: [{ rotate: "-90deg" }],
+                resizeMode: "contain",
               }}
             />
           ) : (

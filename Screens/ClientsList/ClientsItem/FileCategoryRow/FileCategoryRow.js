@@ -58,42 +58,52 @@ const FileCategoryRow = ({
       setSelectedItemName(selectedItem ? selectedItem.name : null);
     }
   }, [categoryId]);
-  const handleDeleteFile = async (userId, fileId) => {
-    // console.log("userId /fileId", userId, fileId);
+
+  const updateClients = async () => {
     try {
       setIsLoading(true);
 
-      const response = await axios.post(
-        process.env.API_BASE_URL + "api/deleteFile.php",
-        {
-          userId: userId,
-          fileId: fileId,
-        }
+      const responseClients = await fetchData(
+        process.env.API_BASE_URL + "api/clients.php",
+        { id: userId }
       );
-
-      if (response.status == 200 || response.status == 201) {
-        const responseClients = await fetchData(
-          process.env.API_BASE_URL + "api/clients.php",
-          { id: userId }
-        );
-        if (responseClients.success) {
-          let clients = [];
-          responseClients.data.forEach((element) => {
-            clients.push(new Client(element));
-          });
-          dispatch(setClients({ clients: clients }));
-        }
-        setIsLoading(false);
-
-        Alert.alert("הצלחה", "הקובץ נמחק בהצלחה");
-      } else {
-        Alert.alert("Error", "Failed to delete post");
+      if (responseClients.success) {
+        let clients = [];
+        responseClients.data.forEach((element) => {
+          clients.push(new Client(element));
+        });
+        dispatch(setClients({ clients: clients }));
       }
+      setIsLoading(false);
     } catch (error) {
-      console.error("Error deleting post:", error);
+      console.error("Error:", error);
     }
   };
-  const onCloseNewFileModal = () => {
+
+  const handleDeleteFile = async (userId, fileId) => {
+    // console.log("userId /fileId", userId, fileId);
+
+    setIsLoading(true);
+
+    const response = await axios.post(
+      process.env.API_BASE_URL + "api/deleteFile.php",
+      {
+        userId: userId,
+        fileId: fileId,
+      }
+    );
+
+    if (response.status == 200 || response.status == 201) {
+      updateClients();
+      Alert.alert("הצלחה", `הקובץ נמחק בהצלחה`);
+    } else {
+      Alert.alert("Error", "Failed to delete post");
+    }
+  };
+  const onCloseNewFileModal = (callUpdateClients) => {
+    if (callUpdateClients) {
+      updateClients();
+    }
     setModalVisible(!modalVisible);
   };
   // console.log(isEditFile);
@@ -204,6 +214,7 @@ const FileCategoryRow = ({
       ],
     },
   ];
+
   const renderItem = ({ item }) => {
     const isOpen = item.id === openId;
     const files = item.getFiles();
@@ -287,6 +298,9 @@ const FileCategoryRow = ({
       {modalVisible && (
         <PopUp
           onCloseModal={onCloseNewFileModal}
+          onCloseModalButtonPress={() => {
+            onCloseNewFileModal(true);
+          }}
           modalHeight={686}
           modalWidth={480}
           editFileObject={isEditFile ? fileObj : null}

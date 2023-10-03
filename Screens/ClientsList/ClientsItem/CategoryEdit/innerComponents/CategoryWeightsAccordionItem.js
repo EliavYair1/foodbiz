@@ -26,7 +26,6 @@ import ClientItemArrow from "../../../../../assets/imgs/ClientItemArrow.png";
 import * as ImagePicker from "expo-image-picker";
 import criticalIcon from "../../../../../assets/imgs/criticalIcon.png";
 import uuid from "uuid-random";
-import { debounce, get, identity, result } from "lodash";
 import Radio from "../../../../../Components/ui/Radio";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import * as FileSystem from "expo-file-system";
@@ -367,7 +366,8 @@ const CategoryWeightsAccordionItem = ({
               style={{
                 width: 20,
                 height: 20,
-                transform: [{ rotate: "-90deg", resizeMode: "contain" }],
+                transform: [{ rotate: "-90deg" }],
+                resizeMode: "contain",
               }}
             />
           ) : (

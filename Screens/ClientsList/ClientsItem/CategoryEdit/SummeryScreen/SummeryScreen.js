@@ -7,6 +7,7 @@ import {
   Platform,
   Dimensions,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import ScreenWrapper from "../../../../../utiles/ScreenWrapper";
@@ -36,13 +37,14 @@ import Loader from "../../../../../utiles/Loader";
 import ModalUi from "../../../../../Components/ui/ModalUi";
 import { setIndex } from "../../../../../store/redux/reducers/indexSlice";
 import routes from "../../../../../Navigation/routes";
+import * as WebBrowser from "expo-web-browser";
+import Icon from "react-native-vector-icons/MaterialIcons";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
   // todo after picking a file/img/capture a img the link should apear below the buttons with a X icon with option deleting it,
   // todo and a loading till end of the upload , in addition clicking the link will open the file as image view(same as the eye icon).
   // todo fix the capture img bug
-  console.log("here");
   const dispatch = useDispatch();
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
@@ -51,7 +53,10 @@ const SummeryScreen = () => {
   const globalCategories = useSelector((state) => state.globalCategories);
   const userId = useSelector((state) => state.user);
   const positiveFeedback = currentReport.getData("positiveFeedback");
-  const categoryNames = categoriesToPassSummeryScreen[5].categoryNames;
+  const categoryNames = categoriesToPassSummeryScreen[1]?.categoryNames || null;
+
+  // console.log("categoryNames", categoryNames[1]);
+  // console.log(categoriesToPassSummeryScreen);
   const currentCategories = useSelector((state) => state.currentCategories);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [SummeryForm, setSummeryForm] = useState({});
@@ -102,9 +107,7 @@ const SummeryScreen = () => {
         setIsSchemaValid(false);
       });
   }, [SummeryForm, schema]);
-  // console.log(currentReport.getData("data"));
-  // console.log("categoriesDataFromReport", categoriesDataFromReport);
-  // console.log(currentReport.getData("id"));
+
   const handleSaveReport = async () => {
     const bodyFormData = new FormData();
     bodyFormData.append("id", currentReport.getData("id"));
@@ -138,19 +141,19 @@ const SummeryScreen = () => {
 
   let categoriesModal = [];
 
-  if (categoryNames[1].length > 0) {
+  if (categoriesToPassSummeryScreen && categoryNames[1].length > 0) {
     categoriesModal.push({
       subheader: "ביקורת בטיחות מזון",
       options: categoryNames[1],
     });
   }
-  if (categoryNames[2].length > 0) {
+  if (categoriesToPassSummeryScreen && categoryNames[2].length > 0) {
     categoriesModal.push({
       subheader: "ביקורת קולינארית",
       options: categoryNames[2],
     });
   }
-  if (categoryNames[3].length > 0) {
+  if (categoriesToPassSummeryScreen && categoryNames[3].length > 0) {
     categoriesModal.push({
       subheader: "ביקורת תזונה",
       options: categoryNames[3],
@@ -158,23 +161,18 @@ const SummeryScreen = () => {
   }
   // * modal pick handler
   const handleOptionClick = (option) => {
-    // setIsLoading(true);
-
     const indexOfCategory = currentCategories.categories.findIndex(
       (category) => category == option
     );
-    // console.log("from a", indexOfCategory);
     dispatch(setIndex(indexOfCategory));
-
     handleModalClose();
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
 
   const sendForManagerApproval = async () => {
-    console.log(" נשלח למנהל");
-    console.log("SummeryForm:", SummeryForm);
     console.log("isSchemaValid:", isSchemaValid);
     if (isSchemaValid) {
+      console.log("SummeryForm:", SummeryForm);
       console.log("scheme is valid");
       try {
         await handleSaveReport();
@@ -184,6 +182,7 @@ const SummeryScreen = () => {
       }
     }
   };
+  // console.log(currentReport.getData(""));
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
@@ -196,6 +195,9 @@ const SummeryScreen = () => {
           containerStyling={{ marginTop: 27.5, marginBottom: 23.5 }}
           iconList={true}
           onCategoriesIconPress={() => setModalVisible(true)}
+          onSummeryIconPress={() => {
+            console.log("you are currently in the summary screen");
+          }}
         />
       </View>
       {isLoading ? (
@@ -240,6 +242,7 @@ const SummeryScreen = () => {
               handleFormChange={handleFormChange}
               errors={errors}
               fileField={"file1"}
+              // loading={isLoading}
               handleFileUploadCallback={(value) => {
                 // console.log("here", value);
                 handleFormChange("file1", value);
@@ -258,6 +261,7 @@ const SummeryScreen = () => {
 
               cameraPhotoField={"cameraPhoto"}
             />
+
             <ButtonGroup
               control={control}
               headerText={"העלאת קבצים 2"}

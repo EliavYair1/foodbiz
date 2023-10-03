@@ -496,7 +496,6 @@ const ClientItem = ({ client, tablePadding, logo }) => {
                     width: 20,
                     height: 20,
                     transform: [{ rotate: "-90deg" }],
-                    resizeMode: "contain",
                   }}
                 />
               ) : (

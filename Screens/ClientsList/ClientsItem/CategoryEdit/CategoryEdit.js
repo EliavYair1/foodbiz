@@ -56,7 +56,6 @@ const CategoryEdit = () => {
     () => globalCategories,
     [globalCategories]
   );
-
   const memoRizedCats = memoizedCategories?.categories;
   const globalStateCategories = memoRizedCats
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
@@ -351,29 +350,69 @@ const CategoryEdit = () => {
     useState(findDataForFlatlist);
 
   // console.log("findDataForFlatlist", findDataForFlatlist);
-
   let categoriesModal = [];
 
   if (categoryNames[1].length > 0) {
+    const originalCategory1 = [...categoryNames[1]];
+    categoryNames[1] = [];
+
+    currentCategories.categories.forEach((categoryId) => {
+      const category = originalCategory1.find((c) => c.id == categoryId);
+      if (category) {
+        categoryNames[1].push(category);
+      }
+    });
     categoriesModal.push({
       subheader: "ביקורת בטיחות מזון",
       options: categoryNames[1],
     });
   }
   if (categoryNames[2].length > 0) {
+    const originalCategory2 = [...categoryNames[2]];
+    categoryNames[2] = [];
+
+    currentCategories.categories.forEach((categoryId) => {
+      const category = originalCategory2.find((c) => c.id == categoryId);
+      if (category) {
+        categoryNames[2].push(category);
+      }
+    });
     categoriesModal.push({
       subheader: "ביקורת קולינארית",
       options: categoryNames[2],
     });
   }
   if (categoryNames[3].length > 0) {
+    const originalCategory3 = [...categoryNames[3]];
+    categoryNames[3] = [];
+
+    currentCategories.categories.forEach((categoryId) => {
+      const category = originalCategory3.find((c) => c.id == categoryId);
+      if (category) {
+        categoryNames[3].push(category);
+      }
+    });
     categoriesModal.push({
       subheader: "ביקורת תזונה",
       options: categoryNames[3],
     });
   }
+
+  const majorCategoryHeadersToPass = categoriesModal.map(
+    (category) => category.subheader
+  );
+  const categoriesToPassSummeryScreen = [
+    // foodSafety,
+    // nutrition,
+    // culinary,
+    // reportGrade,
+    majorCategoryHeadersToPass,
+    { categoryNames: categoryNames },
+  ];
+  // console.log(categoriesToPassSummeryScreen[5]);
+  // todo to initiate save current report/category status on every navigation.
   // * Simulating your debounce function
-  const debounce = (fn, delay) => {
+  function debounce(fn, delay) {
     let timer;
     return (...args) => {
       clearTimeout(timer);
@@ -381,7 +420,7 @@ const CategoryEdit = () => {
         fn(...args);
       }, delay);
     };
-  };
+  }
 
   // * categories picker close function
   const handleModalClose = () => {
@@ -474,18 +513,6 @@ const CategoryEdit = () => {
   // * pagination's between categories names : Next
   const nextCategory = async () => {
     debounce(saveReport(), 300);
-    const majorCategoryHeadersToPass = categoriesModal.map(
-      (category) => category.subheader
-    );
-    const categoriesToPassSummeryScreen = [
-      foodSafety,
-      nutrition,
-      culinary,
-      reportGrade,
-      majorCategoryHeadersToPass,
-
-      { categoryNames: categoryNames },
-    ];
 
     try {
       if (currentCategoryIndex === lastIndexOfCategories) {
@@ -539,6 +566,7 @@ const CategoryEdit = () => {
             onCategoriesIconPress={() => setModalVisible(true)}
             onSummeryIconPress={() => {
               console.log("s");
+              dispatch(setSummary(categoriesToPassSummeryScreen));
             }}
           />
         </View>

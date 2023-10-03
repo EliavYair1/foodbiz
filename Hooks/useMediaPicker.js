@@ -54,9 +54,11 @@ const useMediaPicker = (handleInputChange = false) => {
         if (response.status == 200) {
           // console.log("res data:", response.body);
           let responseBody = JSON.parse(response.body);
+          // console.log("res BODY:", responseBody.name);
           console.log("uploads/" + responseBody.name);
 
           setBinaryMedia("uploads/" + responseBody.name);
+          return selectedMedia;
         }
         /*  */
         // handleInputChange("url", selectedMedia);
@@ -66,6 +68,7 @@ const useMediaPicker = (handleInputChange = false) => {
       console.error("error:", error);
       setError("Failed to pick media.");
     }
+    return false;
   };
 
   useEffect(() => {

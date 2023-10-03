@@ -45,7 +45,6 @@ import CheckboxItem from "./CheckboxItem/CheckboxItem";
 import Loader from "../../utiles/Loader";
 import { HelperText } from "react-native-paper";
 import Drawer from "../../Components/ui/Drawer";
-import FileIcon from "../../assets/icons/iconImgs/FileIcon.png";
 import routes from "../../Navigation/routes";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
 import { setCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
@@ -54,15 +53,12 @@ import "@env";
 import Header from "../../Components/ui/Header";
 import GoBackNavigator from "../../utiles/GoBackNavigator";
 import Client from "../../Components/modals/client";
-import {
-  setClients,
-  changeClientOnIndex,
-} from "../../store/redux/reducers/clientSlice";
+import { setClients } from "../../store/redux/reducers/clientSlice";
 import FetchDataService from "../../Services/FetchDataService";
 import Report from "../../Components/modals/report";
 import ModalUi from "../../Components/ui/ModalUi";
 import { setIndex } from "../../store/redux/reducers/indexSlice";
-
+import { setSummary } from "../../store/redux/reducers/summerySlice";
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
   const { fetchData } = FetchDataService();
@@ -224,9 +220,9 @@ const WorkerNewReport = () => {
     }
 
     const result = {
-      type1: type1Ids,
-      type2: type2Ids,
-      type3: type3Ids,
+      1: type1Ids,
+      2: type2Ids,
+      3: type3Ids,
     };
 
     return result;
@@ -1532,25 +1528,43 @@ const WorkerNewReport = () => {
     globalCategoriesObj,
     formData.categorys
   );
-  if (sortedCategories.type1.length > 0) {
+  if (Array.isArray(formData.categorys) && sortedCategories[1].length > 0) {
+    sortedCategories[1] = formData.categorys
+      .map((id) => sortedCategories[1].find((category) => category.id == id))
+      .filter((category) => category !== undefined);
     categoriesModal.push({
       subheader: "ביקורת בטיחות מזון",
-      options: sortedCategories.type1,
+      options: sortedCategories[1],
     });
   }
-  if (sortedCategories.type2.length > 0) {
+  if (Array.isArray(formData.categorys) && sortedCategories[2].length > 0) {
+    sortedCategories[2] = formData.categorys
+      .map((id) => sortedCategories[2].find((category) => category.id == id))
+      .filter((category) => category !== undefined);
     categoriesModal.push({
       subheader: "ביקורת קולינארית",
-      options: sortedCategories.type2,
+      options: sortedCategories[2],
     });
   }
-  if (sortedCategories.type3.length > 0) {
+  if (Array.isArray(formData.categorys) && sortedCategories[3].length > 0) {
+    sortedCategories[3] = formData.categorys
+      .map((id) => sortedCategories[3].find((category) => category.id == id))
+      .filter((category) => category !== undefined);
     categoriesModal.push({
       subheader: "ביקורת תזונה",
-      options: sortedCategories.type3,
+      options: sortedCategories[3],
     });
   }
 
+  const majorCategoryHeadersToPass = categoriesModal.map(
+    (category) => category.subheader
+  );
+  const categoriesToPassSummeryScreen = [
+    majorCategoryHeadersToPass,
+
+    { categoryNames: sortedCategories },
+  ];
+  // console.log(categoriesToPassSummeryScreen);
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
@@ -1586,8 +1600,7 @@ const WorkerNewReport = () => {
               onBackPress={async () => {
                 if (currentReport) {
                   let res = await saveEditedReport();
-
-                  console.log("back press response: ", res);
+                  // console.log("back press response: ", res);
                 }
               }}
             />
@@ -1605,8 +1618,12 @@ const WorkerNewReport = () => {
                   // navigateToRoute(routes.ONBOARDING.CategoryEdit);
                   setModalVisible(true);
                 }}
-                onSummeryIconPress={() => {
-                  console.log("s");
+                onSummeryIconPress={async () => {
+                  // console.log("s");
+                  // if (currentReport) {
+                  //   await saveEditedReport();
+                  // }
+                  dispatch(setSummary(categoriesToPassSummeryScreen));
                 }}
               />
             </View>
