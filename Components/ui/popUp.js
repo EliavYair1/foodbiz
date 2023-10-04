@@ -68,6 +68,7 @@ const PopUp = ({
   const userId = useSelector((state) => state.user);
   const { saveNewFile } = useSaveNewFile(onCloseModal);
   const [activeOption, setActiveOption] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -99,6 +100,7 @@ const PopUp = ({
     control,
     handleSubmit,
     formState: { errors },
+    // register,
   } = useForm({
     resolver: yupResolver(schema),
   });
@@ -113,7 +115,9 @@ const PopUp = ({
         setIsSchemaValid(false);
       });
   }, [formData, schema]);
-
+  // const { name: stationName } = register("station");
+  // const { name: dateName } = register("date");
+  // console.log(errors);
   const inputRef = useRef();
   const popUpInputInformation = [
     {
@@ -222,15 +226,15 @@ const PopUp = ({
 
     setIsSchemaValid(true);
   };
-
-  const [media, pickMedia, mediaError, BinaryMedia] = useMediaPicker();
+  const [media, pickMedia, mediaError] = useMediaPicker();
 
   const handleImagePick = async () => {
     setisLoading(true);
     try {
       const pickedImage = await pickMedia("image");
       if (pickedImage) {
-        handleFormChange("imagePicker", BinaryMedia);
+        handleFormChange("imagePicker", pickedImage);
+        setImagePicked(pickedImage);
         setImagePicked(true);
         setActiveOption("image");
         setisLoading(false);
@@ -251,7 +255,8 @@ const PopUp = ({
       try {
         const captureImg = await pickMedia("camera");
         if (captureImg) {
-          handleFormChange("imagePicker", BinaryMedia);
+          handleFormChange("imagePicker", captureImg);
+          setImagePicked(captureImg);
           setisLoading(false);
           setImagePicked(true);
           setActiveOption("photo");
@@ -267,8 +272,18 @@ const PopUp = ({
       }
     }
   };
-
-  // todo the camera background apeared on the button after deleting the img
+  useEffect(() => {
+    if (editFileObject) {
+      setImagePicked(false);
+      setSelectedImage(editFileObject.url);
+      handleFormChange("imagePicker", editFileObject.url);
+      handleFormChange("authorName", editFileObject.authorName);
+      handleFormChange("date", editFileObject.date);
+      handleFormChange("fileName", editFileObject.fileName);
+      handleFormChange("station", editFileObject.station_name);
+      handleFormChange("comments", editFileObject.comments);
+    }
+  }, [editFileObject]);
 
   const handleDeleteImg = () => {
     console.log("inside");
@@ -315,7 +330,6 @@ const PopUp = ({
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
-
   return (
     <Modal
       visible={visible}
@@ -463,14 +477,14 @@ const PopUp = ({
                     {/* #################### */}
                     {isLoading ? (
                       <Loader visible={isLoading} size={30} />
-                    ) : imagePicked ? (
+                    ) : formData.imagePicker ? (
                       <View
                         style={{
                           justifyContent: "center",
                           width: "100%",
                         }}
                       >
-                        {media && (
+                        {media || selectedImage ? (
                           <TouchableOpacity
                             onPress={() => {
                               handleDeleteImg();
@@ -487,16 +501,30 @@ const PopUp = ({
                               color={colors.red}
                             />
                           </TouchableOpacity>
+                        ) : null}
+                        {imagePicked == true ? (
+                          <Image
+                            source={{
+                              uri: media,
+                            }}
+                            style={{
+                              width: 100,
+                              height: 100,
+                              alignSelf: "center",
+                            }}
+                          />
+                        ) : (
+                          <Image
+                            source={{
+                              uri: editFileObject.url,
+                            }}
+                            style={{
+                              width: 100,
+                              height: 100,
+                              alignSelf: "center",
+                            }}
+                          />
                         )}
-
-                        <Image
-                          source={{ uri: media }}
-                          style={{
-                            width: 100,
-                            height: 100,
-                            alignSelf: "center",
-                          }}
-                        />
                       </View>
                     ) : (
                       <>
@@ -542,9 +570,7 @@ const PopUp = ({
                               buttonFunction={handleTakePhoto}
                               icon={true}
                               iconPath={icon2}
-                              disableLogic={
-                                activeOption === "image" || editFileObject?.url
-                              }
+                              disableLogic={activeOption === "image"}
                               iconStyle={styles.IconStyle}
                               buttonTextStyle={styles.buttonText}
                               buttonText={"מצלמה"}

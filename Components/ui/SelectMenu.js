@@ -66,80 +66,11 @@ const SelectMenu = ({
     closeMenu();
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      paddingTop: 50,
-    },
-    menuItemText: {
-      fontFamily: fonts.AMedium,
-      fontSize: 16,
-      // color: errorMessage && !selectedItem ? "#b3261e" : colors.black,
-    },
-    button: {
-      width: selectWidth,
-      borderWidth: errorMessage && !selectedItem ? 2 : 1,
-      padding: 10,
-      // borderRadius: 4,
-      justifyContent: "space-between",
-      flexDirection: "row-reverse",
-      borderColor:
-        errorMessage && !selectedItem ? "#b3261e" : "rgba(12, 20, 48, 0.2)",
-      borderRadius: 8,
-      paddingVertical: 12,
-      alignItems: "center",
-    },
-    dropdownContainer: {
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    menu: {
-      marginTop: 10,
-    },
-    selectedItemText: {
-      marginTop: 20,
-      fontSize: 16,
-    },
-    menuItem: {
-      width: selectWidth,
-      justifyContent: "center",
-      alignItems: "center",
-      borderColor: "rgba(12, 20, 48, 0.2)",
-      borderRadius: 8,
-      backgroundColor: colors.white,
-      paddingVertical: 12,
-      zIndex: 20,
-    },
-    centeredView: {
-      flex: 1,
-      // justifyContent: "center",
-      // marginTop: optionsLocation,
-      // marginRight: 0,
-      position: "absolute",
-      top: PositionVertical + 25 ?? 0,
-      right: positionHorizontal - 20 ?? 0,
-    },
-    modalView: {
-      margin: 20,
-      backgroundColor: "white",
-      borderRadius: 20,
-      // padding: 35,
-      alignItems: "center",
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      elevation: 5,
-      height: optionsHeight,
-    },
-  });
   const renderMenuItem = ({ item, idx }) => {
     return (
       <TouchableOpacity
         key={item.id}
-        style={styles.menuItem}
+        style={[styles.menuItem, { width: selectWidth }]}
         onPress={() =>
           handleItemPick(
             returnObject
@@ -187,7 +118,19 @@ const SelectMenu = ({
                 }}
                 anchor={
                   <TouchableOpacity onPress={openMenu} disabled={disabled}>
-                    <View style={styles.button}>
+                    <View
+                      style={[
+                        styles.button,
+                        {
+                          width: selectWidth,
+                          borderWidth: errorMessage && !selectedItem ? 2 : 1,
+                          borderColor:
+                            errorMessage && !selectedItem
+                              ? "#b3261e"
+                              : "rgba(12, 20, 48, 0.2)",
+                        },
+                      ]}
+                    >
                       <Image
                         source={selectorIcon}
                         style={{
@@ -221,9 +164,24 @@ const SelectMenu = ({
                 >
                   <TouchableWithoutFeedback onPress={closeMenu}>
                     <View
-                      style={[styles.centeredView, centeredViewStyling ?? ""]}
+                      style={[
+                        styles.centeredView,
+                        centeredViewStyling ?? "",
+                        {
+                          top:
+                            PositionVertical !== undefined
+                              ? PositionVertical + 25
+                              : 0,
+                          right:
+                            positionHorizontal !== undefined
+                              ? positionHorizontal - 20
+                              : 0,
+                        },
+                      ]}
                     >
-                      <View style={styles.modalView}>
+                      <View
+                        style={[styles.modalView, { height: optionsHeight }]}
+                      >
                         <FlatList
                           data={selectOptions}
                           keyExtractor={(option) => uuid()}
@@ -252,5 +210,71 @@ const SelectMenu = ({
     </>
   );
 };
-
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: 50,
+  },
+  menuItemText: {
+    fontFamily: fonts.AMedium,
+    fontSize: 16,
+    // color: errorMessage && !selectedItem ? "#b3261e" : colors.black,
+  },
+  button: {
+    // width: selectWidth,
+    // borderWidth: errorMessage && !selectedItem ? 2 : 1,
+    padding: 10,
+    // borderRadius: 4,
+    justifyContent: "space-between",
+    flexDirection: "row-reverse",
+    // borderColor:
+    //   errorMessage && !selectedItem ? "#b3261e" : "rgba(12, 20, 48, 0.2)",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  dropdownContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  menu: {
+    marginTop: 10,
+  },
+  selectedItemText: {
+    marginTop: 20,
+    fontSize: 16,
+  },
+  menuItem: {
+    // width: selectWidth,
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "rgba(12, 20, 48, 0.2)",
+    borderRadius: 8,
+    backgroundColor: colors.white,
+    paddingVertical: 12,
+    zIndex: 20,
+  },
+  centeredView: {
+    flex: 1,
+    // justifyContent: "center",
+    // marginTop: optionsLocation,
+    // marginRight: 0,
+    position: "absolute",
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    // padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    // height: optionsHeight,
+  },
+});
 export default SelectMenu;

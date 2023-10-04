@@ -42,9 +42,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
-  // todo after picking a file/img/capture a img the link should apear below the buttons with a X icon with option deleting it,
   // todo and a loading till end of the upload , in addition clicking the link will open the file as image view(same as the eye icon).
-  // todo fix the capture img bug
   const dispatch = useDispatch();
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
@@ -83,9 +81,13 @@ const SummeryScreen = () => {
     control,
     handleSubmit,
     formState: { errors },
+    register,
   } = useForm({
     resolver: yupResolver(schema),
   });
+  const { name: positiveFeedbackName } = register("positiveFeedback");
+  const { name: fileName1 } = register("file1");
+  const { name: fileName2 } = register("file2");
 
   // handling the form changes
   const handleFormChange = (name, value) => {
@@ -182,7 +184,6 @@ const SummeryScreen = () => {
       }
     }
   };
-  // console.log(currentReport.getData(""));
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
@@ -212,7 +213,7 @@ const SummeryScreen = () => {
               <>
                 <Input
                   proxyRef={inputRef}
-                  name="positiveFeedback"
+                  name={positiveFeedbackName}
                   control={control}
                   activeOutlineColor={"grey"}
                   outlineColor={"grey"}

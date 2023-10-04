@@ -1620,8 +1620,17 @@ const WorkerNewReport = () => {
                 }}
                 onSummeryIconPress={async () => {
                   // console.log("s");
-                  // if (currentReport) {
-                  //   await saveEditedReport();
+                  // setIsLoading(true);
+                  // try {
+                  //   let res = await saveEditedReport();
+                  //   if (res) {
+                  //     console.log(res, "ineeee");
+                  //     dispatch(setSummary(categoriesToPassSummeryScreen));
+                  //   }
+                  // } catch (error) {
+                  //   console.log("WorkerNewReport[err]", error);
+                  // } finally {
+                  //   setIsLoading(false);
                   // }
                   dispatch(setSummary(categoriesToPassSummeryScreen));
                 }}
