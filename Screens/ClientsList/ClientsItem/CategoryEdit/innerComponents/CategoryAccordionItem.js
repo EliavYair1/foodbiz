@@ -93,6 +93,8 @@ const CategoryAccordionItem = ({
     reportItemState.image2,
     reportItemState.image3,
   ].filter((image) => !!image);
+
+  console.log("imagesimagesimagesimages", images, reportItemState);
   // * image picker
   const showImagePickerOptions = async () => {
     const options = ["Take a Photo", "Choose from Library", "Cancel"];
@@ -119,6 +121,7 @@ const CategoryAccordionItem = ({
         );
       });
       let result = false;
+      console.log("ddd");
       if (buttonIndex === 0) {
         // Take a photo
         result = await ImagePicker.launchCameraAsync({
@@ -141,9 +144,10 @@ const CategoryAccordionItem = ({
         setImageLoader(true);
         const selectedAssets = result.assets;
 
-        let fileName = selectedAssets[0].fileName;
+        let fileName = selectedAssets[0].fileName ?? "camera.jpg";
         let fileSize = selectedAssets[0].fileSize;
         const fileToUpload = selectedAssets[0];
+        console.log("selectedAssets", selectedAssets);
         const apiUrl =
           process.env.API_BASE_URL +
           "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
@@ -151,6 +155,7 @@ const CategoryAccordionItem = ({
           "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
           fileSize +
           "&ax-start-byte=0&isLast=true";
+        console.log("apiUrl", apiUrl);
         const response = await FileSystem.uploadAsync(
           apiUrl,
           fileToUpload.uri,
@@ -165,6 +170,7 @@ const CategoryAccordionItem = ({
           let responseBody = JSON.parse(response.body);
           if (responseBody.status == "error") {
             setImageLoader(false);
+            console.log("error", responseBody);
             Alert.alert("Error", responseBody.info);
           } else {
             if (reportItemState.image == "") {
@@ -535,6 +541,7 @@ const CategoryAccordionItem = ({
             )}
             <ScrollView horizontal>
               {images.map((image, index) => {
+                console.log("imagggge", image);
                 if (image !== "") {
                   return (
                     <TouchableOpacity
