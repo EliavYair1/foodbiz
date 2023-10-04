@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoPicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+import * as DocumentPicker from "expo-document-picker";
+import "@env";
 const useMediaPicker = (handleInputChange = false) => {
   const [media, setMedia] = useState(null);
   const [BinaryMedia, setBinaryMedia] = useState(null);
@@ -23,10 +25,50 @@ const useMediaPicker = (handleInputChange = false) => {
           aspect: [4, 3],
           quality: 1,
         });
+      } else if (mediaType === "file") {
+        result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
+        // console.log(result.uri);
       } else {
         throw new Error(`Invalid media type: ${mediaType}`);
       }
+      if (result.type === "success") {
+        const selectedMedia = result;
+        setMedia(selectedMedia);
+        let fileName = selectedMedia.name;
+        let fileSize = selectedMedia.size;
+        const fileToUpload = selectedMedia;
 
+        const apiUrl =
+          process.env.API_BASE_URL +
+          "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
+          fileName +
+          "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
+          fileSize +
+          "&ax-start-byte=0&isLast=true";
+        const response = await FileSystem.uploadAsync(
+          apiUrl,
+          fileToUpload.uri,
+          {
+            fieldName: "ax-file-name",
+            httpMethod: "POST",
+            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          }
+        );
+        if (response.status == 200) {
+          console.log("response", response);
+          // console.log("res data:", response.body);
+          let responseBody = JSON.parse(response.body);
+          if (responseBody.status == "error") {
+            setError("Failed to pick media.", responseBody.info);
+            return false;
+          }
+          // console.log("res BODY:", responseBody.name);
+          console.log("uploads/" + responseBody.name);
+
+          setBinaryMedia("uploads/" + responseBody.name);
+          return "uploads/" + responseBody.name;
+        }
+      }
       if (!result.canceled) {
         const selectedMedia = result.assets[0].uri;
         setMedia(selectedMedia);
@@ -58,7 +100,7 @@ const useMediaPicker = (handleInputChange = false) => {
           console.log("uploads/" + responseBody.name);
 
           setBinaryMedia("uploads/" + responseBody.name);
-          return selectedMedia;
+          return "uploads/" + responseBody.name;
         }
         /*  */
         // handleInputChange("url", selectedMedia);

@@ -22,7 +22,6 @@ import axios from "axios";
 import { setGlobalCategories } from "../../../store/redux/reducers/globalCategories";
 import { setReportsTimes } from "../../../store/redux/reducers/reportsTimesSlice";
 
-
 const LoginBox = () => {
   const [passwordShowToggle, setPasswordShowToggle] = useState(true);
   const [formData, setFormData] = useState({});
@@ -173,7 +172,7 @@ const LoginBox = () => {
               mode={itemData.item.mode}
               inputIcon={itemData.item.inputIcon}
               contentStyle={itemData.item.contentStyle}
-              value={itemData.item.value}
+              // value={itemData.item.value}
               secureTextEntry={itemData.item.secureTextEntry}
               returnKeyType={itemData.item.returnKeyType}
               underlineColor={itemData.item.underlineColor}

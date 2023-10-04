@@ -14,6 +14,9 @@ import * as ImagePicker from "expo-image-picker";
 import { HelperText } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Loader from "../../../../../utiles/Loader";
+import { useSelector } from "react-redux";
+import "@env";
+import * as WebBrowser from "expo-web-browser";
 const ButtonGroup = ({
   control,
   headerText,
@@ -35,6 +38,10 @@ const ButtonGroup = ({
   const [activeOption, setActiveOption] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [Link, setLink] = useState(null);
+  const [fileLink, setFileLink] = useState(null);
+  const currentReport = useSelector(
+    (state) => state.currentReport.currentReport
+  );
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -42,16 +49,17 @@ const ButtonGroup = ({
     })();
   }, []);
 
-  const [media, pickMedia, mediaError, BinaryMedia] = useMediaPicker();
+  const [media, pickMedia, mediaError, error] = useMediaPicker();
 
   const handleImagePick = async () => {
     setIsLoading(true);
     try {
       const pickedImage = await pickMedia("image");
+      // console.log("pickedImage", pickedImage, BinaryMedia);
       if (pickedImage) {
         const { uri } = pickedImage;
-        onImagePickChange(BinaryMedia);
-        setLink(BinaryMedia);
+        onImagePickChange(pickedImage);
+        setLink(pickedImage);
         setActiveOption("image");
         setImagePicked(true);
         setIsLoading(false);
@@ -73,10 +81,10 @@ const ButtonGroup = ({
         if (captureImg) {
           // handleFormChange("imagePicker", BinaryMedia);
           setCameraCaptureImageUrl(true);
-          onPhotoCapture(BinaryMedia);
+          onPhotoCapture(captureImg);
           setIsLoading(false);
           // setImagePicked(true);
-          setLink(BinaryMedia);
+          setLink(captureImg);
           setActiveOption("photo");
         } else {
           console.error(
@@ -94,17 +102,18 @@ const ButtonGroup = ({
   const handleFileUpload = async () => {
     setIsLoading(true);
     try {
-      const result = await DocumentPicker.getDocumentAsync({ type: "*/*" });
-      if (result.type === "success") {
-        const { uri, name, type } = result;
-        console.log("Selected file:", { uri, name, type });
-        handleFileUploadCallback(uri);
-        setLink(name);
-        setFileSelected(uri);
+      const selectedFile = await pickMedia("file");
+      // console.log("selectedFile", selectedFile);
+      if (selectedFile) {
+        // const { uri, name, type } = result;
+        // console.log("Selected file:", { uri, name, type });
+        handleFileUploadCallback(selectedFile);
+        setLink(selectedFile);
+        setFileSelected(selectedFile);
         setActiveOption("file");
         setIsLoading(false);
       } else {
-        console.log("File selection canceled");
+        console.log("File selection canceled", error);
       }
     } catch (error) {
       console.error("Error selecting file:", error);
@@ -126,7 +135,7 @@ const ButtonGroup = ({
       <Text style={styles.uploadText}>{headerText}</Text>
       {isLoading ? (
         <Loader visible={isLoading} size={30} isSetting={false} />
-      ) : Link ? (
+      ) : Link || fileLink ? (
         <>
           <View>
             <TouchableOpacity
@@ -143,8 +152,12 @@ const ButtonGroup = ({
             </TouchableOpacity>
             <TouchableOpacity
               onPress={async () => {
-                let url = `${currentReport.getData("viewUrl")}`;
-                await WebBrowser.openBrowserAsync(url);
+                if (media !== null) {
+                  let url = `${process.env.API_BASE_URL}${Link}`;
+                  await WebBrowser.openBrowserAsync(url);
+                } else {
+                  console.log("error trying to display img");
+                }
               }}
             >
               <Text
