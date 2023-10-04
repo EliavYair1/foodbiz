@@ -8,6 +8,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
+  TextInput,
 } from "react-native";
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import ScreenWrapper from "../../../../../utiles/ScreenWrapper";
@@ -69,25 +70,28 @@ const SummeryScreen = () => {
     [globalCategories]
   );
 
-  const schema = useMemo(() => {
-    let schemaBuilder = yup.object().shape({
-      positiveFeedback: yup.string().required("positiveFeedback is required"),
-      file1: yup.string().required("file1 is required"),
-      file2: yup.string().required("file2 is required"),
-    });
-    return schemaBuilder;
-  }, [SummeryForm]);
+  const schema = yup.object().shape({
+    positiveFeedback: yup.string().required("Positive feedback is required"),
+    file1: yup.string().required("File 1 is required"),
+    file2: yup.string().required("File 2 is required"),
+  });
+
   const {
     control,
     handleSubmit,
     formState: { errors },
-    register,
   } = useForm({
     resolver: yupResolver(schema),
   });
-  const { name: positiveFeedbackName } = register("positiveFeedback");
-  const { name: fileName1 } = register("file1");
-  const { name: fileName2 } = register("file2");
+  useEffect(() => {
+    schema
+      .validate(SummeryForm)
+      .then(() => setIsSchemaValid(true))
+      .catch((err) => {
+        console.log("err:", err);
+        setIsSchemaValid(false);
+      });
+  }, [SummeryForm, schema]);
 
   // handling the form changes
   const handleFormChange = (name, value) => {
@@ -99,16 +103,6 @@ const SummeryScreen = () => {
     setIsSchemaValid(true);
     console.log("isschemaValid", isSchemaValid);
   };
-
-  useEffect(() => {
-    schema
-      .validate(SummeryForm)
-      .then(() => setIsSchemaValid(true))
-      .catch((err) => {
-        console.log("err:", err);
-        setIsSchemaValid(false);
-      });
-  }, [SummeryForm, schema]);
 
   const handleSaveReport = async () => {
     const bodyFormData = new FormData();
@@ -134,13 +128,13 @@ const SummeryScreen = () => {
       currentReport.setData("file2", SummeryForm.file2);
       dispatch(setCurrentReport(currentReport));
       // console.log("[SummeryScreen]response:", reportSaved);
+      console.log("summery sent successfully...");
     }
   };
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
   };
-
   let categoriesModal = [];
 
   if (categoriesToPassSummeryScreen && categoryNames[1].length > 0) {
@@ -184,11 +178,19 @@ const SummeryScreen = () => {
       }
     }
   };
+  // console.log("errors", errors);
+  // console.log("fileName1", fileName1);
+  // console.log("fileName2", fileName2);
+  console.log(currentReport.getData("file2"));
+  // console.log("errors", errors);
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
         text={"חזרה לרשימת הלקוחות"}
         containerStyling={{ marginTop: 16 }}
+        onBackPress={async () => {
+          await handleSaveReport();
+        }}
       />
       <View>
         <Header
@@ -213,11 +215,14 @@ const SummeryScreen = () => {
               <>
                 <Input
                   proxyRef={inputRef}
-                  name={positiveFeedbackName}
+                  name={"positiveFeedback"}
                   control={control}
                   activeOutlineColor={"grey"}
                   outlineColor={"grey"}
                   mode={"outlined"}
+                  rules={{
+                    required: "positiveFeedback is required",
+                  }}
                   inputStyle={{
                     backgroundColor: "transparent",
                     height: 150,
@@ -227,6 +232,9 @@ const SummeryScreen = () => {
                   }}
                   defaultValue={positiveFeedback ?? ""}
                   // label={positiveFeedback}
+                  errMsg={
+                    errors.positiveFeedback && errors.positiveFeedback.message
+                  }
                 />
               </>
             }
@@ -256,11 +264,8 @@ const SummeryScreen = () => {
                 // console.log(value);
                 handleFormChange("file1", value);
               }}
-              // imageCaptureErrMsg={
-              //   errors.cameraPhoto && errors.cameraPhoto.message
-              // }
-
               cameraPhotoField={"cameraPhoto"}
+              existingFile={currentReport.getData("file1")}
             />
 
             <ButtonGroup
@@ -283,6 +288,7 @@ const SummeryScreen = () => {
               }
               fileField={"file2"}
               cameraPhotoField={"cameraPhoto2"}
+              existingFile={currentReport.getData("file2")}
             />
           </View>
 
@@ -320,6 +326,8 @@ const SummeryScreen = () => {
               </Text>
             </LinearGradient>
           </TouchableOpacity>
+
+          {/* test */}
         </View>
       )}
       {modalVisible && (

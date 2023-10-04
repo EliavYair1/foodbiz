@@ -28,6 +28,7 @@ const Input = ({
   numeric = false,
   onBlurFunction = false,
   value,
+  errMsg = false,
 }) => {
   return (
     <>

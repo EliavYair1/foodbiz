@@ -30,6 +30,7 @@ const ButtonGroup = ({
   onImagePickChange,
   handleFileUploadCallback,
   onPhotoCapture,
+  existingFile,
 }) => {
   const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
@@ -37,18 +38,14 @@ const ButtonGroup = ({
   const [fileSelected, setFileSelected] = useState(null);
   const [activeOption, setActiveOption] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [Link, setLink] = useState(null);
-  const [fileLink, setFileLink] = useState(null);
-  const currentReport = useSelector(
-    (state) => state.currentReport.currentReport
-  );
+  const [selectedFileToDisplay, setSelectedFileToDisplay] = useState(false);
+
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
     })();
   }, []);
-
   const [media, pickMedia, mediaError, error] = useMediaPicker();
 
   const handleImagePick = async () => {
@@ -59,7 +56,7 @@ const ButtonGroup = ({
       if (pickedImage) {
         const { uri } = pickedImage;
         onImagePickChange(pickedImage);
-        setLink(pickedImage);
+        setSelectedFileToDisplay(pickedImage);
         setActiveOption("image");
         setImagePicked(true);
         setIsLoading(false);
@@ -82,9 +79,9 @@ const ButtonGroup = ({
           // handleFormChange("imagePicker", BinaryMedia);
           setCameraCaptureImageUrl(true);
           onPhotoCapture(captureImg);
+          setSelectedFileToDisplay(captureImg);
           setIsLoading(false);
           // setImagePicked(true);
-          setLink(captureImg);
           setActiveOption("photo");
         } else {
           console.error(
@@ -108,7 +105,7 @@ const ButtonGroup = ({
         // const { uri, name, type } = result;
         // console.log("Selected file:", { uri, name, type });
         handleFileUploadCallback(selectedFile);
-        setLink(selectedFile);
+        setSelectedFileToDisplay(selectedFile);
         setFileSelected(selectedFile);
         setActiveOption("file");
         setIsLoading(false);
@@ -121,6 +118,13 @@ const ButtonGroup = ({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (existingFile) {
+      setSelectedFileToDisplay(existingFile);
+    }
+  }, [existingFile]);
+
   // console.log(isLoading);
   const handleDeleteLink = (field) => {
     // console.log("inside");
@@ -128,14 +132,17 @@ const ButtonGroup = ({
     setImagePicked(false);
     setCameraCaptureImageUrl(null);
     setActiveOption(null);
-    setLink(null);
+    setSelectedFileToDisplay(false);
   };
+  // console.log("CameraCaptureImageUrl", !CameraCaptureImageUrl);
+  // console.log("imagePicked", !imagePicked);
+  // console.log("fileSelected", !fileSelected);
   return (
     <View style={styles.uploadGroup}>
       <Text style={styles.uploadText}>{headerText}</Text>
       {isLoading ? (
         <Loader visible={isLoading} size={30} isSetting={false} />
-      ) : Link || fileLink ? (
+      ) : selectedFileToDisplay ? (
         <>
           <View>
             <TouchableOpacity
@@ -153,7 +160,7 @@ const ButtonGroup = ({
             <TouchableOpacity
               onPress={async () => {
                 if (media !== null) {
-                  let url = `${process.env.API_BASE_URL}${Link}`;
+                  let url = `${process.env.API_BASE_URL}${selectedFileToDisplay}`;
                   await WebBrowser.openBrowserAsync(url);
                 } else {
                   console.log("error trying to display img");
@@ -168,7 +175,7 @@ const ButtonGroup = ({
                   fontFamily: fonts.ABold,
                 }}
               >
-                {Link}
+                {selectedFileToDisplay}
               </Text>
             </TouchableOpacity>
           </View>
@@ -182,36 +189,42 @@ const ButtonGroup = ({
               render={({
                 field: { onChange, onBlur, value },
                 fieldState: { error },
-              }) => (
-                <View style={{ flexDirection: "column" }}>
-                  <Button
-                    buttonStyle={[
-                      [
-                        styles.button,
-                        {
-                          borderColor: !fileSelected ? "red" : "blue",
-                        },
-                      ],
-                    ]}
-                    icon={true}
-                    buttonFunction={handleFileUpload}
-                    iconPath={uploadIcon1}
-                    iconStyle={styles.IconStyle}
-                    buttonTextStyle={styles.buttonText}
-                    buttonText={"בחירת קובץ"}
-                    buttonWidth={260}
-                    disableLogic={
-                      activeOption === "photo" || activeOption === "image"
-                    }
-                    // errorMessage={
-                    //   !fileSelected
-                    //     ? errors.fileField && errors.fileField.message
-                    //     : null
-                    // }
-                    // errorMessage={fileUploadErrMsg}
-                  />
-                </View>
-              )}
+              }) => {
+                // console.log("error", error);
+                return (
+                  <View style={{ flexDirection: "column" }}>
+                    <Button
+                      buttonStyle={[
+                        [
+                          styles.button,
+                          {
+                            borderColor: !fileSelected ? "red" : "blue",
+                          },
+                        ],
+                      ]}
+                      icon={true}
+                      buttonFunction={handleFileUpload}
+                      iconPath={uploadIcon1}
+                      iconStyle={styles.IconStyle}
+                      buttonTextStyle={styles.buttonText}
+                      buttonText={"בחירת קובץ"}
+                      buttonWidth={260}
+                      disableLogic={
+                        activeOption === "photo" || activeOption === "image"
+                      }
+                      // errorMessage={
+                      //   !fileSelected
+                      //     ? errors.fileField && errors.fileField.message
+                      //     : null
+                      // }
+                      // errorMessage={fileUploadErrMsg}
+                    />
+                    {error && error.message && (
+                      <HelperText type="error">{error.message}</HelperText>
+                    )}
+                  </View>
+                );
+              }}
             />
             <Controller
               control={control}
@@ -308,13 +321,16 @@ const ButtonGroup = ({
         </>
       )}
 
-      {errors.fileField && errors.fileField.message && (
-        <HelperText type="error">
-          {!CameraCaptureImageUrl && !imagePicked && !fileSelected
-            ? errors.fileField && errors.fileField.message
-            : null}
-        </HelperText>
-      )}
+      {/* {errors.fileField && errors.fileField.message && ( */}
+      {/* <HelperText
+        type="error"
+        style={{ backgroundColor: "red", color: colors.black }}
+      >
+        {!CameraCaptureImageUrl && !imagePicked && !fileSelected
+          ? errors.fileField && errors.fileField.message
+          : null}
+      </HelperText> */}
+      {/* )} */}
     </View>
   );
 };
@@ -356,168 +372,3 @@ const styles = StyleSheet.create({
     height: 16,
   },
 });
-
-/*       {Link ? (
-        <View>
-          <TouchableOpacity
-            onPress={() => {
-              console.log("aaaaaa");
-            }}
-            style={{
-              justifyContent: "center",
-              alignItems: "center",
-              marginRight: 205,
-            }}
-          >
-            <Icon name="delete-forever" size={30} color={colors.red} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={async () => {
-              let url = `${currentReport.getData("viewUrl")}`;
-              await WebBrowser.openBrowserAsync(url);
-            }}
-          >
-            <Text
-              style={{
-                color: colors.red,
-                fontSize: 18,
-                alignSelf: "center",
-                fontFamily: fonts.ABold,
-              }}
-            >
-              {Link}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.buttonGroupWrapper}>
-          <Controller
-            control={control}
-            name={fileField}
-            render={({
-              field: { onChange, onBlur, value },
-              fieldState: { error },
-            }) => (
-              <View style={{ flexDirection: "column" }}>
-                <Button
-                  buttonStyle={[
-                    [
-                      styles.button,
-                      {
-                        borderColor: !fileSelected ? "red" : "blue",
-                      },
-                    ],
-                  ]}
-                  icon={true}
-                  buttonFunction={handleFileUpload}
-                  iconPath={uploadIcon1}
-                  iconStyle={styles.IconStyle}
-                  buttonTextStyle={styles.buttonText}
-                  buttonText={"בחירת קובץ"}
-                  buttonWidth={260}
-                  disableLogic={
-                    activeOption === "photo" || activeOption === "image"
-                  }
-                  // errorMessage={
-                  //   !fileSelected
-                  //     ? errors.fileField && errors.fileField.message
-                  //     : null
-                  // }
-                  // errorMessage={fileUploadErrMsg}
-                />
-              </View>
-            )}
-          />
-          <Controller
-            control={control}
-            name={imagePickedField}
-            render={({
-              field: { onChange, onBlur, value },
-              fieldState: { error },
-            }) => (
-              <View style={{ flexDirection: "column" }}>
-                <Button
-                  buttonStyle={[
-                    [
-                      styles.button,
-                      {
-                        color: !imagePicked ? colors.redish : colors.black,
-                      },
-                    ],
-                  ]}
-                  icon={true}
-                  buttonFunction={handleImagePick}
-                  iconPath={uploadIcon2}
-                  iconStyle={styles.IconStyle}
-                  buttonTextStyle={styles.buttonText}
-                  disableLogic={
-                    activeOption === "photo" || activeOption === "file"
-                  }
-                  buttonText={"מספריית התמונות"}
-                  buttonWidth={260}
-                  // errorMessage={
-                  //   !imagePicked
-                  //     ? errors.imagePickedField && errors.imagePickedField.message
-                  //     : null
-                  // }
-                  // errorMessage={uploadImageErrorMsg}
-                />
-              </View>
-            )}
-          />
-
-          <View
-            style={{
-              flexDirection: "column",
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
-            <Controller
-              control={control}
-              name={cameraPhotoField}
-              render={({
-                field: { onChange, onBlur, value },
-                fieldState: { error },
-              }) => (
-                <View style={{ flexDirection: "column" }}>
-                  <Camera
-                    style={{
-                      borderRadius: 8,
-                      // backgroundColor: "transparent",
-                      height: 46,
-                    }}
-                    type={Camera.Constants.Type.back}
-                    ref={(ref) => (camera = ref)}
-                  >
-                    <Button
-                      buttonStyle={[
-                        styles.button,
-                        {
-                          backgroundColor: "white",
-                        },
-                      ]}
-                      icon={true}
-                      buttonFunction={handleTakePhoto}
-                      iconPath={uploadIcon3}
-                      iconStyle={styles.IconStyle}
-                      buttonTextStyle={styles.buttonText}
-                      disableLogic={
-                        activeOption === "file" || activeOption === "image"
-                      }
-                      buttonText={"מצלמה"}
-                      buttonWidth={260}
-                      // errorMessage={
-                      //   !CameraCaptureImageUrl
-                      //     ? errors.cameraPhoto && errors.cameraPhoto.message
-                      //     : null
-                      // }
-                      // errorMessage={imageCaptureErrMsg}
-                    />
-                  </Camera>
-                </View>
-              )}
-            />
-          </View>
-        </View>
-      )} */

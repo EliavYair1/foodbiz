@@ -40,7 +40,7 @@ const useMediaPicker = (handleInputChange = false) => {
 
         const apiUrl =
           process.env.API_BASE_URL +
-          "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
+          "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng%7Cpdf&ax-file-name=" +
           fileName +
           "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
           fileSize +
