@@ -106,17 +106,16 @@ const SummeryScreen = () => {
       ...prevFormData,
       [name]: value,
     }));
-    // console.log("summaryFormData", SummeryForm);
     setIsSchemaValid(true);
     console.log("isschemaValid", isSchemaValid);
   };
 
-  const handleSaveReport = async (navigationRoute) => {
+  const handleSaveReport = async (navigationRoute, status) => {
     const bodyFormData = new FormData();
     bodyFormData.append("id", currentReport.getData("id"));
     bodyFormData.append("workerId", currentReport.getData("workerId"));
     bodyFormData.append("clientId", currentReport.getData("clientId"));
-    bodyFormData.append("status", 2);
+    bodyFormData.append("status", status);
     bodyFormData.append(
       "newGeneralCommentTopText",
       SummeryForm.newGeneralCommentTopText
@@ -128,17 +127,19 @@ const SummeryScreen = () => {
     bodyFormData.append("data", []);
 
     const reportSaved = await saveReport(bodyFormData);
-    if (reportSaved && isSchemaValid) {
-      currentReport.setData("status", 2);
+    if (reportSaved) {
+      currentReport.setData("status", status);
       currentReport.setData("positiveFeedback", SummeryForm.positiveFeedback);
       currentReport.setData("file1", SummeryForm.file1);
       currentReport.setData("file2", SummeryForm.file2);
       dispatch(setCurrentReport(currentReport));
-      // console.log("[SummeryScreen]response:", reportSaved);
       navigateToRoute(navigationRoute);
       console.log("summery sent successfully...");
     }
   };
+  // todo to add fetch to previous data of positivefeedback , content to the summarynote, file1,file2
+  // todo display error msg's
+
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
@@ -166,11 +167,17 @@ const SummeryScreen = () => {
 
   // * modal pick handler
   const handleOptionClick = async (option) => {
+    // * to add handle Saving
+
     const indexOfCategory = currentCategories.categories.findIndex(
       (category) => category == option
     );
+
     dispatch(setIndex(indexOfCategory));
-    // await handleSaveReport(routes.ONBOARDING.CategoryEdit);
+    await handleSaveReport(
+      routes.ONBOARDING.CategoryEdit,
+      currentReport.getData("status")
+    );
     handleModalClose();
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
@@ -181,24 +188,23 @@ const SummeryScreen = () => {
       console.log("SummeryForm:", SummeryForm);
       console.log("scheme is valid");
       try {
-        // await handleSaveReport(routes.ONBOARDING.CategoryEdit);
+        await handleSaveReport(routes.ONBOARDING.ClientsList, 2);
         console.log("success sending information for manager approval");
       } catch (error) {
         console.error("Error sending for manager approval:", error);
       }
     }
   };
-  // console.log("errors", errors);
-  // console.log("fileName1", fileName1);
-  // console.log("fileName2", fileName2);
-  // console.log("errors", errors);
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
         text={"חזרה לרשימת הלקוחות"}
         containerStyling={{ marginTop: 16 }}
         onBackPress={async () => {
-          await handleSaveReport(routes.ONBOARDING.ClientsList);
+          await handleSaveReport(
+            routes.ONBOARDING.ClientsList,
+            currentReport.getData("status")
+          );
           console.log("backkk up");
         }}
       />
@@ -212,7 +218,10 @@ const SummeryScreen = () => {
             console.log("you are currently in the summary screen");
           }}
           onSettingsIconPress={async () => {
-            await handleSaveReport(routes.ONBOARDING.WorkerNewReport);
+            await handleSaveReport(
+              routes.ONBOARDING.WorkerNewReport,
+              currentReport.getData("status")
+            );
           }}
         />
       </View>
@@ -363,7 +372,21 @@ const SummeryScreen = () => {
         }}
       >
         <SummaryDrawer
-          onPrevCategory={navigateTogoBack}
+          onPrevCategory={async () => {
+            console.log(
+              "indexOfCategory",
+              currentCategories.categories[
+                currentCategories.categories.length - 1
+              ]
+            );
+            // todo add navigation with saving the current data while heading to the last category
+            // console.log(categoryNames);
+            // await handleSaveReport(
+            //   routes.ONBOARDING.CategoryEdit,
+            //   currentReport.getData("status")
+            // );
+            // navigateTogoBack;
+          }}
           prevCategoryText={"לקטגוריה הקודמת"}
           onSetContent={(value) => {
             handleFormChange("newGeneralCommentTopText", value);

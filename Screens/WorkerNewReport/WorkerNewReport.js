@@ -687,6 +687,7 @@ const WorkerNewReport = () => {
     try {
       setIsLoading(true);
       const apiUrl = process.env.API_BASE_URL + "ajax/saveReport2.php";
+      console.log("saving...", apiUrl);
       const response = await axios.post(apiUrl, bodyFormData);
       console.log("out");
       if (response.status == 200 || response.status == 201) {
@@ -1577,6 +1578,8 @@ const WorkerNewReport = () => {
   };
   // * modal pick handler
   const handleOptionClick = (option) => {
+    // * todo add saveedit report
+
     setIsLoading(true);
     const indexOfCategory = formData.categorys.findIndex(
       (category) => category == option
@@ -1604,6 +1607,7 @@ const WorkerNewReport = () => {
               text={"חזרה לרשימת הלקוחות"}
               onBackPress={async () => {
                 if (currentReport) {
+                  // * working
                   let res = await saveEditedReport();
                   // console.log("back press response: ", res);
                 }
@@ -1625,22 +1629,26 @@ const WorkerNewReport = () => {
                 }}
                 onSummeryIconPress={async () => {
                   // console.log("s");
-                  // setIsLoading(true);
-                  // try {
-                  //   let res = await saveEditedReport();
-                  //    dispatch(
-                  //     setMajorCategoryHeaders(majorCategoryHeadersToPass)
-                  //   );
-                  //    dispatch(
-                  //     setCategoryNamesSubHeaders(sortedCategories)
-                  //   );
-                  // } catch (error) {
-                  //   console.log("WorkerNewReport[err]", error);
-                  // } finally {
-                  //   setIsLoading(false);
-                  // }
-                  dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
-                  dispatch(setCategoryNamesSubHeaders(sortedCategories));
+                  // * working
+                  setIsLoading(true);
+                  try {
+                    await saveEditedReport();
+                    console.log(
+                      "majorCategoryHeadersToPass",
+                      majorCategoryHeadersToPass
+                    );
+                    console.log("sortedCategories", sortedCategories);
+                    dispatch(
+                      setMajorCategoryHeaders(majorCategoryHeadersToPass)
+                    );
+                    dispatch(setCategoryNamesSubHeaders(sortedCategories));
+                  } catch (error) {
+                    console.log("WorkerNewReport[err]", error);
+                  } finally {
+                    setIsLoading(false);
+                  }
+                  // dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
+                  // dispatch(setCategoryNamesSubHeaders(sortedCategories));
                   // dispatch(setSummary(categoriesToPassSummeryScreen));
                 }}
               />

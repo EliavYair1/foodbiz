@@ -62,8 +62,8 @@ const IconList = ({
       id: 4,
       text: "סיכום",
       source: require("../../../../../assets/icons/iconImgs/notebook.png"),
-      iconPress: () => {
-        onSummeryIconPress();
+      iconPress: async () => {
+        await onSummeryIconPress();
         navigateToRoute(routes.ONBOARDING.SummeryScreen);
         console.log("summery icon pressed");
       },
