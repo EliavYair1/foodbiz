@@ -62,26 +62,7 @@ const SelectMenu = ({
     }
     setVisible(true);
   };
-  // const openMenu = () => {
-  //   if (disabled) return;
-  //   if (elementRef.current) {
-  //     elementRef.current.measure((x, y, width, height, pageX, pageY) => {
-  //       const windowHeight = Dimensions.get("window").height;
-  //       const windowWidth = Dimensions.get("window").width;
-  //       const menuTop =
-  //         windowHeight - pageY > optionsHeight
-  //           ? pageY
-  //           : windowHeight - optionsHeight;
-  //       const menuLeft =
-  //         windowWidth - pageX > selectWidth ? pageX : windowWidth - selectWidth;
-  //       setMenuPosition({ top: menuTop, left: menuLeft });
-  //       setVisible(true);
-  //     });
-  //   }
-  // };
 
-  console.log(Platform.OS, menuPosition.top);
-  console.log(Platform.OS, menuPosition.left);
   const closeMenu = () => setVisible(false);
 
   const handleItemPick = (item) => {

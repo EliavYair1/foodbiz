@@ -1,4 +1,11 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import Button from "../../../../../Components/ui/Button";
 import uploadIcon1 from "../../../../../assets/imgs/plusIconDark.png";
@@ -61,6 +68,7 @@ const ButtonGroup = ({
         setImagePicked(true);
         setIsLoading(false);
       } else {
+        setIsLoading(false);
         console.error(`[Error] Media selection canceled due to: ${mediaError}`);
       }
     } catch (error) {
@@ -84,6 +92,7 @@ const ButtonGroup = ({
           // setImagePicked(true);
           setActiveOption("photo");
         } else {
+          setIsLoading(false);
           console.error(
             `[Error] Media selection canceled due to: ${mediaError}`
           );
@@ -110,6 +119,7 @@ const ButtonGroup = ({
         setActiveOption("file");
         setIsLoading(false);
       } else {
+        setIsLoading(false);
         console.log("File selection canceled", error);
       }
     } catch (error) {
@@ -208,7 +218,7 @@ const ButtonGroup = ({
                       iconStyle={styles.IconStyle}
                       buttonTextStyle={styles.buttonText}
                       buttonText={"בחירת קובץ"}
-                      buttonWidth={260}
+                      buttonWidth={Platform.OS == "android" ? 245 : 260}
                       disableLogic={
                         activeOption === "photo" || activeOption === "image"
                       }
@@ -252,7 +262,7 @@ const ButtonGroup = ({
                       activeOption === "photo" || activeOption === "file"
                     }
                     buttonText={"מספריית התמונות"}
-                    buttonWidth={260}
+                    buttonWidth={Platform.OS == "android" ? 245 : 260}
                     // errorMessage={
                     //   !imagePicked
                     //     ? errors.imagePickedField && errors.imagePickedField.message
@@ -304,7 +314,7 @@ const ButtonGroup = ({
                           activeOption === "file" || activeOption === "image"
                         }
                         buttonText={"מצלמה"}
-                        buttonWidth={260}
+                        buttonWidth={Platform.OS == "android" ? 245 : 260}
                         // errorMessage={
                         //   !CameraCaptureImageUrl
                         //     ? errors.cameraPhoto && errors.cameraPhoto.message

@@ -10,6 +10,7 @@ const Header = ({
   iconList = false,
   onCategoriesIconPress,
   onSummeryIconPress = false,
+  onSettingsIconPress = false,
 }) => {
   return (
     <View style={[styles.headerWrapper, containerStyling ?? ""]}>
@@ -23,6 +24,7 @@ const Header = ({
           <IconList
             onCategoriesIconPress={onCategoriesIconPress}
             onSummeryIconPress={onSummeryIconPress}
+            onSettingsIconPress={onSettingsIconPress}
           />
         </View>
       )}

@@ -1628,16 +1628,17 @@ const WorkerNewReport = () => {
                   // setIsLoading(true);
                   // try {
                   //   let res = await saveEditedReport();
-                  //   if (res) {
-                  //     console.log(res, "ineeee");
-                  //     dispatch(setSummary(categoriesToPassSummeryScreen));
-                  //   }
+                  //    dispatch(
+                  //     setMajorCategoryHeaders(majorCategoryHeadersToPass)
+                  //   );
+                  //    dispatch(
+                  //     setCategoryNamesSubHeaders(sortedCategories)
+                  //   );
                   // } catch (error) {
                   //   console.log("WorkerNewReport[err]", error);
                   // } finally {
                   //   setIsLoading(false);
                   // }
-
                   dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
                   dispatch(setCategoryNamesSubHeaders(sortedCategories));
                   // dispatch(setSummary(categoriesToPassSummeryScreen));

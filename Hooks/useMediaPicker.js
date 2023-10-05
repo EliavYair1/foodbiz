@@ -34,10 +34,9 @@ const useMediaPicker = (handleInputChange = false) => {
       if (result.type === "success") {
         const selectedMedia = result;
         setMedia(selectedMedia);
-        let fileName = selectedMedia.name;
+        let fileName = selectedMedia.name.split(" ").join("");
         let fileSize = selectedMedia.size;
         const fileToUpload = selectedMedia;
-
         const apiUrl =
           process.env.API_BASE_URL +
           "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng%7Cpdf&ax-file-name=" +
@@ -74,7 +73,8 @@ const useMediaPicker = (handleInputChange = false) => {
         setMedia(selectedMedia);
 
         const selectedAssets = result.assets;
-        let fileName = selectedAssets[0].fileName;
+        // let fileName = selectedAssets[0].fileName;
+        let fileName = selectedAssets[0].fileName ?? "camera.jpg";
         let fileSize = selectedAssets[0].fileSize;
         const fileToUpload = selectedAssets[0];
         const apiUrl =

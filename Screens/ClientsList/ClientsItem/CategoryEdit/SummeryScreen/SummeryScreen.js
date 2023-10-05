@@ -43,21 +43,19 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
-  // todo and a loading till end of the upload , in addition clicking the link will open the file as image view(same as the eye icon).
   const dispatch = useDispatch();
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
 
-  const categoriesToPassSummeryScreen = useSelector((state) => state.summary);
   const globalCategories = useSelector((state) => state.globalCategories);
-  const userId = useSelector((state) => state.user);
   const positiveFeedback = currentReport.getData("positiveFeedback");
   // const categoryNames = categoriesToPassSummeryScreen[1]?.categoryNames || null;
-  console.log("SummeryScreen im here......");
+
   const categoryNames = useSelector(
     (state) => state.summary.categoryNamesSubHeaders
   );
+
   const majorCategoryHeaders = useSelector(
     (state) => state.summary.majorCategoryHeaders
   );
@@ -65,6 +63,7 @@ const SummeryScreen = () => {
   // console.log("categoryNames", categoryNames[1]);
   // console.log(categoriesToPassSummeryScreen);
   const currentCategories = useSelector((state) => state.currentCategories);
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [SummeryForm, setSummeryForm] = useState({});
   const [isSchemaValid, setIsSchemaValid] = useState(false);
@@ -112,7 +111,7 @@ const SummeryScreen = () => {
     console.log("isschemaValid", isSchemaValid);
   };
 
-  const handleSaveReport = async () => {
+  const handleSaveReport = async (navigationRoute) => {
     const bodyFormData = new FormData();
     bodyFormData.append("id", currentReport.getData("id"));
     bodyFormData.append("workerId", currentReport.getData("workerId"));
@@ -129,13 +128,14 @@ const SummeryScreen = () => {
     bodyFormData.append("data", []);
 
     const reportSaved = await saveReport(bodyFormData);
-    if (reportSaved) {
+    if (reportSaved && isSchemaValid) {
       currentReport.setData("status", 2);
       currentReport.setData("positiveFeedback", SummeryForm.positiveFeedback);
       currentReport.setData("file1", SummeryForm.file1);
       currentReport.setData("file2", SummeryForm.file2);
       dispatch(setCurrentReport(currentReport));
       // console.log("[SummeryScreen]response:", reportSaved);
+      navigateToRoute(navigationRoute);
       console.log("summery sent successfully...");
     }
   };
@@ -163,12 +163,14 @@ const SummeryScreen = () => {
       options: categoryNames[3],
     });
   }
+
   // * modal pick handler
-  const handleOptionClick = (option) => {
+  const handleOptionClick = async (option) => {
     const indexOfCategory = currentCategories.categories.findIndex(
       (category) => category == option
     );
     dispatch(setIndex(indexOfCategory));
+    // await handleSaveReport(routes.ONBOARDING.CategoryEdit);
     handleModalClose();
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
@@ -179,7 +181,7 @@ const SummeryScreen = () => {
       console.log("SummeryForm:", SummeryForm);
       console.log("scheme is valid");
       try {
-        await handleSaveReport();
+        // await handleSaveReport(routes.ONBOARDING.CategoryEdit);
         console.log("success sending information for manager approval");
       } catch (error) {
         console.error("Error sending for manager approval:", error);
@@ -196,7 +198,7 @@ const SummeryScreen = () => {
         text={"חזרה לרשימת הלקוחות"}
         containerStyling={{ marginTop: 16 }}
         onBackPress={async () => {
-          // await handleSaveReport();
+          await handleSaveReport(routes.ONBOARDING.ClientsList);
           console.log("backkk up");
         }}
       />
@@ -208,6 +210,9 @@ const SummeryScreen = () => {
           onCategoriesIconPress={() => setModalVisible(true)}
           onSummeryIconPress={() => {
             console.log("you are currently in the summary screen");
+          }}
+          onSettingsIconPress={async () => {
+            await handleSaveReport(routes.ONBOARDING.WorkerNewReport);
           }}
         />
       </View>

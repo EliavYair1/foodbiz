@@ -188,7 +188,8 @@ const CategoryTempAccordionItem = ({
           setImageLoader(true);
           const selectedAssets = result.assets;
 
-          let fileName = selectedAssets[0].fileName;
+          // let fileName = selectedAssets[0].fileName;
+          let fileName = selectedAssets[0].fileName ?? "camera.jpg";
           let fileSize = selectedAssets[0].fileSize;
           const fileToUpload = selectedAssets[0];
           const apiUrl =

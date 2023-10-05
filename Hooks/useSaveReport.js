@@ -14,6 +14,7 @@ const useSaveReport = () => {
   const { dispatch } = useDispatch();
   const { fetchData } = FetchDataService();
   const userId = useSelector((state) => state.user);
+
   const saveReport = async (reportData) => {
     try {
       setIsLoading(true);
@@ -45,7 +46,7 @@ const useSaveReport = () => {
             {
               text: "ok",
               onPress: () => {
-                navigateToRoute(routes.ONBOARDING.ClientsList);
+                console.log("success");
               },
             },
             {

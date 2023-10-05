@@ -10,7 +10,6 @@ const ReportCard = ({
   reportGrade,
   gradesCondition,
 }) => {
-  console.log(gradesCondition);
   return (
     <View style={styles.reportGradeBox}>
       <View style={styles.reportGradesWrapper}>
