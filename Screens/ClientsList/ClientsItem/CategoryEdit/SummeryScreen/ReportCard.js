@@ -10,11 +10,11 @@ const ReportCard = ({
   reportGrade,
   gradesCondition,
 }) => {
-  // console.log(gradesCondition[0]);
+  console.log(gradesCondition);
   return (
     <View style={styles.reportGradeBox}>
       <View style={styles.reportGradesWrapper}>
-        {gradesCondition[0].map((header, index) => {
+        {gradesCondition.map((header, index) => {
           if (header == "ביקורת בטיחות מזון") {
             return fsGrade > 0 ? (
               <View key={index}>

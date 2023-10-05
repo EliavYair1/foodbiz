@@ -48,11 +48,19 @@ const SummeryScreen = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
+
   const categoriesToPassSummeryScreen = useSelector((state) => state.summary);
   const globalCategories = useSelector((state) => state.globalCategories);
   const userId = useSelector((state) => state.user);
   const positiveFeedback = currentReport.getData("positiveFeedback");
-  const categoryNames = categoriesToPassSummeryScreen[1]?.categoryNames || null;
+  // const categoryNames = categoriesToPassSummeryScreen[1]?.categoryNames || null;
+  console.log("SummeryScreen im here......");
+  const categoryNames = useSelector(
+    (state) => state.summary.categoryNamesSubHeaders
+  );
+  const majorCategoryHeaders = useSelector(
+    (state) => state.summary.majorCategoryHeaders
+  );
 
   // console.log("categoryNames", categoryNames[1]);
   // console.log(categoriesToPassSummeryScreen);
@@ -137,19 +145,19 @@ const SummeryScreen = () => {
   };
   let categoriesModal = [];
 
-  if (categoriesToPassSummeryScreen && categoryNames[1].length > 0) {
+  if (categoryNames[1].length > 0) {
     categoriesModal.push({
       subheader: "ביקורת בטיחות מזון",
       options: categoryNames[1],
     });
   }
-  if (categoriesToPassSummeryScreen && categoryNames[2].length > 0) {
+  if (categoryNames[2].length > 0) {
     categoriesModal.push({
       subheader: "ביקורת קולינארית",
       options: categoryNames[2],
     });
   }
-  if (categoriesToPassSummeryScreen && categoryNames[3].length > 0) {
+  if (categoryNames[3].length > 0) {
     categoriesModal.push({
       subheader: "ביקורת תזונה",
       options: categoryNames[3],
@@ -181,7 +189,6 @@ const SummeryScreen = () => {
   // console.log("errors", errors);
   // console.log("fileName1", fileName1);
   // console.log("fileName2", fileName2);
-  console.log(currentReport.getData("file2"));
   // console.log("errors", errors);
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
@@ -189,7 +196,8 @@ const SummeryScreen = () => {
         text={"חזרה לרשימת הלקוחות"}
         containerStyling={{ marginTop: 16 }}
         onBackPress={async () => {
-          await handleSaveReport();
+          // await handleSaveReport();
+          console.log("backkk up");
         }}
       />
       <View>
@@ -302,7 +310,7 @@ const SummeryScreen = () => {
                 cGrade={currentReport.getData("culinaryGrade")}
                 nGrade={currentReport.getData("nutritionGrade")}
                 reportGrade={currentReport.getData("grade")}
-                gradesCondition={categoriesToPassSummeryScreen}
+                gradesCondition={majorCategoryHeaders}
               />
             }
           />

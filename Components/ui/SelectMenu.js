@@ -6,6 +6,8 @@ import {
   Image,
   Modal,
   TouchableWithoutFeedback,
+  Platform,
+  Dimensions,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -22,7 +24,7 @@ import colors from "../../styles/colors";
 import { useForm, Controller } from "react-hook-form";
 import uuid from "uuid-random";
 import { findNodeHandle } from "react-native";
-
+import { LayoutAnimation, UIManager } from "react-native";
 const SelectMenu = ({
   selectOptions,
   selectWidth,
@@ -46,16 +48,40 @@ const SelectMenu = ({
   const elementRef = useRef(null);
   const [positionHorizontal, setPositionHorizontal] = useState(0);
   const [PositionVertical, setPositionVertical] = useState(0);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
   const openMenu = () => {
     if (disabled) return;
     if (elementRef.current) {
       elementRef.current.measure((x, y, width, height, pageX, pageY) => {
+        // todo error via android dosent accept that logic works only on ios
         setPositionHorizontal(pageX);
         setPositionVertical(pageY);
       });
     }
     setVisible(true);
   };
+  // const openMenu = () => {
+  //   if (disabled) return;
+  //   if (elementRef.current) {
+  //     elementRef.current.measure((x, y, width, height, pageX, pageY) => {
+  //       const windowHeight = Dimensions.get("window").height;
+  //       const windowWidth = Dimensions.get("window").width;
+  //       const menuTop =
+  //         windowHeight - pageY > optionsHeight
+  //           ? pageY
+  //           : windowHeight - optionsHeight;
+  //       const menuLeft =
+  //         windowWidth - pageX > selectWidth ? pageX : windowWidth - selectWidth;
+  //       setMenuPosition({ top: menuTop, left: menuLeft });
+  //       setVisible(true);
+  //     });
+  //   }
+  // };
+
+  console.log(Platform.OS, menuPosition.top);
+  console.log(Platform.OS, menuPosition.left);
   const closeMenu = () => setVisible(false);
 
   const handleItemPick = (item) => {
@@ -115,6 +141,8 @@ const SelectMenu = ({
                 onDismiss={closeMenu}
                 contentStyle={{
                   backgroundColor: "white",
+                  // top: menuPosition.top,
+                  // left: menuPosition.left,
                 }}
                 anchor={
                   <TouchableOpacity onPress={openMenu} disabled={disabled}>
@@ -164,6 +192,13 @@ const SelectMenu = ({
                 >
                   <TouchableWithoutFeedback onPress={closeMenu}>
                     <View
+                      // ref={elementRef}
+                      // onLayout={(event) => {
+                      //   const { x, y } = event.nativeEvent.layout;
+                      //   // setMenuPosition({ left: x, top: y });
+                      //   // console.log("x", x);
+                      //   // console.log("y", y);
+                      // }}
                       style={[
                         styles.centeredView,
                         centeredViewStyling ?? "",
@@ -174,7 +209,7 @@ const SelectMenu = ({
                               : 0,
                           right:
                             positionHorizontal !== undefined
-                              ? positionHorizontal - 20
+                              ? positionHorizontal - 25
                               : 0,
                         },
                       ]}

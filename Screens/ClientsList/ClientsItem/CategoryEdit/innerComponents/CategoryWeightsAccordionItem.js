@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Divider } from "react-native-paper";
 import CheckboxItem from "../../../../WorkerNewReport/CheckboxItem/CheckboxItem";
@@ -267,6 +268,7 @@ const CategoryWeightsAccordionItem = ({
       <TouchableOpacity onPress={toggleAccordion}>
         <View
           style={{
+            // width: 762,
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
@@ -293,7 +295,10 @@ const CategoryWeightsAccordionItem = ({
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
               ]}
-              inputStyle={[styles.inputStyling, { width: 193 }]}
+              inputStyle={[
+                styles.inputStyling,
+                { width: Platform.OS == "android" ? 133 : 193 },
+              ]}
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
@@ -313,6 +318,9 @@ const CategoryWeightsAccordionItem = ({
               selectWidth={80}
               optionsCenterView={"flex-start"}
               optionsHeight={150}
+              selectMenuStyling={{
+                backgroundColor: open ? "white" : colors.accordionOpen,
+              }}
               defaultText={
                 // looking for the value inside the reportItemState and display it default value is 1
                 reportItemState.WeightMeasureType &&
@@ -439,7 +447,10 @@ const CategoryWeightsAccordionItem = ({
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
               ]}
-              inputStyle={[styles.inputStyling, { width: 136 }]}
+              inputStyle={[
+                styles.inputStyling,
+                { width: Platform.OS == "android" ? 130 : 136 },
+              ]}
               activeUnderlineColor={colors.black}
               numeric={true}
               // onChangeFunction={(value) => {
@@ -470,7 +481,10 @@ const CategoryWeightsAccordionItem = ({
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
               ]}
-              inputStyle={[styles.inputStyling, { width: 136 }]}
+              inputStyle={[
+                styles.inputStyling,
+                { width: Platform.OS == "android" ? 130 : 136 },
+              ]}
               activeUnderlineColor={colors.black}
               numeric={true}
               onChangeFunction={(value) => {
@@ -495,7 +509,10 @@ const CategoryWeightsAccordionItem = ({
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
               ]}
-              inputStyle={[styles.inputStyling, { width: 136 }]}
+              inputStyle={[
+                styles.inputStyling,
+                { width: Platform.OS == "android" ? 130 : 136 },
+              ]}
               activeUnderlineColor={colors.black}
               numeric={true}
               onChangeFunction={(value) => {
@@ -520,7 +537,10 @@ const CategoryWeightsAccordionItem = ({
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
               ]}
-              inputStyle={[styles.inputStyling, { width: 136 }]}
+              inputStyle={[
+                styles.inputStyling,
+                { width: Platform.OS == "android" ? 130 : 136 },
+              ]}
               activeUnderlineColor={colors.black}
               numeric={true}
               onChangeFunction={(value) => {
@@ -545,7 +565,10 @@ const CategoryWeightsAccordionItem = ({
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
               ]}
-              inputStyle={[styles.inputStyling, { width: 136 }]}
+              inputStyle={[
+                styles.inputStyling,
+                { width: Platform.OS == "android" ? 130 : 136 },
+              ]}
               activeUnderlineColor={colors.black}
               numeric={true}
               onChangeFunction={(value) => {
@@ -578,7 +601,13 @@ const CategoryWeightsAccordionItem = ({
               styles.inputContentStyling,
               { backgroundColor: open ? "white" : colors.accordionOpen },
             ]}
-            inputStyle={[styles.inputStyling, { minWidth: "100%" }]}
+            inputStyle={[
+              styles.inputStyling,
+              {
+                maxWidth: "100%",
+                width: Platform.OS == "android" ? 610 : "100%",
+              },
+            ]}
             activeUnderlineColor={colors.black}
             onChangeFunction={(value) => {
               console.log(value, "is selected");
@@ -641,7 +670,7 @@ const CategoryWeightsAccordionItem = ({
 const styles = StyleSheet.create({
   container: {},
   accordionCategoryItemWrapper: {
-    width: 762,
+    // width: 762,
     padding: 16,
     borderWidth: 1,
     borderRadius: 4,
@@ -661,10 +690,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 16,
     marginRight: 24,
+    // paddingHorizontal: 16,
   },
   massurementInputsWrapper: {
     flexDirection: "row",
     gap: 12,
+    justifyContent: "center",
   },
   inputTextWrapper: {
     flexDirection: "row",

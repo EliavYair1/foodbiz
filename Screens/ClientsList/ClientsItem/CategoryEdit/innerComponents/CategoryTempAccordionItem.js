@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Divider } from "react-native-paper";
 import CheckboxItem from "../../../../WorkerNewReport/CheckboxItem/CheckboxItem";
@@ -274,7 +275,7 @@ const CategoryTempAccordionItem = ({
         <View
           style={{
             flexDirection: "row",
-            justifyContent: "space-between",
+            justifyContent: "center",
             alignItems: "center",
             marginBottom: 16,
           }}
@@ -328,7 +329,10 @@ const CategoryTempAccordionItem = ({
                 styles.inputContentStyling,
                 { backgroundColor: open ? "white" : colors.accordionOpen },
               ]}
-              inputStyle={[styles.inputStyling, { width: 270 }]}
+              inputStyle={[
+                styles.inputStyling,
+                { width: Platform.OS == "android" ? 220 : 270 },
+              ]}
               activeUnderlineColor={colors.black}
               onChangeFunction={(value) => {
                 console.log(value, "is selected");
@@ -419,7 +423,7 @@ const CategoryTempAccordionItem = ({
           <View style={styles.categoryRatingCheckboxWrapper}>
             <Radio
               options={ratingsOptions}
-              optionGap={38}
+              optionGap={Platform.OS == "android" ? 23 : 38}
               optionText="דירוג:"
               disabled={false}
               selectedOption={
@@ -450,7 +454,7 @@ const CategoryTempAccordionItem = ({
             defaultValue={reportItemState.comment}
             // placeholder={"יש לנקות *ממטרות* מדיח כלים"}
             contentStyle={styles.inputContentStyling}
-            inputStyle={[styles.inputStyling, { minWidth: "100%" }]}
+            inputStyle={[styles.inputStyling, { maxWidth: "100%", width: 590 }]}
             activeUnderlineColor={colors.black}
             onChangeFunction={(value) => {
               console.log(value, "is selected");
@@ -505,13 +509,17 @@ const CategoryTempAccordionItem = ({
 };
 
 const styles = StyleSheet.create({
-  container: {},
+  container: {
+    // width: 730,
+    // flex: 1,
+  },
   accordionCategoryItemWrapper: {
-    width: 762,
+    // width: 762,
     padding: 16,
     borderWidth: 1,
     borderRadius: 4,
     borderColor: "rgba(83, 104, 180, 0.30)",
+    // paddingHorizontal: 16,
   },
   categoryRelevantCheckboxWrapper: {
     flexDirection: "row",
@@ -523,6 +531,7 @@ const styles = StyleSheet.create({
   categoryRatingCheckboxWrapper: {
     flexDirection: "row",
     // gap: 5,
+    justifyContent: "center",
     alignItems: "center",
     marginTop: 16,
     marginBottom: 16,
@@ -531,6 +540,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     paddingVertical: 16,
+    // justifyContent: "center",
   },
   secondRowInputTextWrapper: {
     flexDirection: "row",

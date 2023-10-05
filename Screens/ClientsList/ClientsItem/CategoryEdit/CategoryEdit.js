@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,9 +28,14 @@ import routes from "../../../../Navigation/routes";
 import GradeCalculator from "./innerComponents/GradeCalculator";
 import GoBackNavigator from "../../../../utiles/GoBackNavigator";
 import Header from "../../../../Components/ui/Header";
-import { setSummary } from "../../../../store/redux/reducers/summerySlice";
+import {
+  setMajorCategoryHeaders,
+  setCategoryNamesSubHeaders,
+  setSummary,
+} from "../../../../store/redux/reducers/summerySlice";
 import SummaryDrawer from "./innerComponents/SummeryDrawer";
 import { setCurrentCategories } from "../../../../store/redux/reducers/getCurrentCategories";
+
 const CategoryEdit = () => {
   // console.log("EditExistingReport");
   const { navigateToRoute } = useScreenNavigator();
@@ -217,9 +222,6 @@ const CategoryEdit = () => {
   }, [CategoriesItems]);
 
   // ? todo list
-  // todo bug issues when initiating the next/prev category :
-  // todo 4 : when clickig on next/prev and getting to the temp/weights compts it skips and move to the next general category (check the findDataForFlatlist function logic).
-  // todo 5 : not sure if the right CategoriesItems/currentReportItems relevent data is passed correctly (to check the categoryChange function).
   // ! todo list end
 
   // * handling changes in the report finding , replacing and returning the new report item
@@ -348,67 +350,58 @@ const CategoryEdit = () => {
 
   const [dataForFlatListToDisplay, setDataForFlatListToDisplay] =
     useState(findDataForFlatlist);
-
+  // console.log("dataForFlatListToDisplay", dataForFlatListToDisplay);
   // console.log("findDataForFlatlist", findDataForFlatlist);
   let categoriesModal = [];
 
   if (categoryNames[1].length > 0) {
-    const originalCategory1 = [...categoryNames[1]];
-    categoryNames[1] = [];
-
+    const categoryNames1 = [];
     currentCategories.categories.forEach((categoryId) => {
-      const category = originalCategory1.find((c) => c.id == categoryId);
+      const category = categoryNames[1].find((c) => c.id == categoryId);
       if (category) {
-        categoryNames[1].push(category);
+        categoryNames1.push(category);
       }
     });
     categoriesModal.push({
       subheader: "ביקורת בטיחות מזון",
-      options: categoryNames[1],
+      options: categoryNames1,
     });
   }
   if (categoryNames[2].length > 0) {
-    const originalCategory2 = [...categoryNames[2]];
-    categoryNames[2] = [];
-
+    const categoryNames2 = [];
     currentCategories.categories.forEach((categoryId) => {
-      const category = originalCategory2.find((c) => c.id == categoryId);
+      const category = categoryNames[2].find((c) => c.id == categoryId);
       if (category) {
-        categoryNames[2].push(category);
+        categoryNames2.push(category);
       }
     });
     categoriesModal.push({
       subheader: "ביקורת קולינארית",
-      options: categoryNames[2],
+      options: categoryNames2,
     });
   }
   if (categoryNames[3].length > 0) {
-    const originalCategory3 = [...categoryNames[3]];
-    categoryNames[3] = [];
-
+    const categoryNames3 = [];
     currentCategories.categories.forEach((categoryId) => {
-      const category = originalCategory3.find((c) => c.id == categoryId);
+      const category = categoryNames[3].find((c) => c.id == categoryId);
       if (category) {
-        categoryNames[3].push(category);
+        categoryNames3.push(category);
       }
     });
     categoriesModal.push({
       subheader: "ביקורת תזונה",
-      options: categoryNames[3],
+      options: categoryNames3,
     });
   }
 
   const majorCategoryHeadersToPass = categoriesModal.map(
     (category) => category.subheader
   );
-  const categoriesToPassSummeryScreen = [
-    // foodSafety,
-    // nutrition,
-    // culinary,
-    // reportGrade,
-    majorCategoryHeadersToPass,
-    { categoryNames: categoryNames },
-  ];
+
+  // const categoriesToPassSummeryScreen = [
+  //   majorCategoryHeadersToPass,
+  //   { categoryNames: categoryNames },
+  // ];
   // console.log(categoriesToPassSummeryScreen[5]);
   // todo to initiate save current report/category status on every navigation.
   // * Simulating your debounce function
@@ -513,7 +506,8 @@ const CategoryEdit = () => {
   // * pagination's between categories names : Next
   const nextCategory = async () => {
     debounce(saveReport(), 300);
-
+    // console.log("majorCategoryHeadersToPass", majorCategoryHeadersToPass);
+    // console.log("categoryNames", categoryNames);
     try {
       if (currentCategoryIndex === lastIndexOfCategories) {
         console.log(
@@ -522,7 +516,10 @@ const CategoryEdit = () => {
         );
         navigateToRoute(routes.ONBOARDING.SummeryScreen);
         dispatch(setCurrentCategories(currentCategories.categories));
-        dispatch(setSummary(categoriesToPassSummeryScreen));
+        // dispatch(setSummary(categoriesToPassSummeryScreen));
+
+        dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
+        dispatch(setCategoryNamesSubHeaders(categoryNames));
         // todo to send foward these params : positiveFeedback, grades, summeryAndNotes, file1 , file2
         // navigateToRoute(routes.ONBOARDING.SummeryScreen);
         return;
@@ -566,7 +563,9 @@ const CategoryEdit = () => {
             onCategoriesIconPress={() => setModalVisible(true)}
             onSummeryIconPress={() => {
               console.log("s");
-              dispatch(setSummary(categoriesToPassSummeryScreen));
+              dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
+              dispatch(setCategoryNamesSubHeaders(categoryNames));
+              // dispatch(setSummary(categoriesToPassSummeryScreen));
             }}
           />
         </View>
@@ -623,6 +622,7 @@ const CategoryEdit = () => {
             ) : (
               <FlatList
                 data={dataForFlatListToDisplay}
+                style={{ width: Platform.OS == "android" ? 742 : 762 }}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id.toString()}
                 ListEmptyComponent={
@@ -715,6 +715,8 @@ const styles = StyleSheet.create({
   imageTextList: {},
   categoryContainer: {
     flex: 1,
+    width: "100%",
+    justifyContent: "center",
     backgroundColor: "#fff",
     borderRadius: 10,
     shadowColor: "#5368B4",

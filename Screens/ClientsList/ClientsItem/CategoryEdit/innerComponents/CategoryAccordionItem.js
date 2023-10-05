@@ -735,7 +735,7 @@ const CategoryAccordionItem = ({
 const styles = StyleSheet.create({
   container: {},
   accordionCategoryItemWrapper: {
-    width: 762,
+    // width: 762,
     padding: 16,
     borderWidth: 1,
     borderRadius: 4,

@@ -9,10 +9,10 @@ const currentReportSlice = createSlice({
   initialState,
   reducers: {
     getCurrentReport: (state, action) => {
-      state.currentReport = action.payload;
+      return { ...state, currentReport: action.payload };
     },
     setCurrentReport: (state, action) => {
-      state.currentReport = action.payload;
+      return { ...state, currentReport: action.payload };
     },
   },
 });

@@ -58,7 +58,12 @@ import FetchDataService from "../../Services/FetchDataService";
 import Report from "../../Components/modals/report";
 import ModalUi from "../../Components/ui/ModalUi";
 import { setIndex } from "../../store/redux/reducers/indexSlice";
-import { setSummary } from "../../store/redux/reducers/summerySlice";
+import {
+  setCategoryNamesSubHeaders,
+  setMajorCategoryHeaders,
+  setSummary,
+} from "../../store/redux/reducers/summerySlice";
+
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
   const { fetchData } = FetchDataService();
@@ -1559,11 +1564,11 @@ const WorkerNewReport = () => {
   const majorCategoryHeadersToPass = categoriesModal.map(
     (category) => category.subheader
   );
-  const categoriesToPassSummeryScreen = [
-    majorCategoryHeadersToPass,
+  // const categoriesToPassSummeryScreen = [
+  //   majorCategoryHeadersToPass,
 
-    { categoryNames: sortedCategories },
-  ];
+  //   { categoryNames: sortedCategories },
+  // ];
   // console.log(categoriesToPassSummeryScreen);
   // * categories picker close function
   const handleModalClose = () => {
@@ -1632,7 +1637,10 @@ const WorkerNewReport = () => {
                   // } finally {
                   //   setIsLoading(false);
                   // }
-                  dispatch(setSummary(categoriesToPassSummeryScreen));
+
+                  dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
+                  dispatch(setCategoryNamesSubHeaders(sortedCategories));
+                  // dispatch(setSummary(categoriesToPassSummeryScreen));
                 }}
               />
             </View>
