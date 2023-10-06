@@ -5,9 +5,9 @@ import fonts from "../styles/fonts";
 import routes from "../Navigation/routes";
 const GoBackNavigator = ({ text, containerStyling, onBackPress = false }) => {
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
-  const handleNavigation = () => {
+  const handleNavigation = async () => {
     if (onBackPress) {
-      onBackPress();
+      await onBackPress();
     }
     // navigateTogoBack();
     navigateToRoute(routes.ONBOARDING.ClientsList);

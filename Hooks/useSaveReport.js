@@ -11,9 +11,35 @@ import Client from "../Components/modals/client";
 const useSaveReport = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { navigateToRoute } = useScreenNavigator();
-  const { dispatch } = useDispatch();
+  const dispatch = useDispatch();
   const { fetchData } = FetchDataService();
   const userId = useSelector((state) => state.user);
+
+  const handleRefreshClients = async () => {
+    setIsLoading(true);
+
+    try {
+      const responseClients = await fetchData(
+        process.env.API_BASE_URL + "api/clients.php",
+        { id: userId }
+      );
+
+      if (responseClients.success) {
+        setIsLoading(false);
+        let clients = [];
+        responseClients.data.forEach((element) => {
+          clients.push(new Client(element));
+        });
+        dispatch(setClients({ clients: clients }));
+      }
+      console.log("clients refreshed...");
+    } catch (error) {
+      setIsLoading(false);
+      console.error("[handleRefreshClients]error", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const saveReport = async (reportData) => {
     try {
@@ -22,23 +48,8 @@ const useSaveReport = () => {
       const response = await axios.post(apiUrl, reportData);
       if (response.status == 200 || response.status == 201) {
         setIsLoading(false);
-        console.log("[useSaveReport] Response.data", response.data);
-        // todo to debug the update of the clients
-        // if (userId) {
-        //   const responseClients = await fetchData(
-        //     process.env.API_BASE_URL + "api/clients.php",
-        //     { id: userId }
-        //   );
-        //   if (responseClients.success) {
-        //     let clients = [];
-        //     responseClients.data.forEach((element) => {
-        //       clients.push(new Client(element));
-        //     });
-        //     dispatch(setClients({ clients: clients }));
-        //     console.log("responseClients", responseClients.data);
-        //   }
-        // }
-
+        // console.log("[useSaveReport] Response.data", response.data);
+        handleRefreshClients();
         Alert.alert(
           "Success",
           "Data posted successfully!",
@@ -61,7 +72,7 @@ const useSaveReport = () => {
       }
     } catch (error) {
       setIsLoading(false);
-      console.error("Error making POST request:", error);
+      console.error("[saveReport]Error making POST request:", error);
       return false;
     }
   };

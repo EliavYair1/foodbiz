@@ -45,7 +45,9 @@ const ButtonGroup = ({
   const [fileSelected, setFileSelected] = useState(null);
   const [activeOption, setActiveOption] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFileToDisplay, setSelectedFileToDisplay] = useState(false);
+  const [selectedFileToDisplay, setSelectedFileToDisplay] = useState(
+    existingFile ?? false
+  );
 
   useEffect(() => {
     (async () => {
@@ -132,9 +134,9 @@ const ButtonGroup = ({
   useEffect(() => {
     if (existingFile) {
       setSelectedFileToDisplay(existingFile);
+      handleFormChange(fileField, existingFile);
     }
   }, [existingFile]);
-
   // console.log(isLoading);
   const handleDeleteLink = (field) => {
     // console.log("inside");
@@ -147,6 +149,7 @@ const ButtonGroup = ({
   // console.log("CameraCaptureImageUrl", !CameraCaptureImageUrl);
   // console.log("imagePicked", !imagePicked);
   // console.log("fileSelected", !fileSelected);
+
   return (
     <View style={styles.uploadGroup}>
       <Text style={styles.uploadText}>{headerText}</Text>

@@ -475,6 +475,7 @@ const CategoryEdit = () => {
         currentReport.setData("newGeneralCommentTopText", content);
         dispatch(getCurrentReport(currentReport));
         setIsLoading(false);
+        console.log("[CategoryEdit]success saving report");
       }
     } catch (error) {
       setIsLoading(false);
@@ -561,11 +562,22 @@ const CategoryEdit = () => {
             subHeaderText={`${categoryHeader} >${categorySubHeader}`}
             iconList={true}
             onCategoriesIconPress={() => setModalVisible(true)}
-            onSummeryIconPress={() => {
-              console.log("s");
-              dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
-              dispatch(setCategoryNamesSubHeaders(categoryNames));
-              // dispatch(setSummary(categoriesToPassSummeryScreen));
+            onSettingsIconPress={async () => {
+              await saveReport();
+              navigateToRoute(routes.ONBOARDING.WorkerNewReport);
+            }}
+            onSummeryIconPress={async () => {
+              // console.log("s");
+              setIsLoading(true);
+              try {
+                await saveReport();
+                dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
+                dispatch(setCategoryNamesSubHeaders(categoryNames));
+              } catch (error) {
+                console.log("categoryEdit[err]", error);
+              } finally {
+                setIsLoading(false);
+              }
             }}
           />
         </View>

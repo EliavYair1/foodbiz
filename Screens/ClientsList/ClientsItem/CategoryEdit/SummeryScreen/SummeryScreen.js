@@ -50,7 +50,6 @@ const SummeryScreen = () => {
 
   const globalCategories = useSelector((state) => state.globalCategories);
   const positiveFeedback = currentReport.getData("positiveFeedback");
-  // const categoryNames = categoriesToPassSummeryScreen[1]?.categoryNames || null;
 
   const categoryNames = useSelector(
     (state) => state.summary.categoryNamesSubHeaders
@@ -60,12 +59,15 @@ const SummeryScreen = () => {
     (state) => state.summary.majorCategoryHeaders
   );
 
-  // console.log("categoryNames", categoryNames[1]);
-  // console.log(categoriesToPassSummeryScreen);
   const currentCategories = useSelector((state) => state.currentCategories);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [SummeryForm, setSummeryForm] = useState({});
+  const [SummeryForm, setSummeryForm] = useState({
+    positiveFeedback: null,
+    file1: null,
+    file2: null,
+    newGeneralCommentTopText: null,
+  });
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const drawerRef = useRef();
   const inputRef = useRef();
@@ -90,15 +92,6 @@ const SummeryScreen = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-  useEffect(() => {
-    schema
-      .validate(SummeryForm)
-      .then(() => setIsSchemaValid(true))
-      .catch((err) => {
-        console.log("err:", err);
-        setIsSchemaValid(false);
-      });
-  }, [SummeryForm, schema]);
 
   // handling the form changes
   const handleFormChange = (name, value) => {
@@ -137,6 +130,17 @@ const SummeryScreen = () => {
       console.log("summery sent successfully...");
     }
   };
+
+  useEffect(() => {
+    schema
+      .validate(SummeryForm)
+      .then(() => setIsSchemaValid(true))
+      .catch((err) => {
+        console.log("err:", err);
+        setIsSchemaValid(false);
+      });
+  }, [SummeryForm, schema]);
+
   // todo to add fetch to previous data of positivefeedback , content to the summarynote, file1,file2
   // todo display error msg's
 
@@ -164,11 +168,8 @@ const SummeryScreen = () => {
       options: categoryNames[3],
     });
   }
-
   // * modal pick handler
   const handleOptionClick = async (option) => {
-    // * to add handle Saving
-
     const indexOfCategory = currentCategories.categories.findIndex(
       (category) => category == option
     );
@@ -181,7 +182,6 @@ const SummeryScreen = () => {
     handleModalClose();
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
-
   const sendForManagerApproval = async () => {
     console.log("isSchemaValid:", isSchemaValid);
     if (isSchemaValid) {
@@ -195,6 +195,7 @@ const SummeryScreen = () => {
       }
     }
   };
+
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
@@ -205,7 +206,7 @@ const SummeryScreen = () => {
             routes.ONBOARDING.ClientsList,
             currentReport.getData("status")
           );
-          console.log("backkk up");
+          // console.log("backkk up");
         }}
       />
       <View>
@@ -373,19 +374,14 @@ const SummeryScreen = () => {
       >
         <SummaryDrawer
           onPrevCategory={async () => {
-            console.log(
-              "indexOfCategory",
-              currentCategories.categories[
-                currentCategories.categories.length - 1
-              ]
-            );
-            // todo add navigation with saving the current data while heading to the last category
             // console.log(categoryNames);
-            // await handleSaveReport(
-            //   routes.ONBOARDING.CategoryEdit,
-            //   currentReport.getData("status")
-            // );
-            // navigateTogoBack;
+            const lastIndexOfCategory = currentCategories.categories.length - 1;
+            await handleSaveReport(
+              routes.ONBOARDING.CategoryEdit,
+              currentReport.getData("status")
+            );
+            dispatch(setIndex(lastIndexOfCategory));
+            navigateToRoute(routes.ONBOARDING.CategoryEdit);
           }}
           prevCategoryText={"לקטגוריה הקודמת"}
           onSetContent={(value) => {

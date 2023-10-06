@@ -61,7 +61,6 @@ import { setIndex } from "../../store/redux/reducers/indexSlice";
 import {
   setCategoryNamesSubHeaders,
   setMajorCategoryHeaders,
-  setSummary,
 } from "../../store/redux/reducers/summerySlice";
 
 const windowWidth = Dimensions.get("window").width;
@@ -83,7 +82,6 @@ const WorkerNewReport = () => {
 
   const userId = useSelector((state) => state.user);
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
-  const currentCategories = useSelector((state) => state.currentCategories);
   const globalCategories = useSelector((state) => state.globalCategories);
   let clients = useSelector((state) => state.clients);
 
@@ -126,7 +124,6 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
-  const [selectedModalCategory, setSelectedModalCategory] = useState([]);
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
     memoizedCategories?.categories?.[1]?.categories ?? []
@@ -1577,20 +1574,22 @@ const WorkerNewReport = () => {
     setIsLoading(false);
   };
   // * modal pick handler
-  const handleOptionClick = (option) => {
-    // * todo add saveedit report
+  const handleOptionClick = async (option) => {
+    // * todo add saveedit report // done
 
     setIsLoading(true);
     const indexOfCategory = formData.categorys.findIndex(
       (category) => category == option
     );
+
     dispatch(setIndex(indexOfCategory));
+    await saveEditedReport();
+
     dispatch(setCurrentCategories(formData.categorys));
 
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
     handleModalClose();
   };
-
   return (
     <>
       {isLoading ? (
@@ -1608,7 +1607,7 @@ const WorkerNewReport = () => {
               onBackPress={async () => {
                 if (currentReport) {
                   // * working
-                  let res = await saveEditedReport();
+                  await saveEditedReport();
                   // console.log("back press response: ", res);
                 }
               }}
@@ -1628,16 +1627,10 @@ const WorkerNewReport = () => {
                   setModalVisible(true);
                 }}
                 onSummeryIconPress={async () => {
-                  // console.log("s");
                   // * working
                   setIsLoading(true);
                   try {
                     await saveEditedReport();
-                    console.log(
-                      "majorCategoryHeadersToPass",
-                      majorCategoryHeadersToPass
-                    );
-                    console.log("sortedCategories", sortedCategories);
                     dispatch(
                       setMajorCategoryHeaders(majorCategoryHeadersToPass)
                     );
@@ -1647,9 +1640,6 @@ const WorkerNewReport = () => {
                   } finally {
                     setIsLoading(false);
                   }
-                  // dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
-                  // dispatch(setCategoryNamesSubHeaders(sortedCategories));
-                  // dispatch(setSummary(categoriesToPassSummeryScreen));
                 }}
               />
             </View>
