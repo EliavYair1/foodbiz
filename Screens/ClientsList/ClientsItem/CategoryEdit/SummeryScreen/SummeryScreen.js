@@ -32,7 +32,6 @@ import { HelperText } from "react-native-paper";
 import Input from "../../../../../Components/ui/Input";
 import SummaryDrawer from "../innerComponents/SummeryDrawer";
 import useScreenNavigator from "../../../../../Hooks/useScreenNavigator";
-import useSaveReport from "../../../../../Hooks/useSaveReport";
 import { setCurrentReport } from "../../../../../store/redux/reducers/getCurrentReport";
 import Loader from "../../../../../utiles/Loader";
 import ModalUi from "../../../../../Components/ui/ModalUi";
@@ -40,6 +39,7 @@ import { setIndex } from "../../../../../store/redux/reducers/indexSlice";
 import routes from "../../../../../Navigation/routes";
 import * as WebBrowser from "expo-web-browser";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import useSaveCurrentScreenData from "../../../../../Hooks/useSaveReport";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
@@ -73,12 +73,19 @@ const SummeryScreen = () => {
   const inputRef = useRef();
   const [content, setContent] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
-  const { saveReport, isLoading } = useSaveReport();
+  const { saveCurrentScreenData, PostLoading } = useSaveCurrentScreenData();
   const memoizedCategories = useMemo(
     () => globalCategories,
     [globalCategories]
   );
-
+  useEffect(() => {
+    if (currentReport) {
+      handleFormChange(
+        "newGeneralCommentTopText",
+        currentReport.getData("newGeneralCommentTopText")
+      );
+    }
+  }, []);
   const schema = yup.object().shape({
     positiveFeedback: yup.string().required("Positive feedback is required"),
     file1: yup.string().required("File 1 is required"),
@@ -119,7 +126,10 @@ const SummeryScreen = () => {
     bodyFormData.append("file2", SummeryForm.file2);
     bodyFormData.append("data", []);
 
-    const reportSaved = await saveReport(bodyFormData);
+    const reportSaved = await saveCurrentScreenData(
+      bodyFormData,
+      "ajax/saveReport.php"
+    );
     if (reportSaved) {
       currentReport.setData("status", status);
       currentReport.setData("positiveFeedback", SummeryForm.positiveFeedback);
@@ -141,7 +151,6 @@ const SummeryScreen = () => {
       });
   }, [SummeryForm, schema]);
 
-  // todo to add fetch to previous data of positivefeedback , content to the summarynote, file1,file2
   // todo display error msg's
 
   // * categories picker close function
@@ -226,8 +235,8 @@ const SummeryScreen = () => {
           }}
         />
       </View>
-      {isLoading ? (
-        <Loader visible={isLoading} isSetting={false} />
+      {PostLoading ? (
+        <Loader visible={PostLoading} isSetting={false} />
       ) : (
         <View style={{ flex: 1 }}>
           <SummaryAndNote
@@ -274,7 +283,7 @@ const SummeryScreen = () => {
               handleFormChange={handleFormChange}
               errors={errors}
               fileField={"file1"}
-              // loading={isLoading}
+              // loading={PostLoading}
               handleFileUploadCallback={(value) => {
                 // console.log("here", value);
                 handleFormChange("file1", value);

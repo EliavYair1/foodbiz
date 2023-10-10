@@ -35,7 +35,7 @@ import {
 } from "../../../../store/redux/reducers/summerySlice";
 import SummaryDrawer from "./innerComponents/SummeryDrawer";
 import { setCurrentCategories } from "../../../../store/redux/reducers/getCurrentCategories";
-
+import useSaveCurrentScreenData from "../../../../Hooks/useSaveReport";
 const CategoryEdit = () => {
   // console.log("EditExistingReport");
   const { navigateToRoute } = useScreenNavigator();
@@ -61,6 +61,7 @@ const CategoryEdit = () => {
     () => globalCategories,
     [globalCategories]
   );
+  const { saveCurrentScreenData } = useSaveCurrentScreenData();
   const memoRizedCats = memoizedCategories?.categories;
   const globalStateCategories = memoRizedCats
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
@@ -481,6 +482,16 @@ const CategoryEdit = () => {
       setIsLoading(false);
       console.error("Error making POST request:", error);
     }
+    // const reportSaved = await saveCurrentScreenData(
+    //   bodyFormData,
+    //   "ajax/saveReport.php"
+    // );
+    // if (reportSaved) {
+    //   let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
+    //   currentReport.setData("data", updatedValues);
+    //   currentReport.setData("newGeneralCommentTopText", content);
+    //   dispatch(getCurrentReport(currentReport));
+    // }
   };
   // * pagination's between categories names : Prev
   const prevCategory = async () => {
