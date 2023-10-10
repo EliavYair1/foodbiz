@@ -33,6 +33,7 @@ import { setClients } from "../../store/redux/reducers/clientSlice";
 const windowWidth = Dimensions.get("screen").width;
 const windowHeight = Dimensions.get("window").height;
 const ClientsList = () => {
+  console.log("ClientsList");
   const clients = useSelector((state) => state.clients);
   const user = useSelector((state) => state.user);
   const { navigateToRoute } = useScreenNavigator();
@@ -40,7 +41,6 @@ const ClientsList = () => {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { fetchData } = FetchDataService();
-
   // const [filteredClients, setFilteredClients] = useState(clients);
   const [filteredClients, setFilteredClients] = useState(clients);
   const flatListRef = useRef(null);

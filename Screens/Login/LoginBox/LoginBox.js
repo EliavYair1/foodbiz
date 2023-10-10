@@ -73,7 +73,7 @@ const LoginBox = () => {
       id: 1,
       ref: useRef(),
       name: "password",
-      value: "password",
+      value: "",
       label: "סיסמה",
 
       control: control,

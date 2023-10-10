@@ -5,10 +5,30 @@ import React from "react";
 const LastFiveReportDetails = ({ lastFiveReport }) => {
   return (
     <View style={{}}>
-      <GradeDetails title="כללי" grade={lastFiveReport.grade} />
-      <GradeDetails title="בטיחות מזון" grade={lastFiveReport.safetyGrade} />
-      <GradeDetails title="קולינארי" grade={lastFiveReport.culinaryGrade} />
-      <GradeDetails title="תזונה" grade={lastFiveReport.nutritionGrade} />
+      {lastFiveReport.grade > 0 && (
+        <GradeDetails
+          title="כללי"
+          grade={Number(lastFiveReport.grade).toFixed(2)}
+        />
+      )}
+      {lastFiveReport.grade > 0 && (
+        <GradeDetails
+          title="בטיחות מזון"
+          grade={Number(lastFiveReport.safetyGrade).toFixed(2)}
+        />
+      )}
+      {lastFiveReport.grade > 0 && (
+        <GradeDetails
+          title="קולינארי"
+          grade={Number(lastFiveReport.culinaryGrade).toFixed(2)}
+        />
+      )}
+      {lastFiveReport.grade > 0 && (
+        <GradeDetails
+          title="תזונה"
+          grade={Number(lastFiveReport.nutritionGrade).toFixed(2)}
+        />
+      )}
     </View>
   );
 };

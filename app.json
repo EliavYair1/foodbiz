@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "starter-template",
-    "slug": "starter-template",
+    "name": "Foodbiz",
+    "slug": "Foodbiz",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,10 +11,13 @@
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
-
-    "platforms": ["ios", "android"],
-
-    "assetBundlePatterns": ["**/*"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "assetBundlePatterns": [
+      "assets/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.moburst.foodbiz",
@@ -26,17 +29,19 @@
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.moburst.foodbiz"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-
     "plugins": [
       [
         "expo-camera",
@@ -45,6 +50,10 @@
         }
       ]
     ],
-    "assetBundlePatterns": ["assets/*"]
+    "extra": {
+      "eas": {
+        "projectId": "7d8a1795-0354-4587-9062-1a07cc772fbd"
+      }
+    }
   }
 }

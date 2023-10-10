@@ -23,6 +23,6 @@ export default class LastReport {
   }
 
   getLastReportData(attr) {
-    return this.data[attr];
+    return this.data[attr] ?? {};
   }
 }

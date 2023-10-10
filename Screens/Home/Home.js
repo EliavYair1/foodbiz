@@ -34,35 +34,39 @@ const Home = () => {
       }
     }
     const checkLoginStatus = async () => {
-      const user_id = await retrieveData("user_id");
+      try {
+        const user_id = await retrieveData("user_id");
 
-      if (user_id) {
-        const responseClients = await fetchData(
-          process.env.API_BASE_URL + "api/clients.php",
-          { id: user_id }
-        );
-        // console.log("responseClients:", responseClients.data[1].reports[0]);
-        if (responseClients.success) {
-          let clients = [];
-          responseClients.data.forEach((element) => {
-            clients.push(new Client(element));
-          });
-          dispatch(setClients({ clients: clients }));
-          // console.log("clients[Home]:", clients);
-
-          dispatch(setUser(user_id));
-          const responseCategories = await axios.get(
-            process.env.API_BASE_URL + "api/categories.php"
+        if (user_id) {
+          const responseClients = await fetchData(
+            process.env.API_BASE_URL + "api/clients.php",
+            { id: user_id }
           );
-          dispatch(setGlobalCategories(responseCategories.data.categories));
-          dispatch(setReportsTimes(responseCategories.data.reports_times));
-          navigateToRoute(routes.ONBOARDING.ClientsList);
-          // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
+          // console.log("responseClients:", responseClients);
+          if (responseClients.success) {
+            let clients = [];
+            responseClients.data.forEach((element) => {
+              clients.push(new Client(element));
+            });
+            dispatch(setClients({ clients: clients }));
+            // console.log("clients[Home]:", clients);
+
+            dispatch(setUser(user_id));
+            const responseCategories = await axios.get(
+              process.env.API_BASE_URL + "api/categories.php"
+            );
+            dispatch(setGlobalCategories(responseCategories.data.categories));
+            dispatch(setReportsTimes(responseCategories.data.reports_times));
+            navigateToRoute(routes.ONBOARDING.ClientsList);
+            // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
+          } else {
+            console.log("error2:", responseClients.message);
+          }
         } else {
-          console.log("error2:", responseClients.message);
+          navigateToRoute(routes.ONBOARDING.Login);
         }
-      } else {
-        navigateToRoute(routes.ONBOARDING.Login);
+      } catch (error) {
+        console.log("error:", error);
       }
     };
     checkLoginStatus();

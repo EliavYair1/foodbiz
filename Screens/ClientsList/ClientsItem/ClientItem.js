@@ -46,6 +46,7 @@ import { setClients } from "../../../store/redux/reducers/clientSlice";
 import FetchDataService from "../../../Services/FetchDataService";
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
+  // console.log("ClientItem", client.getCompany());
   const contentRef = useRef();
   const { fetchData } = FetchDataService();
   const [open, setOpen] = useState(false);
@@ -139,9 +140,18 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   };
 
   const lastReport = client.getLastReportData();
+  let haveCulinaryGrade = false;
+  let haveGrade = false;
+  let haveNutritionGrade = false;
+  let haveSafetyGrade = false;
+  if (lastReport && lastReport.data) {
+    haveCulinaryGrade = lastReport.data.haveCulinaryGrade;
+    haveGrade = lastReport.data.haveGrade;
+    haveNutritionGrade = lastReport.data.haveNutritionGrade;
+    haveSafetyGrade = lastReport.data.haveSafetyGrade;
+  } else {
+  }
   const lastFiveReport = client.getLastFiveReportsData();
-  const { haveCulinaryGrade, haveGrade, haveNutritionGrade, haveSafetyGrade } =
-    lastReport.data;
 
   const reportsTable = [
     {
@@ -233,11 +243,20 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           },
           action: (report) => {
             // console.log(report.getSafetyGrade());
-            console.log("Edit_icon");
-            dispatch(getCurrentStation(report.getReportStationName()));
-            dispatch(getCurrentClient(client));
-            dispatch(getCurrentReport(report));
-            navigateToRoute(routes.ONBOARDING.WorkerNewReport);
+            console.log("Edit_icon", {
+              id: userId,
+              reportId: report.getData("id"),
+            });
+            fetchData(process.env.API_BASE_URL + "api/getReportData.php", {
+              id: userId,
+              reportId: report.getData("id"),
+            }).then((reportData) => {
+              report.setData("data", reportData.data);
+              dispatch(getCurrentStation(report.getReportStationName()));
+              dispatch(getCurrentClient(client));
+              dispatch(getCurrentReport(report));
+              navigateToRoute(routes.ONBOARDING.WorkerNewReport);
+            });
           },
         },
         {
@@ -409,45 +428,50 @@ const ClientItem = ({ client, tablePadding, logo }) => {
             justifyContent: "flex-start",
           }}
         >
-          <Text
-            style={{
-              fontFamily: fonts.ASemiBold,
-              color: colors.black,
-              fontSize: 15,
-              alignSelf: "center",
-              textAlign: "left",
-              // width: "25%",
-            }}
-          >
-            {logo}
-          </Text>
-          <Text
-            style={{
-              fontFamily: fonts.ASemiBold,
-              color: colors.black,
-              fontSize: 15,
+          {logo ? (
+            <Image
+              source={{ uri: process.env.API_BASE_URL + logo }}
+              style={{
+                height: 20,
+                width: 100,
+                resizeMode: "contain",
+              }}
+            />
+          ) : (
+            <Text
+              style={{
+                fontFamily: fonts.ASemiBold,
+                color: colors.black,
+                fontSize: 15,
 
-              textAlign: "left",
-            }}
-          >
-            {client.getCompany()}
-          </Text>
+                textAlign: "left",
+              }}
+            >
+              {client.getCompany()}
+            </Text>
+          )}
         </View>
 
         <View style={{ alignSelf: "center", width: "15%" }}>
-          <Text style={styles.subHeaderText}>
-            {lastReport.getTimeOfReport()}
-          </Text>
-          <Text
-            style={[
-              styles.statusText,
-              {
-                backgroundColor: statusBgColor(lastReport.data.reportStatuses),
-              },
-            ]}
-          >
-            {lastReport.data.reportStatuses}
-          </Text>
+          {lastReport && (
+            <>
+              <Text style={styles.subHeaderText}>
+                {lastReport.getTimeOfReport()}
+              </Text>
+              <Text
+                style={[
+                  styles.statusText,
+                  {
+                    backgroundColor: statusBgColor(
+                      lastReport.data.reportStatuses
+                    ),
+                  },
+                ]}
+              >
+                {lastReport.data.reportStatuses}
+              </Text>
+            </>
+          )}
         </View>
 
         <ReportDetails
