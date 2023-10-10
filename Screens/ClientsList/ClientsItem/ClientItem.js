@@ -140,9 +140,8 @@ const ClientItem = ({ client, tablePadding, logo }) => {
 
   const lastReport = client.getLastReportData();
   const lastFiveReport = client.getLastFiveReportsData();
-  const { haveCulinaryGrade, haveGrade, haveNutritionGrade, haveSafetyGrade } =
-    lastReport.data;
-
+  // const { haveCulinaryGrade, haveGrade, haveNutritionGrade, haveSafetyGrade } =
+  //   lastReport?.data;
   const reportsTable = [
     {
       id: 0,
@@ -436,27 +435,29 @@ const ClientItem = ({ client, tablePadding, logo }) => {
 
         <View style={{ alignSelf: "center", width: "15%" }}>
           <Text style={styles.subHeaderText}>
-            {lastReport.getTimeOfReport()}
+            {lastReport?.getTimeOfReport()}
           </Text>
           <Text
             style={[
               styles.statusText,
               {
-                backgroundColor: statusBgColor(lastReport.data.reportStatuses),
+                backgroundColor: statusBgColor(
+                  lastReport?.data?.reportStatuses
+                ),
               },
             ]}
           >
-            {lastReport.data.reportStatuses}
+            {lastReport?.data.reportStatuses}
           </Text>
         </View>
 
         <ReportDetails
           wrapperWidth={"14.5%"}
           lastReport={lastReport}
-          haveGrade={haveGrade}
-          haveNutritionGrade={haveNutritionGrade}
-          haveSafetyGrade={haveSafetyGrade}
-          haveCulinaryGrade={haveCulinaryGrade}
+          // haveGrade={haveGrade}
+          // haveNutritionGrade={haveNutritionGrade}
+          // haveSafetyGrade={haveSafetyGrade}
+          // haveCulinaryGrade={haveCulinaryGrade}
         />
 
         <View

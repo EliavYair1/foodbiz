@@ -176,8 +176,11 @@ const CategoryEdit = () => {
   const [CategoriesItems, setCategoriesItems] = useState(
     findParentAndChildCategories.child.items
   );
+  // ! bug issue it gets undefined becouse the starcture of the data is changed in the backend
   const categoriesDataFromReport = currentReport.getCategoriesData();
+  // console.log("categoriesDataFromReport", categoriesDataFromReport);
   let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+  // ! bug issue
   const findRelevantReportData = useMemo(() => {
     //  getting the relevent data of the categories based on the current sub Category.
     const relevantData = parsedCategoriesDataFromReport.find(

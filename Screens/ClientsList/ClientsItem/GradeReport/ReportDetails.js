@@ -9,17 +9,23 @@ const ReportDetails = ({
   haveCulinaryGrade,
   wrapperWidth,
 }) => {
+  // console.log("lastReport", lastReport);
   return (
     <View style={{ alignSelf: "center", width: wrapperWidth }}>
-      {haveGrade && <GradeDetails title="כללי" grade={lastReport.data.grade} />}
-      {haveSafetyGrade && (
-        <GradeDetails title="בטיחות מזון" grade={lastReport.data.safetyGrade} />
+      {lastReport?.data.haveGrade && (
+        <GradeDetails title="כללי" grade={lastReport?.data.grade} />
       )}
-      {haveCulinaryGrade && (
-        <GradeDetails title="קולינארי" grade={lastReport.data.culinaryGrade} />
+      {lastReport?.data.haveSafetyGrade && (
+        <GradeDetails
+          title="בטיחות מזון"
+          grade={lastReport?.data.safetyGrade}
+        />
       )}
-      {haveNutritionGrade && (
-        <GradeDetails title="תזונה" grade={lastReport.data.nutritionGrade} />
+      {lastReport?.data.haveCulinaryGrade && (
+        <GradeDetails title="קולינארי" grade={lastReport?.data.culinaryGrade} />
+      )}
+      {lastReport?.data.haveNutritionGrade && (
+        <GradeDetails title="תזונה" grade={lastReport?.data.nutritionGrade} />
       )}
     </View>
   );
