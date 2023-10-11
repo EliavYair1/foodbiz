@@ -102,6 +102,7 @@ const SummaryDrawer = ({
     }
   }, []);
 
+  // ! bug issue it gets undefined becouse the starcture of the data is changed in the backend
   const categoriesDataFromReport = currentReport.getCategoriesData();
   const parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
 

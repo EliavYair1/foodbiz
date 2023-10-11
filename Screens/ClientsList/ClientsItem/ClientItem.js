@@ -149,7 +149,6 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     haveGrade = lastReport.data.haveGrade;
     haveNutritionGrade = lastReport.data.haveNutritionGrade;
     haveSafetyGrade = lastReport.data.haveSafetyGrade;
-  } else {
   }
   const lastFiveReport = client.getLastFiveReportsData();
 

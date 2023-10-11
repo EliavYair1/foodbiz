@@ -79,7 +79,7 @@ const WorkerNewReport = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
-
+  console.log("currentReport", currentReport);
   const userId = useSelector((state) => state.user);
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
   const globalCategories = useSelector((state) => state.globalCategories);

@@ -9,6 +9,7 @@ const ReportDetails = ({
   haveCulinaryGrade,
   wrapperWidth,
 }) => {
+  // console.log("lastReport", lastReport);
   return (
     <View style={{ alignSelf: "center", width: wrapperWidth }}>
       {haveGrade && <GradeDetails title="כללי" grade={lastReport.data.grade} />}

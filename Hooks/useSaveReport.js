@@ -8,15 +8,15 @@ import { setClients } from "../store/redux/reducers/clientSlice";
 import { useDispatch, useSelector } from "react-redux";
 import FetchDataService from "../Services/FetchDataService";
 import Client from "../Components/modals/client";
-const useSaveReport = () => {
-  const [isLoading, setIsLoading] = useState(false);
+const useSaveCurrentScreenData = () => {
+  const [PostLoading, setPostLoading] = useState(false);
   const { navigateToRoute } = useScreenNavigator();
   const dispatch = useDispatch();
   const { fetchData } = FetchDataService();
   const userId = useSelector((state) => state.user);
 
   const handleRefreshClients = async () => {
-    setIsLoading(true);
+    setPostLoading(true);
 
     try {
       const responseClients = await fetchData(
@@ -25,7 +25,7 @@ const useSaveReport = () => {
       );
 
       if (responseClients.success) {
-        setIsLoading(false);
+        setPostLoading(false);
         let clients = [];
         responseClients.data.forEach((element) => {
           clients.push(new Client(element));
@@ -34,50 +34,54 @@ const useSaveReport = () => {
       }
       console.log("clients refreshed...");
     } catch (error) {
-      setIsLoading(false);
+      setPostLoading(false);
       console.error("[handleRefreshClients]error", error);
     } finally {
-      setIsLoading(false);
+      setPostLoading(false);
     }
   };
 
-  const saveReport = async (reportData) => {
+  const saveCurrentScreenData = async (reportData, route, alertMsg = false) => {
     try {
-      setIsLoading(true);
-      const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
+      setPostLoading(true);
+      const apiUrl = process.env.API_BASE_URL + route;
       const response = await axios.post(apiUrl, reportData);
       if (response.status == 200 || response.status == 201) {
-        setIsLoading(false);
-        // console.log("[useSaveReport] Response.data", response.data);
+        setPostLoading(false);
+        // console.log("[usesaveCurrentScreenData] Response.data", response.data);
         handleRefreshClients();
-        Alert.alert(
-          "Success",
-          "Data posted successfully!",
-          [
-            {
-              text: "ok",
-              onPress: () => {
-                console.log("success");
-              },
-            },
-            {
-              text: "Cancel",
-              onPress: () => {},
-              style: "cancel",
-            },
-          ],
-          { cancelable: false }
-        );
+        {
+          alertMsg &&
+            Alert.alert(
+              "Success",
+              "Data posted successfully!",
+              [
+                {
+                  text: "ok",
+                  onPress: () => {
+                    console.log("success");
+                  },
+                },
+                {
+                  text: "Cancel",
+                  onPress: () => {},
+                  style: "cancel",
+                },
+              ],
+              { cancelable: false }
+            );
+        }
+
         return response.data;
       }
     } catch (error) {
-      setIsLoading(false);
-      console.error("[saveReport]Error making POST request:", error);
+      setPostLoading(false);
+      console.error("[saveCurrentScreenData]Error making POST request:", error);
       return false;
     }
   };
 
-  return { saveReport, isLoading };
+  return { saveCurrentScreenData, PostLoading };
 };
 
-export default useSaveReport;
+export default useSaveCurrentScreenData;
