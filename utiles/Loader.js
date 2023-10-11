@@ -10,6 +10,7 @@ const Loader = ({
   size,
   loaderStyling,
   isSetting,
+  loadingText = false,
 }) => {
   if (!visible) {
     return null;
@@ -24,7 +25,9 @@ const Loader = ({
           size={size}
           style={loaderStyling}
         />
-        <Text style={{ marginTop: 10 }}>Loading...</Text>
+        <Text style={{ marginTop: 10 }}>
+          {loadingText ? loadingText : "Loading..."}
+        </Text>
       </View>
     </ScreenWrapper>
   );

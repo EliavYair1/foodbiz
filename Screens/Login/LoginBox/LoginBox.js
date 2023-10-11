@@ -21,14 +21,16 @@ import Client from "../../../Components/modals/client";
 import axios from "axios";
 import { setGlobalCategories } from "../../../store/redux/reducers/globalCategories";
 import { setReportsTimes } from "../../../store/redux/reducers/reportsTimesSlice";
-
+import Loader from "../../../utiles/Loader";
 const LoginBox = () => {
   const [passwordShowToggle, setPasswordShowToggle] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({});
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const { navigateToRoute } = useScreenNavigator();
   const user = useSelector((state) => state.user);
   const clients = useSelector((state) => state.clients);
+
   const { fetchData } = FetchDataService();
   const dispatch = useDispatch();
   const handlepasswordToggle = () => {
@@ -73,7 +75,7 @@ const LoginBox = () => {
       id: 1,
       ref: useRef(),
       name: "password",
-      value: "",
+      value: "password",
       label: "סיסמה",
 
       control: control,
@@ -105,19 +107,19 @@ const LoginBox = () => {
     // checking if scheme is valid
     if (isSchemaValid) {
       console.log("scheme is valid");
-
+      setIsLoading(true);
+      console.log("loading...");
       //fetching the user
       const response = await fetchData(
         process.env.API_BASE_URL + "api/login.php",
         formData
       );
       console.log("response", response);
-
       // if success push the user && fetch client data
       if (response.success) {
         storeData("user_id", response.user_id);
         dispatch(setUser(response.user_id));
-
+        console.log("in");
         // fetch the client data
         const responseClients = await fetchData(
           process.env.API_BASE_URL + "api/clients.php",
@@ -140,59 +142,73 @@ const LoginBox = () => {
           navigateToRoute(routes.ONBOARDING.ClientsList);
           // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
         } else {
-          console.log("error2:", responseClients.message);
-          Alert.alert("Error", response.message);
+          console.log("Clients Error:", responseClients.error);
+          Alert.alert("Clients Error", response.error);
         }
+        setIsLoading(false);
       } else {
         // if fail to fetch user data
-        console.log("error:", response.message);
-        Alert.alert("Error", response.message);
+        setIsLoading(false);
+        console.log("Login error:", response.error);
+        Alert.alert("Login error", response.error);
       }
+      setIsLoading(false);
     }
+
     console.log("The form submitted:", formData);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>ברוכים הבאים!</Text>
-      <Text style={styles.subHeader}>הכניסו את פרטי ההתחברות</Text>
 
-      <FlatList
-        style={{ flexGrow: 0 }}
-        data={inputsInformation}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={(itemData) => {
-          return (
-            <Input
-              id={itemData.item.id}
-              proxyRef={itemData.item.ref}
-              control={itemData.item.control}
-              name={itemData.item.name}
-              label={itemData.item.label}
-              mode={itemData.item.mode}
-              inputIcon={itemData.item.inputIcon}
-              contentStyle={itemData.item.contentStyle}
-              // value={itemData.item.value}
-              secureTextEntry={itemData.item.secureTextEntry}
-              returnKeyType={itemData.item.returnKeyType}
-              underlineColor={itemData.item.underlineColor}
-              inputStyle={itemData.item.inputStyle}
-              activeUnderlineColor={itemData.item.activeUnderlineColor}
-              onChangeFunction={(value) =>
-                handleInputChange(itemData.item.name, value)
-              }
-              onSubmitEditing={itemData.item.onSubmitEditing}
-            />
-          );
-        }}
-      />
-      <Button
-        buttonText={"התחברות"}
-        buttonFunction={handleSubmit(onSubmitForm)}
-        buttonStyle={styles.button}
-        buttonTextStyle={styles.buttonText}
-        disableLogic={!isSchemaValid}
-      />
+      {isLoading ? (
+        <>
+          <Text style={styles.subHeader}>אנא המתן...</Text>
+          <Loader visible={isLoading} color={colors.blue} size={50} />
+        </>
+      ) : (
+        <>
+          <Text style={styles.subHeader}>הכניסו את פרטי ההתחברות</Text>
+
+          <FlatList
+            style={{ flexGrow: 0 }}
+            data={inputsInformation}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={(itemData) => {
+              return (
+                <Input
+                  id={itemData.item.id}
+                  proxyRef={itemData.item.ref}
+                  control={itemData.item.control}
+                  name={itemData.item.name}
+                  label={itemData.item.label}
+                  mode={itemData.item.mode}
+                  inputIcon={itemData.item.inputIcon}
+                  contentStyle={itemData.item.contentStyle}
+                  // value={itemData.item.value}
+                  secureTextEntry={itemData.item.secureTextEntry}
+                  returnKeyType={itemData.item.returnKeyType}
+                  underlineColor={itemData.item.underlineColor}
+                  inputStyle={itemData.item.inputStyle}
+                  activeUnderlineColor={itemData.item.activeUnderlineColor}
+                  onChangeFunction={(value) =>
+                    handleInputChange(itemData.item.name, value)
+                  }
+                  onSubmitEditing={itemData.item.onSubmitEditing}
+                />
+              );
+            }}
+          />
+          <Button
+            buttonText={"התחברות"}
+            buttonFunction={handleSubmit(onSubmitForm)}
+            buttonStyle={styles.button}
+            buttonTextStyle={styles.buttonText}
+            disableLogic={!isSchemaValid}
+          />
+        </>
+      )}
     </View>
   );
 };

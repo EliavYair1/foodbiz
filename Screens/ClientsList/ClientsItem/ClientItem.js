@@ -47,6 +47,7 @@ import FetchDataService from "../../../Services/FetchDataService";
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   // console.log("ClientItem", client.getCompany());
+  console.log("render");
   const contentRef = useRef();
   const { fetchData } = FetchDataService();
   const [open, setOpen] = useState(false);
