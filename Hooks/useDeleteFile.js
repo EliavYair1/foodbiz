@@ -21,7 +21,7 @@ const useDeleteFile = ({ onCloseModal }) => {
       const response = await axios.post(apiUrl, reportData);
       if (response.status == 200 || response.status == 201) {
         setIsLoading(false);
-        console.log("[useDeleteFile] Response.data", response.data);
+        // console.log("[useDeleteFile] Response.data", response.data);
         // todo to debug the update of the clients
         // if (userId) {
         //   const responseClients = await fetchData(

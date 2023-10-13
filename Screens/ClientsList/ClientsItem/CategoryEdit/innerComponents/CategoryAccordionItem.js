@@ -94,7 +94,7 @@ const CategoryAccordionItem = ({
     reportItemState.image3,
   ].filter((image) => !!image);
 
-  console.log("imagesimagesimagesimages", images, reportItemState);
+  // console.log("imagesimagesimagesimages", images, reportItemState);
   // * image picker
   const showImagePickerOptions = async () => {
     const options = ["Take a Photo", "Choose from Library", "Cancel"];

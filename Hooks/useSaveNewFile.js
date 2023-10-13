@@ -46,7 +46,7 @@ const useSaveNewFile = () => {
       }
     } catch (error) {
       if (error.response) {
-        console.log(error.response.data);
+        console.log("[useSaveNewFile]error:", error.response.data);
       }
     }
   };

@@ -110,11 +110,20 @@ const LoginBox = () => {
       setIsLoading(true);
       console.log("loading...");
       //fetching the user
+      console.log(process.env.API_BASE_URL + "api/login.php");
+      console.log("formData", formData);
       const response = await fetchData(
         process.env.API_BASE_URL + "api/login.php",
         formData
       );
-      console.log("response", response);
+      // const response = await axios.post(
+      //   process.env.API_BASE_URL + "api/login.php",
+      //   formData
+      // );
+
+      // console.log("response", response);
+      // console.log("formData", formData);
+
       // if success push the user && fetch client data
       if (response.success) {
         storeData("user_id", response.user_id);

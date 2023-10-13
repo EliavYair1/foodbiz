@@ -374,7 +374,6 @@ const SummaryDrawer = ({
               )}
               <ScrollView
                 style={{
-                  // flex: Platform.OS === "ios" ? 1 : 0,
                   flex: 1,
                   // direction: "ltr",
                   // direction: "rtl",

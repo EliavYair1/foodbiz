@@ -54,7 +54,7 @@ const useMediaPicker = (handleInputChange = false) => {
           }
         );
         if (response.status == 200) {
-          console.log("response", response);
+          // console.log("response", response);
           // console.log("res data:", response.body);
           let responseBody = JSON.parse(response.body);
           if (responseBody.status == "error") {

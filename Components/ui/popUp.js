@@ -286,7 +286,7 @@ const PopUp = ({
   }, [editFileObject]);
 
   const handleDeleteImg = () => {
-    console.log("inside");
+    // console.log("handleDeleteImg-inside");
     handleFormChange("imagePicker", null);
     setImagePicked(false);
     setActiveOption(null);

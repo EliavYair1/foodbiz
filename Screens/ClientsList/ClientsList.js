@@ -33,7 +33,7 @@ import { setClients } from "../../store/redux/reducers/clientSlice";
 const windowWidth = Dimensions.get("screen").width;
 const windowHeight = Dimensions.get("window").height;
 const ClientsList = () => {
-  console.log("ClientsList");
+  // console.log("ClientsList");
   const clients = useSelector((state) => state.clients);
   const user = useSelector((state) => state.user);
   const { navigateToRoute } = useScreenNavigator();
@@ -42,14 +42,16 @@ const ClientsList = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { fetchData } = FetchDataService();
   // const [filteredClients, setFilteredClients] = useState(clients);
-  const [filteredClients, setFilteredClients] = useState(clients);
+  const [filteredClients, setFilteredClients] = useState(
+    clients && clients.length > 0 ? clients : null
+  );
   const flatListRef = useRef(null);
 
-  useEffect(() => {
-    if (clients && clients.length > 0) {
-      setFilteredClients(clients);
-    }
-  }, [clients]);
+  // useEffect(() => {
+  //   if (clients && clients.length > 0) {
+  //     setFilteredClients(clients);
+  //   }
+  // }, [clients]);
 
   useEffect(() => {
     const fetchingClientsData = async () => {
@@ -86,6 +88,7 @@ const ClientsList = () => {
     // Scroll to the top of the screen
     flatListRef.current.scrollToOffset({ offset: 0, animated: true });
   };
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
 
@@ -105,7 +108,7 @@ const ClientsList = () => {
       }
     } catch (error) {
       setIsRefreshing(false);
-      console.log("error", error);
+      console.log("[handleRefresh]error", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -131,11 +134,19 @@ const ClientsList = () => {
             visible={loading}
           />
         ) : (
-          <View style={{ maxWidth: windowWidth }}>
+          <View
+            style={{
+              maxWidth: windowWidth,
+              minHeight: windowHeight,
+              paddingBottom: 270,
+            }}
+          >
             <FlatList
               ref={flatListRef}
               style={{ flexGrow: 0 }}
+              // contentContainerStyle={{ paddingBottom: 100 }}
               data={filteredClients}
+              // initialNumToRender={11}
               refreshControl={
                 <RefreshControl
                   refreshing={isRefreshing}

@@ -44,10 +44,12 @@ import { setCurrentCategories } from "../../../store/redux/reducers/getCurrentCa
 import Client from "../../../Components/modals/client";
 import { setClients } from "../../../store/redux/reducers/clientSlice";
 import FetchDataService from "../../../Services/FetchDataService";
+import { UIManager, LayoutAnimation } from "react-native";
+
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   // console.log("ClientItem", client.getCompany());
-  console.log("render");
+  console.log("client render", client.id);
   const contentRef = useRef();
   const { fetchData } = FetchDataService();
   const [open, setOpen] = useState(false);
@@ -60,34 +62,81 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const userId = useSelector((state) => state.user);
-  const [tabHeight, setTabHeight] = useState(0);
-  // tabs handler
-  const handleTabPress = useCallback((tab) => {
-    setActiveTab(tab);
-  }, []);
+  // const [tabHeight, setTabHeight] = useState(0);
 
-  // accodrion handler
-  const handleAccordionOpening = () => {
-    setOpen(!open);
+  UIManager.setLayoutAnimationEnabledExperimental &&
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  const customLayoutAnimation = {
+    duration: 250,
+    create: {
+      type: LayoutAnimation.Types.easeInEaseOut,
+      property: LayoutAnimation.Properties.opacity,
+    },
+    update: {
+      type: LayoutAnimation.Types.easeInEaseOut,
+    },
   };
-  useEffect(() => {
+  // accodrion handler
+  // const handleAccordionOpening = () => {
+  //   LayoutAnimation.configureNext(customLayoutAnimation);
+  //   setOpen(!open);
+  // };
+
+  // tabs handler
+  const handleTabPress = (tab) => {
+    setActiveTab(tab);
+  };
+
+  function calculateTabHeight(activeTab) {
     if (activeTab === "דוחות") {
-      setTabHeight(800);
+      return 800;
     } else if (activeTab === "קבצים") {
-      setTabHeight(450);
+      return 450;
     } else {
-      // Set a default height for other tabs
-      setTabHeight(500); // Replace DEFAULT_HEIGHT with your desired default height
+      return 500;
     }
-  }, [activeTab]);
-  // accordion animation
-  useEffect(() => {
+  }
+  const initialTabHeight = calculateTabHeight(activeTab);
+  const [tabHeight, setTabHeight] = useState(initialTabHeight);
+
+  const animateHeight = (open, tabHeight) => {
     Animated.timing(heightAnim, {
       toValue: open ? tabHeight : 0,
       duration: 250,
       useNativeDriver: false,
     }).start();
-  }, [open, heightAnim, tabHeight]);
+  };
+  const handleAccordionOpening = () => {
+    LayoutAnimation.configureNext(customLayoutAnimation);
+    setOpen(!open);
+    animateHeight(!open, tabHeight);
+  };
+  // const handleAccordionOpening = () => {
+  //   LayoutAnimation.configureNext(customLayoutAnimation);
+  //   setOpen(!open);
+  // };
+
+  // const handleTabPress = useCallback((tab) => {
+  //   setActiveTab(tab);
+  // }, []);
+
+  // useEffect(() => {
+  //   const newTabHeight = calculateTabHeight(activeTab);
+  //   setTabHeight(newTabHeight);
+  // }, [activeTab]);
+
+  // useEffect(() => {
+  //   animateHeight(open, tabHeight);
+  // }, [open, tabHeight]);
+
+  // accordion animation
+  // useEffect(() => {
+  //   Animated.timing(heightAnim, {
+  //     toValue: open ? tabHeight : 0,
+  //     duration: 250,
+  //     useNativeDriver: false,
+  //   }).start();
+  // }, [open, heightAnim, tabHeight]);
 
   // defining the color of the last report status background color
   const statusBgColor = (status) => {
@@ -366,7 +415,29 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   ];
   // console.log(client);
   // handling nested tables
-  const handleDisplayedTab = useMemo(() => {
+  // const handleDisplayedTab = useMemo(() => {
+  //   if (activeTab === "דוחות") {
+  //     const reports = client.getReports();
+  //     return <ClientTable rowsData={reports} headers={reportsTable} />;
+  //   } else if (activeTab === "קבצים") {
+  //     const files = client.getFilesCategory();
+  //     const stations = client.getStations();
+  //     const company = client.getCompany();
+  //     // console.log(stations[]);
+  //     return (
+  //       <FileCategoryRow
+  //         stations={stations}
+  //         items={files}
+  //         icon={fileIcon}
+  //         tableHeadText={"קבצים"}
+  //         company={company}
+  //       ></FileCategoryRow>
+  //     );
+  //   } else {
+  //     return <ClientTable rowsData={filteredData} headers={usersTable} />;
+  //   }
+  // }, [activeTab, client, filteredData]);
+  const handleDisplayedTab = () => {
     if (activeTab === "דוחות") {
       const reports = client.getReports();
       return <ClientTable rowsData={reports} headers={reportsTable} />;
@@ -374,7 +445,6 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       const files = client.getFilesCategory();
       const stations = client.getStations();
       const company = client.getCompany();
-      // console.log(stations[]);
       return (
         <FileCategoryRow
           stations={stations}
@@ -387,14 +457,8 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     } else {
       return <ClientTable rowsData={filteredData} headers={usersTable} />;
     }
-  }, [activeTab, client, filteredData]);
-
-  // styling
-
-  // navigating on new report button (temp name)
-  const newReportNavigation = () => {
-    navigateToRoute(routes.ONBOARDING.WorkerNewReport);
   };
+  // styling
 
   // handling users filter on search bar
   const handleSearch = (filteredUsers) => {
@@ -413,7 +477,6 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     dispatch(getCurrentClient(client));
     navigateToRoute(routes.ONBOARDING.WorkerNewReport);
   };
-
   return (
     <>
       <TouchableOpacity
@@ -555,7 +618,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
             onSearch={handleSearch}
             filterFunction={usersFilterFunction}
           />
-          {isLoading ? <Loader visible={isLoading} /> : handleDisplayedTab}
+          {isLoading ? <Loader visible={isLoading} /> : handleDisplayedTab()}
         </View>
       </Animated.View>
     </>

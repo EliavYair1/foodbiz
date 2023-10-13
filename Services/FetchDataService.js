@@ -12,7 +12,6 @@ const FetchDataService = () => {
         },
         data: JSON.stringify(data),
       };
-
       return { success: true, ...(await axios(config)).data };
     } catch (error) {
       if (error.response) {

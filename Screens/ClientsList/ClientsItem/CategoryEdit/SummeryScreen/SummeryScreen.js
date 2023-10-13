@@ -146,7 +146,7 @@ const SummeryScreen = () => {
       .validate(SummeryForm)
       .then(() => setIsSchemaValid(true))
       .catch((err) => {
-        console.log("err:", err);
+        // console.log("err:", err);
         setIsSchemaValid(false);
       });
   }, [SummeryForm, schema]);

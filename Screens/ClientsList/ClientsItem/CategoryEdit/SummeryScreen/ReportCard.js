@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 import colors from "../../../../../styles/colors";
 import fonts from "../../../../../styles/fonts";
+const windowWidth = Dimensions.get("screen").width;
 const ReportCard = ({
   onChangeGrade = false,
   fsGrade,
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
   reportGrade: {
     justifyContent: "center",
     alignSelf: "center",
-    width: 722,
+    width: windowWidth - 82,
     backgroundColor: "#D3E0FF",
     paddingHorizontal: 20,
     paddingVertical: 13,

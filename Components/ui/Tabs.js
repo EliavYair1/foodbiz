@@ -28,42 +28,13 @@ const Tabs = ({
     return filteredData;
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flexDirection: "row",
-      backgroundColor: colors.lightBlue,
-      paddingHorizontal: tablePadding,
-      paddingVertical: 8,
-    },
-    tab: {
-      // flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 8,
-      // width: 72,
-      marginRight: 72,
-    },
-    activeTab: {
-      // backgroundColor: "#e0e0e0",
-    },
-    tabText: {
-      fontSize: 16,
-      color: colors.black,
-      fontFamily: fonts.ARegular,
-    },
-    activeTabText: {
-      color: "#000",
-      fontFamily: fonts.ABold,
-    },
-    searchInput: {
-      backgroundColor: "#D1E7FF",
-      borderColor: "rgba(12, 20, 48, 0.2)",
-      width: 218,
-    },
-  });
-
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.lightBlue, paddingHorizontal: tablePadding },
+      ]}
+    >
       {tabs.map((tab, index) => (
         <TouchableOpacity
           key={tab}
@@ -73,7 +44,11 @@ const Tabs = ({
           <Text
             style={[
               styles.tabText,
-              tab === activeTab ? styles.activeTabText : null,
+              tab === activeTab
+                ? { color: "#000", fontFamily: fonts.ABold }
+                : null,
+              ,
+              { color: colors.black, fontFamily: fonts.ARegular },
             ]}
           >
             {tab}
@@ -93,5 +68,31 @@ const Tabs = ({
     </View>
   );
 };
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
 
+    paddingVertical: 8,
+  },
+  tab: {
+    // flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    // width: 72,
+    marginRight: 72,
+  },
+  activeTab: {
+    // backgroundColor: "#e0e0e0",
+  },
+  tabText: {
+    fontSize: 16,
+  },
+  activeTabText: {},
+  searchInput: {
+    backgroundColor: "#D1E7FF",
+    borderColor: "rgba(12, 20, 48, 0.2)",
+    width: 218,
+  },
+});
 export default Tabs;

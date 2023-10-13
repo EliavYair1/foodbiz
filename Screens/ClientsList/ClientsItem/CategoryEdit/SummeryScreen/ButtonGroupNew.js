@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   Platform,
+  Dimensions,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Button from "../../../../../Components/ui/Button";
@@ -24,6 +25,7 @@ import Loader from "../../../../../utiles/Loader";
 import { useSelector } from "react-redux";
 import "@env";
 import * as WebBrowser from "expo-web-browser";
+const windowWidth = Dimensions.get("screen").width;
 const ButtonGroup = ({
   control,
   headerText,
@@ -49,6 +51,12 @@ const ButtonGroup = ({
     existingFile ?? false
   );
 
+  const smallDevice = windowWidth < 820;
+  // useEffect(() => {
+  //   const bigDevice = windowWidth > 834;
+  //   // console.log("big", windowWidth, bigDevice);
+  //   // console.log("small", windowWidth, smallDevice);
+  // }, []);
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -221,7 +229,9 @@ const ButtonGroup = ({
                       iconStyle={styles.IconStyle}
                       buttonTextStyle={styles.buttonText}
                       buttonText={"בחירת קובץ"}
-                      buttonWidth={Platform.OS == "android" ? 245 : 260}
+                      buttonWidth={
+                        Platform.OS == "android" ? 245 : smallDevice ? 245 : 260
+                      }
                       disableLogic={
                         activeOption === "photo" || activeOption === "image"
                       }
@@ -265,7 +275,9 @@ const ButtonGroup = ({
                       activeOption === "photo" || activeOption === "file"
                     }
                     buttonText={"מספריית התמונות"}
-                    buttonWidth={Platform.OS == "android" ? 245 : 260}
+                    buttonWidth={
+                      Platform.OS == "android" ? 245 : smallDevice ? 200 : 260
+                    }
                     // errorMessage={
                     //   !imagePicked
                     //     ? errors.imagePickedField && errors.imagePickedField.message
@@ -317,7 +329,13 @@ const ButtonGroup = ({
                           activeOption === "file" || activeOption === "image"
                         }
                         buttonText={"מצלמה"}
-                        buttonWidth={Platform.OS == "android" ? 245 : 260}
+                        buttonWidth={
+                          Platform.OS == "android"
+                            ? 245
+                            : smallDevice
+                            ? 245
+                            : 260
+                        }
                         // errorMessage={
                         //   !CameraCaptureImageUrl
                         //     ? errors.cameraPhoto && errors.cameraPhoto.message

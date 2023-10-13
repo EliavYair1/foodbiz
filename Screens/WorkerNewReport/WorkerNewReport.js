@@ -79,7 +79,7 @@ const WorkerNewReport = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
-  console.log("currentReport", currentReport);
+  // console.log("currentReport", currentReport);
   const userId = useSelector((state) => state.user);
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
   const globalCategories = useSelector((state) => state.globalCategories);
@@ -684,9 +684,9 @@ const WorkerNewReport = () => {
     try {
       setIsLoading(true);
       const apiUrl = process.env.API_BASE_URL + "ajax/saveReport2.php";
-      console.log("saving...", apiUrl);
+      // console.log("saving...", apiUrl);
       const response = await axios.post(apiUrl, bodyFormData);
-      console.log("out");
+      console.log("saving edited report..");
       if (response.status == 200 || response.status == 201) {
         currentReport.setData(
           "newGeneralCommentTopText",
@@ -707,6 +707,7 @@ const WorkerNewReport = () => {
         dispatch(setCurrentReport(currentReport));
         dispatch(setCurrentCategories(formData.categorys));
         setIsLoading(false);
+        console.log("success saving the changes...");
       }
       return response.data;
     } catch (error) {
@@ -721,7 +722,7 @@ const WorkerNewReport = () => {
         process.env.API_BASE_URL + "api/duplicateReport.php",
         { ...formData, rearrangement: IsRearrangement }
       );
-      console.log("(postNewReport)response:", response.status);
+      // console.log("(postNewReport)response:", response.status);
       if (response.status === 200) {
         const responseClients = await fetchData(
           process.env.API_BASE_URL + "api/clients.php",
@@ -763,7 +764,7 @@ const WorkerNewReport = () => {
   // * submit the form
   const onSubmitForm = async () => {
     // checking if scheme is valid
-    console.log("on submit...");
+    // console.log("on submit...");
     // const formValues = getValues();
 
     console.log("formData:", formData);
@@ -771,7 +772,7 @@ const WorkerNewReport = () => {
       console.log("scheme is valid");
 
       try {
-        const response = await postNewReport(formData);
+        await postNewReport(formData);
         // console.log("new report response:", response);
       } catch (error) {
         console.error("Error posting data:", error);
@@ -790,15 +791,15 @@ const WorkerNewReport = () => {
       try {
         const response = await saveEditedReport();
         console.log("edit post response:", response);
+        dispatch(setIndex(0));
+        dispatch(getCurrentCategory(formData.categorys[0]));
+        navigateToRoute(routes.ONBOARDING.CategoryEdit);
       } catch (error) {
         console.error("Error posting data:", error);
       }
     }
-    dispatch(setIndex(0));
-    dispatch(getCurrentCategory(formData.categorys[0]));
-    navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
-
+  // console.log(windowWidth);
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {
@@ -1445,10 +1446,7 @@ const WorkerNewReport = () => {
               )}
               <ScrollView
                 style={{
-                  // flex: Platform.OS === "ios" ? 1 : 0,
                   flex: 1,
-                  // direction: "ltr",
-                  // direction: "rtl",
                   overflow: "visible",
                   height: "100%",
                   minHeight: 250,
