@@ -1,19 +1,5 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  SectionList,
-  Platform,
-} from "react-native";
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import { View, Text, TouchableOpacity, Platform } from "react-native";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import Dashboard from "../../Components/ui/Dashboard";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
 import { FlatList, RefreshControl } from "react-native-gesture-handler";
@@ -26,14 +12,11 @@ import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import { removeData } from "../../Services/StorageService";
 import routes from "../../Navigation/routes";
 import { setUser } from "../../store/redux/reducers/userSlice";
-import uuid from "uuid-random";
 import FetchDataService from "../../Services/FetchDataService";
 import Client from "../../Components/modals/client";
-import { setClients } from "../../store/redux/reducers/clientSlice";
-const windowWidth = Dimensions.get("screen").width;
-const windowHeight = Dimensions.get("window").height;
+import { windowWidth, windowHeight } from "./ClientsList";
 
-const ClientsList = () => {
+export const ClientsList = () => {
   const clients = useSelector((state) => state.clients);
   const user = useSelector((state) => state.user);
   const { navigateToRoute } = useScreenNavigator();
@@ -101,6 +84,8 @@ const ClientsList = () => {
       setIsRefreshing(false);
     }
   };
+  // console.log("allClients", allClients);
+  // console.log(allClients);
   const handleEndReached = () => {
     if (!isRefreshing) {
       const clientPerScreen = 11;
@@ -147,8 +132,8 @@ const ClientsList = () => {
               ref={flatListRef}
               style={{ flexGrow: 0 }}
               data={filteredClients}
-              onEndReached={handleEndReached}
-              onEndReachedThreshold={0.1}
+              // onEndReached={handleEndReached}
+              // onEndReachedThreshold={0.1}
               refreshControl={
                 <RefreshControl
                   refreshing={isRefreshing}
@@ -200,12 +185,3 @@ const ClientsList = () => {
     </ScreenWrapper>
   );
 };
-
-const styles = StyleSheet.create({
-  loader: {
-    justifyContent: "center",
-    alignItems: "center",
-    flex: 1,
-  },
-});
-export default React.memo(ClientsList);

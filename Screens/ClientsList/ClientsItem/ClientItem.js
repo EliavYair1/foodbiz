@@ -9,6 +9,7 @@ import {
   Dimensions,
   Alert,
   Linking,
+  Platform,
 } from "react-native";
 import React, {
   useState,
@@ -49,7 +50,7 @@ import { UIManager, LayoutAnimation } from "react-native";
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   // console.log("ClientItem", client.getCompany());
-  console.log("client render", client.id);
+  console.log("client render", Platform.OS, client.id);
   const contentRef = useRef();
   const { fetchData } = FetchDataService();
   const [open, setOpen] = useState(false);
@@ -77,10 +78,10 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     },
   };
   // accodrion handler
-  // const handleAccordionOpening = () => {
-  //   LayoutAnimation.configureNext(customLayoutAnimation);
-  //   setOpen(!open);
-  // };
+  const handleAccordionOpening = () => {
+    LayoutAnimation.configureNext(customLayoutAnimation);
+    setOpen(!open);
+  };
 
   // tabs handler
   const handleTabPress = (tab) => {
@@ -106,11 +107,11 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       useNativeDriver: false,
     }).start();
   };
-  const handleAccordionOpening = () => {
-    LayoutAnimation.configureNext(customLayoutAnimation);
-    setOpen(!open);
-    animateHeight(!open, tabHeight);
-  };
+  // const handleAccordionOpening = () => {
+  //   LayoutAnimation.configureNext(customLayoutAnimation);
+  //   setOpen(!open);
+  //   // animateHeight(!open, tabHeight);
+  // };
   // const handleAccordionOpening = () => {
   //   LayoutAnimation.configureNext(customLayoutAnimation);
   //   setOpen(!open);
@@ -125,9 +126,9 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   //   setTabHeight(newTabHeight);
   // }, [activeTab]);
 
-  // useEffect(() => {
-  //   animateHeight(open, tabHeight);
-  // }, [open, tabHeight]);
+  useEffect(() => {
+    animateHeight(open, tabHeight);
+  }, [open, tabHeight]);
 
   // accordion animation
   // useEffect(() => {

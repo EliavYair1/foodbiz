@@ -15,9 +15,7 @@ const Dashboard = ({ tablePadding, data, onSearch, filterFunction }) => {
     setSearchText(text);
     onSearch(filterData(text));
   };
-
   const handleSearch = () => {
-    // console.log("Performing search for:", searchText);
     onSearch(filterData(searchText));
   };
 
