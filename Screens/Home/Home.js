@@ -60,13 +60,13 @@ const Home = () => {
             navigateToRoute(routes.ONBOARDING.ClientsList);
             // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
           } else {
-            console.log("error2:", responseClients.message);
+            console.log("Clients error:", responseClients.error);
           }
         } else {
           navigateToRoute(routes.ONBOARDING.Login);
         }
       } catch (error) {
-        console.log("error:", error);
+        console.log("Login error:", error);
       }
     };
     checkLoginStatus();

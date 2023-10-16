@@ -47,7 +47,6 @@ const SummeryScreen = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
-
   const globalCategories = useSelector((state) => state.globalCategories);
   const positiveFeedback = currentReport.getData("positiveFeedback");
 
@@ -78,6 +77,7 @@ const SummeryScreen = () => {
     () => globalCategories,
     [globalCategories]
   );
+
   useEffect(() => {
     if (currentReport) {
       handleFormChange(
@@ -157,26 +157,28 @@ const SummeryScreen = () => {
   const handleModalClose = () => {
     setModalVisible(false);
   };
+
   let categoriesModal = [];
 
-  if (categoryNames[1].length > 0) {
+  if (categoryNames[1]?.length > 0) {
     categoriesModal.push({
       subheader: "ביקורת בטיחות מזון",
       options: categoryNames[1],
     });
   }
-  if (categoryNames[2].length > 0) {
+  if (categoryNames[2]?.length > 0) {
     categoriesModal.push({
       subheader: "ביקורת קולינארית",
       options: categoryNames[2],
     });
   }
-  if (categoryNames[3].length > 0) {
+  if (categoryNames[3]?.length > 0) {
     categoriesModal.push({
       subheader: "ביקורת תזונה",
       options: categoryNames[3],
     });
   }
+
   // * modal pick handler
   const handleOptionClick = async (option) => {
     const indexOfCategory = currentCategories.categories.findIndex(
@@ -191,14 +193,23 @@ const SummeryScreen = () => {
     handleModalClose();
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
+
   const sendForManagerApproval = async () => {
-    console.log("isSchemaValid:", isSchemaValid);
-    if (isSchemaValid) {
-      console.log("SummeryForm:", SummeryForm);
-      console.log("scheme is valid");
+    const formErrors = {};
+    try {
+      await schema.validate(SummeryForm, { abortEarly: false });
+    } catch (err) {
+      err.inner.forEach((validationError) => {
+        formErrors[validationError.path] = validationError.message;
+      });
+    }
+    if (Object.keys(formErrors).length > 0) {
+      Alert.alert("Error", JSON.stringify(formErrors));
+    } else {
+      console.log("schema is valid");
+
       try {
         await handleSaveReport(routes.ONBOARDING.ClientsList, 2);
-        console.log("success sending information for manager approval");
       } catch (error) {
         console.error("Error sending for manager approval:", error);
       }
@@ -276,6 +287,7 @@ const SummeryScreen = () => {
               {errors.positiveFeedback.message}
             </HelperText>
           )}
+          {/* todo bug in android crush in this component  */}
           <View style={{}}>
             <ButtonGroup
               control={control}
@@ -315,9 +327,9 @@ const SummeryScreen = () => {
                 // console.log(value);
                 handleFormChange("file2", value);
               }}
-              imageCaptureErrMsg={
-                errors.cameraPhoto2 && errors.cameraPhoto2.message
-              }
+              // imageCaptureErrMsg={
+              //   errors.cameraPhoto2 && errors.cameraPhoto2.message
+              // }
               fileField={"file2"}
               cameraPhotoField={"cameraPhoto2"}
               existingFile={currentReport.getData("file2")}

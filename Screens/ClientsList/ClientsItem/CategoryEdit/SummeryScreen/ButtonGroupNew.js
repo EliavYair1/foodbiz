@@ -31,8 +31,8 @@ const ButtonGroup = ({
   headerText,
   handleFormChange,
   errors,
-  imageCaptureErrMsg,
-  fileUploadErrMsg,
+  // imageCaptureErrMsg,
+  // fileUploadErrMsg,
   imagePickedField,
   fileField,
   cameraPhotoField,
@@ -48,7 +48,7 @@ const ButtonGroup = ({
   const [activeOption, setActiveOption] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFileToDisplay, setSelectedFileToDisplay] = useState(
-    existingFile ?? false
+    existingFile || null
   );
 
   const smallDevice = windowWidth < 820;
@@ -58,11 +58,17 @@ const ButtonGroup = ({
   //   // console.log("small", windowWidth, smallDevice);
   // }, []);
   useEffect(() => {
-    (async () => {
+    const CameraPermission = async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        console.error("Camera permission not granted.");
+        return;
+      }
       setHasPermission(status === "granted");
-    })();
+    };
+    CameraPermission();
   }, []);
+
   const [media, pickMedia, mediaError, error] = useMediaPicker();
 
   const handleImagePick = async () => {
@@ -163,9 +169,10 @@ const ButtonGroup = ({
       <Text style={styles.uploadText}>{headerText}</Text>
       {isLoading ? (
         <Loader visible={isLoading} size={30} isSetting={false} />
-      ) : selectedFileToDisplay ? (
+      ) : selectedFileToDisplay && selectedFileToDisplay.length > 0 ? (
         <>
-          <View>
+          {/* bug to fix on existing file display */}
+          {/* <View>
             <TouchableOpacity
               onPress={() => {
                 handleDeleteLink(fileField);
@@ -199,7 +206,7 @@ const ButtonGroup = ({
                 {selectedFileToDisplay}
               </Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </>
       ) : (
         <>

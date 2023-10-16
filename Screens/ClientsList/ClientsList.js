@@ -34,6 +34,7 @@ const windowWidth = Dimensions.get("screen").width;
 const windowHeight = Dimensions.get("window").height;
 const bigDevice = windowHeight > 1200;
 const ClientsList = () => {
+  const clientPerScreen = 10;
   const clients = useSelector((state) => state.clients);
   const user = useSelector((state) => state.user);
   const { navigateToRoute } = useScreenNavigator();
@@ -42,14 +43,16 @@ const ClientsList = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { fetchData } = FetchDataService();
   const flatListRef = useRef(null);
-  const [filteredClients, setFilteredClients] = useState(clients);
-  const [currentClient, setCurrentClient] = useState(1);
+  const [filteredClients, setFilteredClients] = useState(
+    clients.slice(0, clientPerScreen)
+  );
   // const [allClients, setAllClients] = useState([]);
   const memoizedClients = useMemo(() => clients, [clients]);
+  const [listOffset, setListOffset] = useState(clientPerScreen);
   useEffect(() => {
     const fetchingClientsData = async () => {
       setLoading(true);
-      if (clients) {
+      if (memoizedClients) {
         console.log(`hello user: ${user}`);
         setLoading(false);
       } else {
@@ -78,7 +81,6 @@ const ClientsList = () => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    setCurrentClient(1);
 
     try {
       const responseClients = await fetchData(
@@ -92,8 +94,9 @@ const ClientsList = () => {
         responseClients.data.forEach((element) => {
           clients.push(new Client(element));
         });
+
         // setAllClients(clients);
-        // setFilteredClients(clients.slice(0, clientPerScreen));
+        setFilteredClients(clients.slice(0, clientPerScreen));
       }
     } catch (error) {
       setIsRefreshing(false);
@@ -106,20 +109,11 @@ const ClientsList = () => {
   // console.log(allClients);
   const handleEndReached = () => {
     if (!isRefreshing) {
-      const clientPerScreen = 11;
-      const totalItems = allClients.length;
-      const totalClients = Math.ceil(totalItems / clientPerScreen);
-
-      if (currentClient < totalClients) {
-        setCurrentClient(currentClient + 1);
-        const startIndex = (currentClient - 1) * clientPerScreen;
-        const endIndex = currentClient * clientPerScreen;
-
-        setFilteredClients(allClients.slice(0, endIndex));
-      }
+      setFilteredClients(clients.slice(0, listOffset + clientPerScreen));
+      setListOffset(listOffset + clientPerScreen);
     }
   };
-
+  // console.log("filteredClients", filteredClients);
   return (
     <ScreenWrapper
       edges={[]}
@@ -151,8 +145,8 @@ const ClientsList = () => {
               ref={flatListRef}
               style={{ flexGrow: 0 }}
               data={filteredClients}
-              // onEndReached={handleEndReached}
-              // onEndReachedThreshold={0.1}
+              onEndReached={handleEndReached}
+              onEndReachedThreshold={0.1}
               refreshControl={
                 <RefreshControl
                   refreshing={isRefreshing}

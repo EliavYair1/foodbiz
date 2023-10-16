@@ -71,7 +71,6 @@ const Accordion = ({
     },
     [contentItemStyling, hasDivider]
   );
-
   return (
     <View>
       <TouchableOpacity
@@ -160,8 +159,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   contentWrapper: {
+    flex: 1,
     backgroundColor: colors.white,
-    height: "100%",
+    // height: '100%',
     borderBottomLeftRadius: 4,
     borderBottomRightRadius: 4,
   },
@@ -175,6 +175,7 @@ const styles = StyleSheet.create({
     // paddingHorizontal: 16,
     // alignItems: "center",
     justifyContent: "space-between",
+    // flex: 1,
   },
   contentText: {
     textAlign: "left",

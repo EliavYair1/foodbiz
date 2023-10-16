@@ -92,6 +92,7 @@ const WorkerNewReport = () => {
 
   // console.log("currentCategories", currentCategories.categories);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
+  // const [SchemaErr, setSchemaErr] = useState(null);
   const [IsRearrangement, setIsRearrangement] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [formData, setFormData] = useState({
@@ -191,8 +192,9 @@ const WorkerNewReport = () => {
       .validate(formData)
       .then(() => setIsSchemaValid(true))
       .catch((err) => {
-        // console.log("err:", err);
         setIsSchemaValid(false);
+        // console.log("err:", err);
+        // setSchemaErr(err);
       });
     setValue("clientId", currentClient?.id);
   }, [formData, schema]);
@@ -764,24 +766,28 @@ const WorkerNewReport = () => {
     }
   };
   // * submit the form
-  const onSubmitForm = async () => {
-    // checking if scheme is valid
-    // console.log("on submit...");
-    // const formValues = getValues();
 
-    console.log("formData:", formData);
-    if (isSchemaValid) {
-      console.log("scheme is valid");
+  const onSubmitForm = async () => {
+    const formErrors = {};
+    try {
+      await schema.validate(formData, { abortEarly: false });
+    } catch (err) {
+      err.inner.forEach((validationError) => {
+        formErrors[validationError.path] = validationError.message;
+      });
+    }
+    if (Object.keys(formErrors).length > 0) {
+      Alert.alert("Error", JSON.stringify(formErrors));
+    } else {
+      console.log("schema is valid");
 
       try {
         await postNewReport(formData);
-        // console.log("new report response:", response);
       } catch (error) {
         console.error("Error posting data:", error);
       }
     }
   };
-
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
@@ -1360,7 +1366,7 @@ const WorkerNewReport = () => {
       headerHeight: 48,
       headerTogglerStyling: styles.headerStyle,
       iconDisplay: true,
-      boxHeight: 80.5,
+      // boxHeight: 80.5,
       draggable: false,
       contentItemStyling: styles.contentBoxSetting,
       hasDivider: false,
@@ -1378,6 +1384,7 @@ const WorkerNewReport = () => {
                 marginTop: 20,
                 height: "100%",
                 direction: "rtl",
+                // backgroundColor: "red",
               }}
             >
               <View
@@ -1450,13 +1457,20 @@ const WorkerNewReport = () => {
                 style={{
                   flex: 1,
                   overflow: "visible",
+                  // height: Platform.OS === "ios" ? "100%" : "50%",
+                  // minHeight: Platform.OS === "ios" ? 250 : 500,
                   height: "100%",
-                  minHeight: 250,
+                  minHeight: Platform.OS == "ios" ? 200 : 200,
+                  direction: "rtl",
+                  borderWidth: 1,
+                  // borderColor: "#000",
+                  borderColor: "#eee",
+                  zIndex: 2,
                 }}
               >
                 <KeyboardAvoidingView
-                  behavior={Platform.OS === "ios" ? "padding" : "height"}
-                  style={{ flex: 1 }}
+                  behavior={Platform.OS == "ios" ? "height" : "height"}
+                  style={{ flex: 1, direction: "rtl" }}
                 >
                   <RichEditor
                     ref={richText}
@@ -1467,6 +1481,7 @@ const WorkerNewReport = () => {
                         ? currentReport.getData("newGeneralCommentTopText")
                         : ""
                     }
+                    styleWithCSS={true}
                     // placeholder={
                     //   "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
                     // }
@@ -1474,13 +1489,15 @@ const WorkerNewReport = () => {
                     //   return true;
                     // }}
                     style={{
-                      minHeight: 123,
-                      // direction: "ltr",
-                      // direction: "rtl",
+                      // flex: 1,
+                      // height: "100%",
+                      direction: "rtl",
                       borderWidth: 1,
-                      borderColor: "#eee",
-                      zIndex: 2,
-                      overflow: "visible",
+                      // borderColor: "#eee",
+                      // borderColor: "#000",
+
+                      // zIndex: 2,
+                      // overflow: "visible",
                     }}
                   />
                 </KeyboardAvoidingView>
@@ -1811,8 +1828,10 @@ const styles = StyleSheet.create({
   },
   contentBoxSetting: {
     alignItems: "center",
-    height: 80.5,
+    // height: 80.5,
     paddingHorizontal: 16,
+    flex: 1,
+    direction: "rtl",
   },
   contentBoxCategories: {
     alignItems: "center",

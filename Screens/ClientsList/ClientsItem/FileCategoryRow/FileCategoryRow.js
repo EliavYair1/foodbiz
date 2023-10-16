@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Dimensions,
 } from "react-native";
 import { List, Divider } from "react-native-paper";
 import fonts from "../../../../styles/fonts";
@@ -39,7 +40,6 @@ const FileCategoryRow = ({
 }) => {
   const { fetchData } = FetchDataService();
   const dispatch = useDispatch();
-
   const heightAnim = useRef(new Animated.Value(0)).current;
   const userId = useSelector((state) => state.user);
   const [openId, setOpenId] = useState(null);
@@ -48,8 +48,8 @@ const FileCategoryRow = ({
   const [categoryId, setCategoryId] = useState(null);
   const [fileObj, setFileObj] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
   const [selectedItemName, setSelectedItemName] = useState(null);
+
   useMemo(() => {
     if (categoryId) {
       const selectedItem = items.find(
@@ -100,12 +100,14 @@ const FileCategoryRow = ({
       Alert.alert("Error", "Failed to delete post");
     }
   };
+
   const onCloseNewFileModal = (callUpdateClients) => {
     if (callUpdateClients) {
       updateClients();
     }
     setModalVisible(!modalVisible);
   };
+
   // console.log(isEditFile);
   const handleItemClick = (itemId) => {
     setOpenId(itemId === openId ? null : itemId);
@@ -284,6 +286,7 @@ const FileCategoryRow = ({
       </>
     );
   };
+
   return (
     <View style={styles.container}>
       {isLoading ? (
@@ -320,6 +323,9 @@ const FileCategoryRow = ({
     </View>
   );
 };
+
+const windowWidth = Dimensions.get("window").width;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -337,6 +343,7 @@ const styles = StyleSheet.create({
     color: colors.black,
   },
   tablerowContainer: {
+    width: windowWidth,
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 16,

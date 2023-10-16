@@ -488,7 +488,10 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   return (
     <>
       <TouchableOpacity
-        style={[styles.itemContainer, { maxWidth: windowWidth }]}
+        style={[
+          styles.itemContainer,
+          { maxWidth: windowWidth, width: windowWidth },
+        ]}
         onPress={handleAccordionOpening}
       >
         <View
@@ -626,7 +629,11 @@ const ClientItem = ({ client, tablePadding, logo }) => {
             onSearch={handleSearch}
             filterFunction={usersFilterFunction}
           />
-          {isLoading ? <Loader visible={isLoading} /> : handleDisplayedTab()}
+          {isLoading || !open ? (
+            <Loader visible={isLoading} />
+          ) : (
+            handleDisplayedTab()
+          )}
         </View>
       </Animated.View>
     </>

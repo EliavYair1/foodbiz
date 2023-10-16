@@ -516,7 +516,7 @@ const PopUp = ({
                         ) : (
                           <Image
                             source={{
-                              uri: editFileObject.url,
+                              uri: editFileObject?.url,
                             }}
                             style={{
                               width: 100,
