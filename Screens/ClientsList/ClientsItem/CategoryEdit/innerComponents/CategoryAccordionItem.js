@@ -285,7 +285,6 @@ const CategoryAccordionItem = ({
     `עד ה-${addDaysToDate(31)} `,
     " נא לשלוח תאריך מדויק לביצוע",
   ];
-  console.log("reportItemState", reportItemState);
   // console.log("ratingsOptions", ratingsOptions);
 
   return (
@@ -366,7 +365,7 @@ const CategoryAccordionItem = ({
             optionText="דירוג:"
             selectedOption={reportItemState?.grade}
             onChange={(option) => handleReportChange(option, "grade")}
-            // disabled={reportItemState?.noRelevant ?? 0}
+            // disabled={reportItemState.noRelevant}
             disabled={reportItemState.noRelevant ? true : false}
           />
         </View>
