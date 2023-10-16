@@ -32,7 +32,7 @@ import Client from "../../Components/modals/client";
 import { setClients } from "../../store/redux/reducers/clientSlice";
 const windowWidth = Dimensions.get("screen").width;
 const windowHeight = Dimensions.get("window").height;
-
+const bigDevice = windowHeight > 1200;
 const ClientsList = () => {
   const clients = useSelector((state) => state.clients);
   const user = useSelector((state) => state.user);
@@ -44,10 +44,11 @@ const ClientsList = () => {
   const flatListRef = useRef(null);
   const [filteredClients, setFilteredClients] = useState(clients);
   const [currentClient, setCurrentClient] = useState(1);
-  const [allClients, setAllClients] = useState([]);
+  // const [allClients, setAllClients] = useState([]);
   const memoizedClients = useMemo(() => clients, [clients]);
   useEffect(() => {
     const fetchingClientsData = async () => {
+      setLoading(true);
       if (clients) {
         console.log(`hello user: ${user}`);
         setLoading(false);
@@ -91,8 +92,8 @@ const ClientsList = () => {
         responseClients.data.forEach((element) => {
           clients.push(new Client(element));
         });
-        setAllClients(clients);
-        setFilteredClients(clients.slice(0, clientPerScreen));
+        // setAllClients(clients);
+        // setFilteredClients(clients.slice(0, clientPerScreen));
       }
     } catch (error) {
       setIsRefreshing(false);
@@ -101,6 +102,8 @@ const ClientsList = () => {
       setIsRefreshing(false);
     }
   };
+  // console.log("allClients", allClients);
+  // console.log(allClients);
   const handleEndReached = () => {
     if (!isRefreshing) {
       const clientPerScreen = 11;
@@ -116,6 +119,7 @@ const ClientsList = () => {
       }
     }
   };
+
   return (
     <ScreenWrapper
       edges={[]}
@@ -140,15 +144,15 @@ const ClientsList = () => {
             style={{
               maxWidth: windowWidth,
               minHeight: windowHeight,
-              paddingBottom: 270,
+              paddingBottom: bigDevice ? 240 : 275,
             }}
           >
             <FlatList
               ref={flatListRef}
               style={{ flexGrow: 0 }}
               data={filteredClients}
-              onEndReached={handleEndReached}
-              onEndReachedThreshold={0.1}
+              // onEndReached={handleEndReached}
+              // onEndReachedThreshold={0.1}
               refreshControl={
                 <RefreshControl
                   refreshing={isRefreshing}

@@ -397,7 +397,7 @@ const CategoryWeightsAccordionItem = ({
                 options={ratingsOptions}
                 optionGap={38}
                 // optionText="דירוג:"
-                disabled={false}
+                // disabled={false}
                 selectedOption={
                   reportItemState?.grade == undefined
                     ? 3

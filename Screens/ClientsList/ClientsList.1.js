@@ -125,7 +125,7 @@ export const ClientsList = () => {
             style={{
               maxWidth: windowWidth,
               minHeight: windowHeight,
-              paddingBottom: 270,
+              // paddingBottom: 270,
             }}
           >
             <FlatList

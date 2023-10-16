@@ -426,7 +426,7 @@ const CategoryTempAccordionItem = ({
               options={ratingsOptions}
               optionGap={Platform.OS == "android" ? 23 : 38}
               optionText="דירוג:"
-              disabled={false}
+              // disabled={false}
               selectedOption={
                 reportItemState?.grade == undefined ? 3 : reportItemState?.grade
               }

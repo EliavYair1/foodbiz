@@ -50,7 +50,7 @@ import { UIManager, LayoutAnimation } from "react-native";
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   // console.log("ClientItem", client.getCompany());
-  console.log("client render", Platform.OS, client.id);
+  // console.log("client render", Platform.OS, client.id);
   const contentRef = useRef();
   const { fetchData } = FetchDataService();
   const [open, setOpen] = useState(false);
@@ -293,20 +293,27 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           },
           action: (report) => {
             // console.log(report.getSafetyGrade());
-            console.log("Edit_icon", {
-              id: userId,
-              reportId: report.getData("id"),
-            });
-            fetchData(process.env.API_BASE_URL + "api/getReportData.php", {
-              id: userId,
-              reportId: report.getData("id"),
-            }).then((reportData) => {
-              report.setData("data", reportData.data);
-              dispatch(getCurrentStation(report.getReportStationName()));
-              dispatch(getCurrentClient(client));
-              dispatch(getCurrentReport(report));
-              navigateToRoute(routes.ONBOARDING.WorkerNewReport);
-            });
+            // console.log("Edit_icon", {
+            //   id: userId,
+            //   reportId: report.getData("id"),
+            // });
+            setIsLoading(true);
+            try {
+              fetchData(process.env.API_BASE_URL + "api/getReportData.php", {
+                id: userId,
+                reportId: report.getData("id"),
+              }).then((reportData) => {
+                report.setData("data", reportData.data);
+                dispatch(getCurrentStation(report.getReportStationName()));
+                dispatch(getCurrentClient(client));
+                dispatch(getCurrentReport(report));
+                navigateToRoute(routes.ONBOARDING.WorkerNewReport);
+              });
+              setIsLoading(false);
+            } catch (error) {
+              setIsLoading(false);
+              console.log("failed to fetch the report data..", error);
+            }
           },
         },
         {

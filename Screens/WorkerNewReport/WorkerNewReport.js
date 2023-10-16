@@ -718,12 +718,13 @@ const WorkerNewReport = () => {
 
   const postNewReport = async (formData) => {
     try {
+      setIsLoading(true);
       const response = await axios.post(
         process.env.API_BASE_URL + "api/duplicateReport.php",
         { ...formData, rearrangement: IsRearrangement }
       );
       // console.log("(postNewReport)response:", response.status);
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         const responseClients = await fetchData(
           process.env.API_BASE_URL + "api/clients.php",
           { id: userId }
@@ -734,7 +735,7 @@ const WorkerNewReport = () => {
             clients.push(new Client(element));
           });
           dispatch(setClients({ clients: clients }));
-
+          setIsLoading(false);
           Alert.alert(
             "Success",
             "Data posted successfully!",
@@ -757,6 +758,7 @@ const WorkerNewReport = () => {
       }
       return response.data;
     } catch (error) {
+      setIsLoading(false);
       console.error("(postNewReport)Error posting data:", error);
       throw error; // You can handle the error or throw it to be caught elsewhere
     }

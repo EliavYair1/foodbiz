@@ -36,12 +36,6 @@ import Loader from "../../../../../utiles/Loader";
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
 
-const ratingsOptions = [
-  { label: "0", value: "0" },
-  { label: "1", value: "1" },
-  { label: "2", value: "2" },
-  { label: "3", value: "3" },
-];
 const relevantOptions = [
   { id: 0, label: "לא רלוונטי", value: "noRelevant" },
   { id: 1, label: "לא לשקלול", value: "noCalculate" },
@@ -236,6 +230,12 @@ const CategoryAccordionItem = ({
       useNativeDriver: false,
     }).start();
   }, [open]);
+  const ratingsOptions = [
+    { label: "0", value: "0" },
+    { label: "1", value: "1" },
+    { label: "2", value: "2" },
+    { label: "3", value: "3" },
+  ];
   // * change handler
   const handleReportChange = debounce((value, label) => {
     setReportItemState((prev) => {
@@ -285,6 +285,8 @@ const CategoryAccordionItem = ({
     `עד ה-${addDaysToDate(31)} `,
     " נא לשלוח תאריך מדויק לביצוע",
   ];
+  console.log("reportItemState", reportItemState);
+  // console.log("ratingsOptions", ratingsOptions);
 
   return (
     <View
@@ -362,9 +364,10 @@ const CategoryAccordionItem = ({
             options={ratingsOptions}
             optionGap={75}
             optionText="דירוג:"
-            selectedOption={reportItemState.grade}
+            selectedOption={reportItemState?.grade}
             onChange={(option) => handleReportChange(option, "grade")}
-            disabled={reportItemState.noRelevant}
+            // disabled={reportItemState?.noRelevant ?? 0}
+            disabled={reportItemState.noRelevant ? true : false}
           />
         </View>
       </TouchableOpacity>

@@ -10,6 +10,8 @@ const Radio = ({
   selectedOption,
   disabled = false,
 }) => {
+  // console.log("selectedOption", selectedOption);
+
   return (
     <View
       style={{

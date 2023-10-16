@@ -180,7 +180,9 @@ const CategoryEdit = () => {
   const categoriesDataFromReport = currentReport.getCategoriesData();
   // console.log("categoriesDataFromReport", categoriesDataFromReport);
   let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
+
   // ! bug issue
+
   const findRelevantReportData = useMemo(() => {
     //  getting the relevent data of the categories based on the current sub Category.
     const relevantData = parsedCategoriesDataFromReport.find(
@@ -196,6 +198,7 @@ const CategoryEdit = () => {
   const [currentReportItemsForGrade, setCurrentReportItemsForGrade] = useState(
     findRelevantReportData
   );
+
   const [categoryType, setCategoryType] = useState(
     findParentAndChildCategories.child.type
   );
@@ -496,6 +499,7 @@ const CategoryEdit = () => {
     //   dispatch(getCurrentReport(currentReport));
     // }
   };
+
   // * pagination's between categories names : Prev
   const prevCategory = async () => {
     debounce(saveReport(), 300);
@@ -553,6 +557,7 @@ const CategoryEdit = () => {
     // console.log("Rendering item:", item.id);
     return <CategoryAccordion item={item} />;
   };
+
   return (
     <>
       <ScreenWrapper
@@ -633,6 +638,7 @@ const CategoryEdit = () => {
               currentReport.setData("grade", value);
             }}
           />
+          {/* todo bug on andriod here */}
           <View
             style={{
               flex: 1,

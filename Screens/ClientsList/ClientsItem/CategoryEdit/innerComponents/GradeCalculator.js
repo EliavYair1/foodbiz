@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Dimensions } from "react-native";
 import colors from "../../../../../styles/colors";
 import ReportGrade from "./ReportGrade";
+
 const GradeCalculator = ({
   categoryType,
   categoryNames,
@@ -21,17 +22,8 @@ const GradeCalculator = ({
 
   // * Major category grade calculation
   const calculateMajorCategoryGrade = () => {
-    // const parsedCategories = JSON.parse(categoriesDataFromReport);
-
     let currentSubcategories = categoryNames[categoryType];
-    // * chosing to calculate which current subcategories based on the type.
-    // if (categoryType == 1) {
-    //   currentSubcategories = checkboxStatus.foodSafetyReviewCbStatus || [];
-    // } else if (categoryType == 2) {
-    //   currentSubcategories = checkboxStatus.culinaryReviewCbStatus || [];
-    // } else {
-    //   currentSubcategories = checkboxStatus.nutritionReviewCbStatus || [];
-    // }
+
     // * counting the amount of the currentSubcategories for calculation.
     let numberOfCurrentSubcategories = currentSubcategories.length;
 
@@ -43,7 +35,6 @@ const GradeCalculator = ({
             .map((item) => item.id)
             .includes(parseInt(element.id, 10))
         );
-      // console.log('currentPickedCategoriesElementsId', currentPickedCategoriesElementsId)
       let totalGrade = 0;
       // * extracting the grades of the currentPickedCategoriesElementsId and sum the amount of the total grades
       currentPickedCategoriesElementsId.forEach((element) => {
@@ -51,9 +42,6 @@ const GradeCalculator = ({
           passedDownCategoryId == element.id ? categoryGrade : element.grade,
           10
         );
-        // console.log("grade", grade);
-        // console.log("passedDownCategoryId", passedDownCategoryId);
-        // console.log("passedDownCategoryId", categoryGrade);
         totalGrade += grade;
       });
 
@@ -61,9 +49,6 @@ const GradeCalculator = ({
       let avgValOfCurrentSubcategories = Math.round(
         totalGrade / numberOfCurrentSubcategories
       );
-      // console.log("currentSubcategories", currentSubcategories);
-      // console.log("numberOfCurrentSubcategories", numberOfCurrentSubcategories);
-      // console.log("totalGrade", totalGrade);
       setMajorCategoryGrade(avgValOfCurrentSubcategories);
     }
   };
@@ -73,7 +58,6 @@ const GradeCalculator = ({
     let itemsTotal1 = 0;
     let itemsTotal2 = 0;
     let itemsTotal3 = 0;
-    // console.log("calculateCategoryGrade:");
     for (const item of currentReportItemsForGrade) {
       if (item.noRelevant == 1 || item.noCalculate == 1) {
         continue;

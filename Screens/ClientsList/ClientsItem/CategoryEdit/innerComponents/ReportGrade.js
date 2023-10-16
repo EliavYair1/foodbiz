@@ -1,16 +1,17 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Dimensions, Platform } from "react-native";
 import React from "react";
 import colors from "../../../../../styles/colors";
 import fonts from "../../../../../styles/fonts";
-
+const windowWidth = Dimensions.get("screen").width;
+const smallDevice = windowWidth < 800;
 const ReportGrade = ({
   reportGradeText,
   reportGradeBoxColor,
   reportGradeNumber,
 }) => {
+  // console.log(Platform.OS, windowWidth);
   const styles = StyleSheet.create({
     gradeContainer: {
-      width: 245,
       flexDirection: "column",
     },
     gradeText: {
@@ -18,7 +19,7 @@ const ReportGrade = ({
       marginBottom: 4,
     },
     gradeBox: {
-      width: 245,
+      width: smallDevice ? 215 : 235,
       backgroundColor: reportGradeBoxColor,
       justifyContent: "center",
       alignItems: "center",
