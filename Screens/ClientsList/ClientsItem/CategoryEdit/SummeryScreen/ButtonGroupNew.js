@@ -159,18 +159,14 @@ const ButtonGroup = ({
       console.log("errr", error);
     }
   }, [existingFile]);
-  // console.log(isLoading);
+
   const handleDeleteLink = (field) => {
-    // console.log("inside");
     handleFormChange(field, null);
     setImagePicked(false);
     setCameraCaptureImageUrl(null);
     setActiveOption(null);
     setSelectedFileToDisplay(false);
   };
-  // console.log("CameraCaptureImageUrl", !CameraCaptureImageUrl);
-  // console.log("imagePicked", !imagePicked);
-  // console.log("fileSelected", !fileSelected);
   if (hasPermission === false) {
     return <Loader visible={isLoading} size={30} isSetting={false} />;
   }

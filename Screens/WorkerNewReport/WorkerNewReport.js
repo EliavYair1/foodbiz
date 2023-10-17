@@ -79,7 +79,6 @@ const WorkerNewReport = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
-  // console.log("currentReport", currentReport);
   const userId = useSelector((state) => state.user);
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
   const globalCategories = useSelector((state) => state.globalCategories);
@@ -90,9 +89,7 @@ const WorkerNewReport = () => {
     [globalCategories]
   );
 
-  // console.log("currentCategories", currentCategories.categories);
   const [isSchemaValid, setIsSchemaValid] = useState(false);
-  // const [SchemaErr, setSchemaErr] = useState(null);
   const [IsRearrangement, setIsRearrangement] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [formData, setFormData] = useState({
@@ -194,7 +191,6 @@ const WorkerNewReport = () => {
       .catch((err) => {
         setIsSchemaValid(false);
         // console.log("err:", err);
-        // setSchemaErr(err);
       });
     setValue("clientId", currentClient?.id);
   }, [formData, schema]);
@@ -448,7 +444,6 @@ const WorkerNewReport = () => {
     setCheckboxStatus(newOrderedCategories);
   };
 
-  // console.log(checkboxStatus);
   // * get the array of categories from the report and updates the state
   const handleCategoriesCheckboxesToggle = (category, checked, label) => {
     // console.log("handleCategoriesCheckboxesToggle:", category, checked);
@@ -477,7 +472,6 @@ const WorkerNewReport = () => {
       ...checkboxStatus.nutritionReviewCbStatus,
     ];
 
-    // console.log("categories:", categories);
     setFormData((prevFormData) => ({
       ...prevFormData,
       categorys: categories,
@@ -1367,9 +1361,8 @@ const WorkerNewReport = () => {
       iconDisplay: true,
       // boxHeight: 80.5,
       draggable: false,
-      contentItemStyling: styles.contentBoxSetting,
+      contentItemStyling: styles.contentBoxSettingSummery,
       hasDivider: false,
-
       accordionCloseIndicator: accordionCloseIcon,
       accordionOpenIndicator: accordionOpenIcon,
       accordionContent: [
@@ -1488,15 +1481,7 @@ const WorkerNewReport = () => {
                     //   return true;
                     // }}
                     style={{
-                      // flex: 1,
-                      // height: "100%",
                       direction: "rtl",
-                      borderWidth: 1,
-                      // borderColor: "#eee",
-                      // borderColor: "#000",
-
-                      // zIndex: 2,
-                      // overflow: "visible",
                     }}
                   />
                 </KeyboardAvoidingView>
@@ -1578,12 +1563,7 @@ const WorkerNewReport = () => {
   const majorCategoryHeadersToPass = categoriesModal.map(
     (category) => category.subheader
   );
-  // const categoriesToPassSummeryScreen = [
-  //   majorCategoryHeadersToPass,
 
-  //   { categoryNames: sortedCategories },
-  // ];
-  // console.log(categoriesToPassSummeryScreen);
   // * categories picker close function
   const handleModalClose = () => {
     setModalVisible(false);
@@ -1608,180 +1588,168 @@ const WorkerNewReport = () => {
   };
   return (
     <>
-      {isLoading ? (
-        <Loader visible={isLoading} isSetting={true} />
-      ) : (
-        <ScreenWrapper
-          newReportBackGroundImg={true}
-          isConnectedUser
-          wrapperStyle={[styles.container, {}]}
-          edges={[]}
-        >
-          <View style={styles.headerWrapper}>
-            <GoBackNavigator
-              text={"חזרה לרשימת הלקוחות"}
-              onBackPress={async () => {
-                if (currentReport) {
-                  // * working
+      <ScreenWrapper
+        newReportBackGroundImg={true}
+        isConnectedUser
+        wrapperStyle={[styles.container, {}]}
+        edges={[]}
+      >
+        <View style={styles.headerWrapper}>
+          <GoBackNavigator
+            text={"חזרה לרשימת הלקוחות"}
+            onBackPress={async () => {
+              if (currentReport) {
+                // * working
+                await saveEditedReport();
+                // console.log("back press response: ", res);
+              }
+            }}
+          />
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Header
+              HeaderText={
+                currentReport
+                  ? `עריכת דוח עבור ${currentReport.data.station_name}`
+                  : `יצירת דוח חדש עבור ${currentClient.getCompany()}`
+              }
+              iconList={currentReport}
+              onCategoriesIconPress={() => {
+                // navigateToRoute(routes.ONBOARDING.CategoryEdit);
+                setModalVisible(true);
+              }}
+              onSummeryIconPress={async () => {
+                // * working
+                setIsLoading(true);
+                try {
                   await saveEditedReport();
-                  // console.log("back press response: ", res);
+                  dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
+                  dispatch(setCategoryNamesSubHeaders(sortedCategories));
+                } catch (error) {
+                  console.log("WorkerNewReport[err]", error);
+                } finally {
+                  setIsLoading(false);
                 }
               }}
             />
-            <View
-              style={{ flexDirection: "row", justifyContent: "space-between" }}
-            >
-              <Header
-                HeaderText={
-                  currentReport
-                    ? `עריכת דוח עבור ${currentReport.data.station_name}`
-                    : `יצירת דוח חדש עבור ${currentClient.getCompany()}`
-                }
-                iconList={currentReport}
-                onCategoriesIconPress={() => {
-                  // navigateToRoute(routes.ONBOARDING.CategoryEdit);
-                  setModalVisible(true);
-                }}
-                onSummeryIconPress={async () => {
-                  // * working
-                  setIsLoading(true);
-                  try {
-                    await saveEditedReport();
-                    dispatch(
-                      setMajorCategoryHeaders(majorCategoryHeadersToPass)
-                    );
-                    dispatch(setCategoryNamesSubHeaders(sortedCategories));
-                  } catch (error) {
-                    console.log("WorkerNewReport[err]", error);
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
-              />
-            </View>
-
+          </View>
+          {isLoading ? (
+            <Loader visible={isLoading} isSetting={true} />
+          ) : (
             <FlatList
               data={modifiedAccordionContent}
               renderItem={renderAccordion}
               keyExtractor={(item, index) => index.toString()}
             />
-          </View>
-          {currentReport ? (
-            <SafeAreaView
-              style={{
-                width: "100%",
-                // flex: 1,
-                // width: windowWidth,
-                // justifyContent: "center",
-                // alignItems: "center",
-                marginBottom: Platform.OS === "ios" ? 50 : 100,
-              }}
-            >
-              <Drawer
-                content={
-                  <LinearGradient
-                    colors={["#37549D", "#26489F"]}
-                    start={[0, 0]}
-                    end={[1, 0]}
+          )}
+        </View>
+        {currentReport ? (
+          <SafeAreaView
+            style={{
+              width: "100%",
+              marginBottom: Platform.OS === "ios" ? 50 : 100,
+            }}
+          >
+            <Drawer
+              content={
+                <LinearGradient
+                  colors={["#37549D", "#26489F"]}
+                  start={[0, 0]}
+                  end={[1, 0]}
+                  style={{
+                    padding: 16,
+                    height: 76,
+                    zIndex: 1,
+                  }}
+                >
+                  <View
                     style={{
-                      // width: windowWidth,
-                      padding: 16,
-                      height: 76,
-                      zIndex: 1,
-                      // alignItems: "center",
-                      // justifyContent: "center",
+                      maxWidthwidth: windowWidth,
+                      justifyContent: "space-evenly",
+                      alignItems: "center",
+                      flexDirection: "row",
                     }}
                   >
-                    <View
-                      style={{
-                        maxWidthwidth: windowWidth,
-                        justifyContent: "space-evenly",
-                        alignItems: "center",
-                        flexDirection: "row",
-                      }}
-                    >
-                      {formData &&
-                        formData.categorys &&
-                        formData.categorys[0] && (
-                          <TouchableOpacity
-                            onPress={saveEditEdReportAndNavigate}
-                            style={{
-                              alignSelf: "center",
-                              justifyContent: "center",
-                              flexDirection: "row",
-                              gap: 5,
-                              alignItems: "center",
-                              // marginLeft: "auto",
-                              // width: "30%",
-                            }}
-                          >
-                            <Text style={styles.categoryDirButton}>
-                              הקטגוריה הבאה:{" "}
-                              {/* {
+                    {formData &&
+                      formData.categorys &&
+                      formData.categorys[0] && (
+                        <TouchableOpacity
+                          onPress={saveEditEdReportAndNavigate}
+                          style={{
+                            alignSelf: "center",
+                            justifyContent: "center",
+                            flexDirection: "row",
+                            gap: 5,
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text style={styles.categoryDirButton}>
+                            הקטגוריה הבאה:{" "}
+                            {/* {
                                 checkedCategoryNameById[currentCategoryIndex]
                                   .name
                               } */}
-                              {checkedCategories[0]}
-                            </Text>
-                            <Image
-                              source={accordionCloseIcon}
-                              style={{ width: 20, height: 20 }}
-                            />
-                          </TouchableOpacity>
-                        )}
-                    </View>
-                  </LinearGradient>
-                }
-                height={0}
-                onToggle={handleDrawerToggle}
-                contentStyling={{ padding: 0 }}
-              />
-            </SafeAreaView>
-          ) : (
-            <LinearGradient
-              colors={["#37549D", "#26489F"]}
-              start={[0, 0]}
-              end={[1, 0]}
+                            {checkedCategories[0]}
+                          </Text>
+                          <Image
+                            source={accordionCloseIcon}
+                            style={{ width: 20, height: 20 }}
+                          />
+                        </TouchableOpacity>
+                      )}
+                  </View>
+                </LinearGradient>
+              }
+              height={0}
+              onToggle={handleDrawerToggle}
+              contentStyling={{ padding: 0 }}
+            />
+          </SafeAreaView>
+        ) : (
+          <LinearGradient
+            colors={["#37549D", "#26489F"]}
+            start={[0, 0]}
+            end={[1, 0]}
+          >
+            <TouchableOpacity
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              onPress={
+                handleSubmit(onSubmitForm)
+                // console.log("new report");
+              }
             >
-              <TouchableOpacity
+              <Text
                 style={{
-                  width: "100%",
-                  justifyContent: "center",
-                  alignItems: "center",
+                  alignSelf: "center",
+                  paddingVertical: 12,
+                  fontSize: 24,
+                  fontFamily: fonts.ABold,
+                  color: colors.white,
                 }}
-                onPress={
-                  handleSubmit(onSubmitForm)
-                  // console.log("new report");
-                }
               >
-                <Text
-                  style={{
-                    alignSelf: "center",
-                    paddingVertical: 12,
-                    fontSize: 24,
-                    fontFamily: fonts.ABold,
-                    color: colors.white,
-                  }}
-                >
-                  יצירת הדוח
-                </Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          )}
-          {modalVisible && (
-            <View>
-              <ModalUi
-                isLoading={isLoading}
-                categoryEdit={false}
-                header="קטגוריות"
-                modalContent={categoriesModal}
-                onClose={handleModalClose}
-                handleOptionClick={handleOptionClick}
-              />
-            </View>
-          )}
-        </ScreenWrapper>
-      )}
+                יצירת הדוח
+              </Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        )}
+        {modalVisible && (
+          <View>
+            <ModalUi
+              isLoading={isLoading}
+              categoryEdit={false}
+              header="קטגוריות"
+              modalContent={categoriesModal}
+              onClose={handleModalClose}
+              handleOptionClick={handleOptionClick}
+            />
+          </View>
+        )}
+      </ScreenWrapper>
     </>
   );
 };
@@ -1828,6 +1796,13 @@ const styles = StyleSheet.create({
   contentBoxSetting: {
     alignItems: "center",
     height: 80.5,
+    paddingHorizontal: 16,
+    flex: 1,
+    direction: "rtl",
+  },
+  contentBoxSettingSummery: {
+    alignItems: "center",
+    // height: 80.5,
     paddingHorizontal: 16,
     flex: 1,
     direction: "rtl",
