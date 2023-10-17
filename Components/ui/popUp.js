@@ -272,6 +272,7 @@ const PopUp = ({
       }
     }
   };
+
   useEffect(() => {
     if (editFileObject) {
       setImagePicked(false);

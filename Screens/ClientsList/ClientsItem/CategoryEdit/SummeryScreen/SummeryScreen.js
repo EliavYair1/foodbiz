@@ -215,12 +215,12 @@ const SummeryScreen = () => {
       }
     }
   };
-
+  console.log(currentReport.getData("file1"));
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
         text={"חזרה לרשימת הלקוחות"}
-        containerStyling={{ marginTop: 16 }}
+        containerStyling={{ marginTop: 26 }}
         onBackPress={async () => {
           await handleSaveReport(
             routes.ONBOARDING.ClientsList,
@@ -310,6 +310,7 @@ const SummeryScreen = () => {
               }}
               cameraPhotoField={"cameraPhoto"}
               existingFile={currentReport.getData("file1")}
+              // existingFile={false}
             />
 
             <ButtonGroup

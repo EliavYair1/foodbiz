@@ -17,30 +17,19 @@ export default function Button({
   errorMessage = false,
   isCameraButton = false,
 }) {
-  const styles = StyleSheet.create({
-    button: {
-      width: buttonWidth,
-      opacity: disableLogic ? 0.4 : 1,
-      justifyContent: "center",
-      alignSelf: "center",
-      alignItems: "center",
-      flexDirection: "row",
-      gap: 8,
-      borderColor: errorMessage ? "#b3261e" : null,
-    },
-    text: {
-      textAlign: "center",
-      alignItems: "center",
-      justifyContent: "center",
-      alignSelf: "center",
-      fontFamily: fonts.AMedium,
-    },
-  });
   return (
     <>
       <View style={{ flexDirection: "column" }}>
         <TouchableOpacity
-          style={[buttonStyle, styles.button]}
+          style={[
+            buttonStyle,
+            styles.button,
+            {
+              width: buttonWidth,
+              opacity: disableLogic ? 0.4 : 1,
+              borderColor: errorMessage ? "#b3261e" : null,
+            },
+          ]}
           onPress={() => buttonFunction()}
           disabled={disableLogic}
         >
@@ -64,3 +53,22 @@ export default function Button({
     </>
   );
 }
+const styles = StyleSheet.create({
+  button: {
+    // width: buttonWidth,
+    // opacity: disableLogic ? 0.4 : 1,
+    justifyContent: "center",
+    alignSelf: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    // borderColor: errorMessage ? "#b3261e" : null,
+  },
+  text: {
+    textAlign: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    fontFamily: fonts.AMedium,
+  },
+});

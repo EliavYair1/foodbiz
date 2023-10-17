@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1,
     backgroundColor: colors.white,
-    // height: '100%',
+    // height: "100%",
     borderBottomLeftRadius: 4,
     borderBottomRightRadius: 4,
   },

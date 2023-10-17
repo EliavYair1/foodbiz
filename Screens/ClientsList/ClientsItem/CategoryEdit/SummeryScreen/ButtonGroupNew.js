@@ -7,7 +7,7 @@ import {
   Platform,
   Dimensions,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Button from "../../../../../Components/ui/Button";
 import uploadIcon1 from "../../../../../assets/imgs/plusIconDark.png";
 import uploadIcon2 from "../../../../../assets/imgs/libraryIcon.png";
@@ -48,9 +48,15 @@ const ButtonGroup = ({
   const [activeOption, setActiveOption] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFileToDisplay, setSelectedFileToDisplay] = useState(
-    existingFile ?? false
+    existingFile == "" ? false : existingFile
   );
-
+  const cameraRef = useRef(null);
+  // console.log("existingFile", existingFile, typeof existingFile);
+  // console.log(
+  //   "selectedFileToDisplay",
+  //   selectedFileToDisplay,
+  //   typeof selectedFileToDisplay
+  // );
   const smallDevice = windowWidth < 820;
 
   useEffect(() => {
@@ -142,9 +148,15 @@ const ButtonGroup = ({
   };
 
   useEffect(() => {
-    if (existingFile) {
-      setSelectedFileToDisplay(existingFile);
-      handleFormChange(fileField, existingFile);
+    try {
+      if (existingFile !== "") {
+        handleFormChange(fileField, existingFile);
+      } else {
+        // console.log("errr ");
+        handleFormChange(fileField, false);
+      }
+    } catch (error) {
+      console.log("errr", error);
     }
   }, [existingFile]);
   // console.log(isLoading);
@@ -159,7 +171,9 @@ const ButtonGroup = ({
   // console.log("CameraCaptureImageUrl", !CameraCaptureImageUrl);
   // console.log("imagePicked", !imagePicked);
   // console.log("fileSelected", !fileSelected);
-
+  if (hasPermission === false) {
+    return <Loader visible={isLoading} size={30} isSetting={false} />;
+  }
   return (
     <View style={styles.uploadGroup}>
       <Text style={styles.uploadText}>{headerText}</Text>
@@ -307,46 +321,44 @@ const ButtonGroup = ({
                   fieldState: { error },
                 }) => (
                   <View style={{ flexDirection: "column" }}>
-                    <Camera
+                    {/* <Camera
                       style={{
                         borderRadius: 8,
                         // backgroundColor: "transparent",
                         height: 46,
                       }}
                       type={Camera.Constants.Type.back}
+                      // ref={cameraRef}
                       ref={(ref) => (camera = ref)}
-                    >
-                      <Button
-                        buttonStyle={[
-                          styles.button,
-                          {
-                            backgroundColor: "white",
-                          },
-                        ]}
-                        icon={true}
-                        buttonFunction={handleTakePhoto}
-                        iconPath={uploadIcon3}
-                        iconStyle={styles.IconStyle}
-                        buttonTextStyle={styles.buttonText}
-                        disableLogic={
-                          activeOption === "file" || activeOption === "image"
-                        }
-                        buttonText={"מצלמה"}
-                        buttonWidth={
-                          Platform.OS == "android"
-                            ? 245
-                            : smallDevice
-                            ? 245
-                            : 260
-                        }
-                        // errorMessage={
-                        //   !CameraCaptureImageUrl
-                        //     ? errors.cameraPhoto && errors.cameraPhoto.message
-                        //     : null
-                        // }
-                        // errorMessage={imageCaptureErrMsg}
-                      />
-                    </Camera>
+                    > */}
+                    <Button
+                      buttonStyle={[
+                        styles.button,
+                        // {
+                        //   backgroundColor: "white",
+                        // },
+                      ]}
+                      icon={true}
+                      buttonFunction={handleTakePhoto}
+                      iconPath={uploadIcon3}
+                      iconStyle={styles.IconStyle}
+                      buttonTextStyle={styles.buttonText}
+                      buttonText={"מצלמה"}
+                      // buttonWidth={245}
+                      disableLogic={
+                        activeOption === "file" || activeOption === "image"
+                      }
+                      buttonWidth={
+                        Platform.OS == "android" ? 245 : smallDevice ? 245 : 260
+                      }
+                      // errorMessage={
+                      //   !CameraCaptureImageUrl
+                      //     ? errors.cameraPhoto && errors.cameraPhoto.message
+                      //     : null
+                      // }
+                      // errorMessage={imageCaptureErrMsg}
+                    />
+                    {/* </Camera> */}
                   </View>
                 )}
               />

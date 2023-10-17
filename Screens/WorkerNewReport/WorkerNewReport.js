@@ -628,7 +628,6 @@ const WorkerNewReport = () => {
     : [];
   const checkedCategories =
     formData && formData.categorys?.map((id) => idToNameMap[id]);
-
   // * post request on the changes of the report edit
   const saveEditedReport = async () => {
     // console.log(formData);
@@ -1828,7 +1827,7 @@ const styles = StyleSheet.create({
   },
   contentBoxSetting: {
     alignItems: "center",
-    // height: 80.5,
+    height: 80.5,
     paddingHorizontal: 16,
     flex: 1,
     direction: "rtl",
