@@ -48,15 +48,11 @@ const ButtonGroup = ({
   const [activeOption, setActiveOption] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFileToDisplay, setSelectedFileToDisplay] = useState(
-    existingFile || null
+    existingFile ?? false
   );
 
   const smallDevice = windowWidth < 820;
-  // useEffect(() => {
-  //   const bigDevice = windowWidth > 834;
-  //   // console.log("big", windowWidth, bigDevice);
-  //   // console.log("small", windowWidth, smallDevice);
-  // }, []);
+
   useEffect(() => {
     const CameraPermission = async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -169,10 +165,10 @@ const ButtonGroup = ({
       <Text style={styles.uploadText}>{headerText}</Text>
       {isLoading ? (
         <Loader visible={isLoading} size={30} isSetting={false} />
-      ) : selectedFileToDisplay && selectedFileToDisplay.length > 0 ? (
+      ) : selectedFileToDisplay ? (
         <>
           {/* bug to fix on existing file display */}
-          {/* <View>
+          <View>
             <TouchableOpacity
               onPress={() => {
                 handleDeleteLink(fileField);
@@ -206,7 +202,7 @@ const ButtonGroup = ({
                 {selectedFileToDisplay}
               </Text>
             </TouchableOpacity>
-          </View> */}
+          </View>
         </>
       ) : (
         <>

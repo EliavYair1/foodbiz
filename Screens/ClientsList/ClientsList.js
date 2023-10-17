@@ -43,11 +43,13 @@ const ClientsList = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { fetchData } = FetchDataService();
   const flatListRef = useRef(null);
+  const memoizedClients = useMemo(() => clients, [clients]);
+
   const [filteredClients, setFilteredClients] = useState(
     clients.slice(0, clientPerScreen)
   );
+  const [searchActive, setSearchActive] = useState(false);
   // const [allClients, setAllClients] = useState([]);
-  const memoizedClients = useMemo(() => clients, [clients]);
   const [listOffset, setListOffset] = useState(clientPerScreen);
   useEffect(() => {
     const fetchingClientsData = async () => {
@@ -72,9 +74,11 @@ const ClientsList = () => {
 
   // search bar filtering
   const handleSearch = (filteredClients) => {
-    setFilteredClients(filteredClients);
+    setFilteredClients(filteredClients.slice(0, clientPerScreen));
   };
+
   const ClientCompanyFilterFunction = (item, text) => {
+    setSearchActive(text !== "");
     const company = item.company;
     return company && company.includes(text);
   };
@@ -108,7 +112,7 @@ const ClientsList = () => {
   // console.log("allClients", allClients);
   // console.log(allClients);
   const handleEndReached = () => {
-    if (!isRefreshing) {
+    if (!isRefreshing && !searchActive) {
       setFilteredClients(clients.slice(0, listOffset + clientPerScreen));
       setListOffset(listOffset + clientPerScreen);
     }

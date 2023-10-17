@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Image } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SearchBar from "./SearchBar";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
@@ -18,7 +18,6 @@ const Dashboard = ({ tablePadding, data, onSearch, filterFunction }) => {
   const handleSearch = () => {
     onSearch(filterData(searchText));
   };
-
   const filterData = (text) => {
     const filteredData = data.filter((item) => filterFunction(item, text));
     return filteredData;
