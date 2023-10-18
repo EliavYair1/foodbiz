@@ -172,7 +172,8 @@ const WorkerNewReport = () => {
         );
       }),
   });
-
+  // console.log(`switchStates:`, switchStates);
+  // console.log(`formData:`, formData);
   const {
     control,
     handleSubmit,
