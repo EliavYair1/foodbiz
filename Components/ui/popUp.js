@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React, {
   useEffect,
@@ -77,34 +78,28 @@ const PopUp = ({
     })();
   }, []);
 
-  const schema = useMemo(() => {
-    let schemaBuilder = yup.object().shape({
-      comments: yup.string(),
-      date: yup.string().required("date is required"),
-      authorName: yup.string().required("author name is required"),
-      fileName: yup.string().required("file name is required"),
-      station: yup.string().required("station is required"),
-    });
-
-    if (!formData.imagePicker) {
-      schemaBuilder = schemaBuilder.shape({
-        imagePicker: yup
-          .string()
-          .required("pick a image or capture a photo is required"),
-      });
-    }
-    return schemaBuilder;
-  }, [formData]);
+  const schema = yup.object().shape({
+    comments: yup.string(),
+    date: yup.string().required("date is required"),
+    authorName: yup.string().required("author name is required"),
+    fileName: yup.string().required("file name is required"),
+    station: yup.string().required("station is required"),
+    imagePicker:
+      !formData.imagePicker &&
+      yup.string().required("pick an image or capture a photo is required"),
+  });
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     // register,
+    trigger,
+    setValue,
+    getValues,
   } = useForm({
     resolver: yupResolver(schema),
   });
-
   // validate the scheme on every change of the state
   useEffect(() => {
     schema
@@ -115,6 +110,7 @@ const PopUp = ({
         setIsSchemaValid(false);
       });
   }, [formData, schema]);
+
   // const { name: stationName } = register("station");
   // const { name: dateName } = register("date");
   // console.log(errors);
@@ -234,6 +230,8 @@ const PopUp = ({
       const pickedImage = await pickMedia("image");
       if (pickedImage) {
         handleFormChange("imagePicker", pickedImage);
+        setValue("imagePicker", pickedImage);
+        trigger("imagePicker");
         setImagePicked(pickedImage);
         setImagePicked(true);
         setActiveOption("image");
@@ -256,6 +254,8 @@ const PopUp = ({
         const captureImg = await pickMedia("camera");
         if (captureImg) {
           handleFormChange("imagePicker", captureImg);
+          setValue("imagePicker", captureImg);
+          trigger("imagePicker");
           setImagePicked(captureImg);
           setisLoading(false);
           setImagePicked(true);
@@ -283,6 +283,12 @@ const PopUp = ({
       handleFormChange("fileName", editFileObject.fileName);
       handleFormChange("station", editFileObject.station_name);
       handleFormChange("comments", editFileObject.comments);
+      setValue("imagePicker", editFileObject.url);
+      setValue("authorName", editFileObject.authorName);
+      setValue("date", editFileObject.date);
+      setValue("fileName", editFileObject.fileName);
+      setValue("station", editFileObject.station_name);
+      setValue("comments", editFileObject.comments);
     }
   }, [editFileObject]);
 
@@ -317,10 +323,29 @@ const PopUp = ({
 
   const onSubmitForm = async () => {
     // checking if scheme is valid
+    // if (isSchemaValid) {
+    //   console.log("(onSubmitForm)formData", formData);
+    //   await saveFileInfo();
+    // }
 
-    if (isSchemaValid) {
-      console.log("(onSubmitForm)formData", formData);
-      await saveFileInfo();
+    const formErrors = {};
+    try {
+      await schema.validate(formData, { abortEarly: false });
+    } catch (err) {
+      err.inner.forEach((validationError) => {
+        formErrors[validationError.path] = validationError.message;
+      });
+    }
+    if (Object.keys(formErrors).length > 0) {
+      Alert.alert("Error", JSON.stringify(formErrors));
+    } else {
+      console.log("schema is valid");
+      try {
+        await saveFileInfo();
+        console.log("object");
+      } catch (error) {
+        console.error("Error posting data:", error);
+      }
     }
   };
 
@@ -430,6 +455,8 @@ const PopUp = ({
                     inputStyle={{ backgroundColor: "white" }}
                     onChangeFunction={(value) => {
                       handleFormChange("fileName", value);
+                      setValue("fileName", value);
+                      trigger("fileName");
                     }}
                   />
                   <Text style={styles.subtextStyle}>שם הכותב</Text>
@@ -448,6 +475,8 @@ const PopUp = ({
                     onChangeFunction={(value) => {
                       // console.log("authorName:", value);
                       handleFormChange("authorName", value);
+                      setValue("authorName", value);
+                      trigger("authorName");
                     }}
                   />
                   <Text style={styles.subtextStyle}>תאריך</Text>

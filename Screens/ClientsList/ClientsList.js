@@ -48,6 +48,8 @@ const ClientsList = () => {
   const [filteredClients, setFilteredClients] = useState(
     clients.slice(0, clientPerScreen)
   );
+  console.log("[ClientsList]clients", clients);
+  console.log("[ClientsList]filteredClients", filteredClients);
   const [searchActive, setSearchActive] = useState(false);
   // const [allClients, setAllClients] = useState([]);
   const [listOffset, setListOffset] = useState(clientPerScreen);
@@ -83,7 +85,7 @@ const ClientsList = () => {
     return company && company.includes(text);
   };
 
-  const handleRefresh = async () => {
+  const handleRefreshClients = async () => {
     setIsRefreshing(true);
 
     try {
@@ -104,7 +106,7 @@ const ClientsList = () => {
       }
     } catch (error) {
       setIsRefreshing(false);
-      console.log("[handleRefresh]error", error);
+      console.log("[handleRefreshClients]error", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -154,7 +156,7 @@ const ClientsList = () => {
               refreshControl={
                 <RefreshControl
                   refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
+                  onRefresh={handleRefreshClients}
                   colors={[colors.lightBlue]}
                   progressBackgroundColor={
                     Platform.OS === "android" ? colors.white : undefined

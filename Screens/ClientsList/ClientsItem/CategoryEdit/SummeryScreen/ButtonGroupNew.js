@@ -170,6 +170,7 @@ const ButtonGroup = ({
   if (hasPermission === false) {
     return <Loader visible={isLoading} size={30} isSetting={false} />;
   }
+  console.log("selectedFileToDisplay", selectedFileToDisplay);
   return (
     <View style={styles.uploadGroup}>
       <Text style={styles.uploadText}>{headerText}</Text>
@@ -193,7 +194,7 @@ const ButtonGroup = ({
             </TouchableOpacity>
             <TouchableOpacity
               onPress={async () => {
-                if (media !== null) {
+                if (selectedFileToDisplay) {
                   let url = `${process.env.API_BASE_URL}${selectedFileToDisplay}`;
                   await WebBrowser.openBrowserAsync(url);
                 } else {

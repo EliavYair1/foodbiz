@@ -50,7 +50,7 @@ import { UIManager, LayoutAnimation } from "react-native";
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo }) => {
   // console.log("ClientItem", client.getCompany());
-  console.log("client render", Platform.OS, client.id);
+  // console.log("client render", Platform.OS, client.id);
   const contentRef = useRef();
   const { fetchData } = FetchDataService();
   const [open, setOpen] = useState(false);
@@ -90,7 +90,12 @@ const ClientItem = ({ client, tablePadding, logo }) => {
 
   function calculateTabHeight(activeTab) {
     if (activeTab === "דוחות") {
-      return 800;
+      if (client.getReports().length > 7) {
+        return 800;
+      } else if (client.getReports().length < 2) {
+        return 250;
+      }
+      return 500;
     } else if (activeTab === "קבצים") {
       return 450;
     } else {
@@ -100,6 +105,11 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const initialTabHeight = calculateTabHeight(activeTab);
   const [tabHeight, setTabHeight] = useState(initialTabHeight);
 
+  useEffect(() => {
+    const newTabHeight = calculateTabHeight(activeTab);
+    setTabHeight(newTabHeight);
+  }, [activeTab]);
+
   const animateHeight = (open, tabHeight) => {
     Animated.timing(heightAnim, {
       toValue: open ? tabHeight : 0,
@@ -107,38 +117,10 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       useNativeDriver: false,
     }).start();
   };
-  // const handleAccordionOpening = () => {
-  //   LayoutAnimation.configureNext(customLayoutAnimation);
-  //   setOpen(!open);
-  //   // animateHeight(!open, tabHeight);
-  // };
-  // const handleAccordionOpening = () => {
-  //   LayoutAnimation.configureNext(customLayoutAnimation);
-  //   setOpen(!open);
-  // };
-
-  // const handleTabPress = useCallback((tab) => {
-  //   setActiveTab(tab);
-  // }, []);
-
-  // useEffect(() => {
-  //   const newTabHeight = calculateTabHeight(activeTab);
-  //   setTabHeight(newTabHeight);
-  // }, [activeTab]);
-
   useEffect(() => {
     animateHeight(open, tabHeight);
   }, [open, tabHeight]);
-
-  // accordion animation
-  // useEffect(() => {
-  //   Animated.timing(heightAnim, {
-  //     toValue: open ? tabHeight : 0,
-  //     duration: 250,
-  //     useNativeDriver: false,
-  //   }).start();
-  // }, [open, heightAnim, tabHeight]);
-
+  // console.log(client.getReports().length);
   // defining the color of the last report status background color
   const statusBgColor = (status) => {
     if (status == "נשלח ללקוח") {
@@ -202,6 +184,9 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     haveSafetyGrade = lastReport.data.haveSafetyGrade;
   }
   const lastFiveReport = client.getLastFiveReportsData();
+  const initiateLoader = (status) => {
+    setIsLoading(status);
+  };
 
   const reportsTable = [
     {
@@ -292,26 +277,27 @@ const ClientItem = ({ client, tablePadding, logo }) => {
             return report.data.status == 1;
           },
           action: (report) => {
-            // console.log(report.getSafetyGrade());
-            // console.log("Edit_icon", {
-            //   id: userId,
-            //   reportId: report.getData("id"),
-            // });
-            setIsLoading(true);
+            console.log("click edit...");
+            initiateLoader(true);
             try {
               fetchData(process.env.API_BASE_URL + "api/getReportData.php", {
                 id: userId,
                 reportId: report.getData("id"),
-              }).then((reportData) => {
-                report.setData("data", reportData.data);
-                dispatch(getCurrentStation(report.getReportStationName()));
-                dispatch(getCurrentClient(client));
-                dispatch(getCurrentReport(report));
-                navigateToRoute(routes.ONBOARDING.WorkerNewReport);
-              });
-              setIsLoading(false);
+              })
+                .then((reportData) => {
+                  report.setData("data", reportData.data);
+                  dispatch(getCurrentStation(report.getReportStationName()));
+                  dispatch(getCurrentClient(client));
+                  dispatch(getCurrentReport(report));
+                  navigateToRoute(routes.ONBOARDING.WorkerNewReport);
+                  initiateLoader(false);
+                })
+                .catch((error) => {
+                  initiateLoader(false);
+                  console.log("failed to fetch the report data..", error);
+                });
             } catch (error) {
-              setIsLoading(false);
+              initiateLoader(false);
               console.log("failed to fetch the report data..", error);
             }
           },
@@ -367,19 +353,19 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     {
       id: 0,
       label: "שם מלא",
-      width: "16.6666667%",
+      width: "15%",
       data: "name",
     },
     {
       id: 1,
       label: "תפקיד",
-      width: "16.6666667%",
+      width: "15%",
       data: "role",
     },
     {
       id: 2,
       label: "דוא״ל",
-      width: "16.6666667%",
+      width: "25.5%",
       data: "email",
       formatter: (value) => {
         return (
@@ -395,7 +381,7 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     {
       id: 3,
       label: "טלפון",
-      width: "16.6666667%",
+      width: "20%",
       data: "phone",
       formatter: (value) => {
         return (
@@ -411,13 +397,13 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     {
       id: 4,
       label: "מקבל מייל",
-      width: "16.6666667%",
+      width: "10%",
       data: "receivingReminders",
     },
     {
       id: 5,
       label: "תחנה",
-      width: "16.6666667%",
+      width: "14.5%",
       data: "station",
     },
   ];
@@ -453,6 +439,8 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       const files = client.getFilesCategory();
       const stations = client.getStations();
       const company = client.getCompany();
+      // console.log("dsads");
+
       return (
         <FileCategoryRow
           stations={stations}

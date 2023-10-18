@@ -55,7 +55,6 @@ const SelectMenu = ({
     if (disabled) return;
     if (elementRef.current) {
       elementRef.current.measure((x, y, width, height, pageX, pageY) => {
-        // todo error via android dosent accept that logic works only on ios
         setPositionHorizontal(pageX);
         setPositionVertical(pageY);
       });
@@ -108,6 +107,7 @@ const SelectMenu = ({
           return (
             <View
               ref={elementRef}
+              collapsable={false}
               style={[
                 {
                   flexDirection: "row",
@@ -185,13 +185,13 @@ const SelectMenu = ({
                         centeredViewStyling ?? "",
                         {
                           top:
-                            PositionVertical !== undefined
+                            Platform.OS == "ios"
                               ? PositionVertical + 25
-                              : 0,
+                              : PositionVertical,
                           right:
-                            positionHorizontal !== undefined
+                            Platform.OS == "ios"
                               ? positionHorizontal - 25
-                              : 0,
+                              : positionHorizontal - 20,
                         },
                       ]}
                     >

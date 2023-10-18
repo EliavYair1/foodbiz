@@ -725,6 +725,7 @@ const WorkerNewReport = () => {
           { id: userId }
         );
         if (responseClients.success) {
+          console.log("new reoport 1");
           let clients = [];
           responseClients.data.forEach((element) => {
             clients.push(new Client(element));
@@ -869,6 +870,7 @@ const WorkerNewReport = () => {
               selectWidth={240}
               optionsHeight={750}
               defaultText={"בחירה"}
+              // displayedValue={getValues().previousReports}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",
@@ -1600,8 +1602,11 @@ const WorkerNewReport = () => {
             onBackPress={async () => {
               if (currentReport) {
                 // * working
-                await saveEditedReport();
-                // console.log("back press response: ", res);
+                // await saveEditedReport();
+                const response = await saveEditedReport();
+                console.log("back press response:", response);
+              } else {
+                console.log("unable o save on back press..");
               }
             }}
           />
