@@ -122,6 +122,7 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
+  const [richTextHeight, setRichTextHeight] = useState(0);
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
     memoizedCategories?.categories?.[1]?.categories ?? []
@@ -137,6 +138,7 @@ const WorkerNewReport = () => {
     previousReports: yup.string().required("previous report is required"),
     accompany: yup.string().required("accompany is required"),
     timeOfReport: yup.string().required("date is required"),
+    newGeneralCommentTopText: yup.string(),
     reportTime: yup.string(),
     categorys: yup
       .array()
@@ -623,52 +625,48 @@ const WorkerNewReport = () => {
     : [];
   const checkedCategories =
     formData && formData.categorys?.map((id) => idToNameMap[id]);
+
   // * post request on the changes of the report edit
   const saveEditedReport = async () => {
-    // console.log(formData);
+    console.log(formData);
+
     const bodyFormData = new FormData();
-    bodyFormData.append("id", currentReport.getData("id")); //checked expected output : 19150(reportid)
-    bodyFormData.append("workerId", currentReport.getData("workerId")); //checked expected output : 4069114 (userid)
-    bodyFormData.append("clientId", currentReport.getData("clientId")); //checked expected output : 34
-    bodyFormData.append(
-      "clientStationId",
-      currentReport.getData("clientStationId")
-    ); //checked expected output : 66
-    bodyFormData.append("accompany", currentReport.getData("accompany")); //checked expected output : 66
-    bodyFormData.append("haveFine", currentReport.getData("haveFine")); //checked expected output : 66
-    bodyFormData.append(
-      "haveAmountOfItems",
-      currentReport.getData("haveAmountOfItems")
-    ); //checked expected output : 1
-    bodyFormData.append(
-      "haveSafetyGrade",
-      currentReport.getData("haveSafetyGrade")
-    ); //checked expected output : 1
-    bodyFormData.append(
-      "haveCulinaryGrade",
-      currentReport.getData("haveCulinaryGrade")
-    ); //checked expected output : 1
-    bodyFormData.append(
-      "haveNutritionGrade",
-      currentReport.getData("haveNutritionGrade")
-    ); //checked expected output : 1
+    bodyFormData.append("id", currentReport.getData("id")); // ! requierd
+    bodyFormData.append("workerId", currentReport.getData("workerId")); //! requierd 4069114 (userid)
+    bodyFormData.append("clientId", currentReport.getData("clientId")); // ! requierd
+    formData.clientStationId &&
+      bodyFormData.append("clientStationId", formData.clientStationId); //checked expected output : 66
+    formData.accompany && bodyFormData.append("accompany", formData.accompany); //checked expected output : 66
+    bodyFormData.append("haveFine", formData.haveFine); //checked expected output : 66
+
+    bodyFormData.append("haveAmountOfItems", formData.haveAmountOfItems); //checked expected output : 1
+
+    bodyFormData.append("haveSafetyGrade", formData.haveSafetyGrade); //checked expected output : 1
+
+    bodyFormData.append("haveCulinaryGrade", formData.haveCulinaryGrade); //checked expected output : 1
+
+    bodyFormData.append("haveNutritionGrade", formData.haveNutritionGrade); //checked expected output : 1
+
     bodyFormData.append(
       "haveCategoriesNameForCriticalItems",
-      currentReport.getData("haveCategoriesNameForCriticalItems")
+      formData.haveCategoriesNameForCriticalItems
     ); //checked expected output : 0
-    bodyFormData.append("reportTime", currentReport.getData("reportTime")); //checked expected output : 11
-    bodyFormData.append(
-      "newGeneralCommentTopText",
-      formData.newGeneralCommentTopText
-    );
-    bodyFormData.append("timeOfReport", currentReport.getData("timeOfReport")); //checked expected output : 12/09/2023
-    bodyFormData.append("data", []);
+    formData.reportTime &&
+      bodyFormData.append("reportTime", formData.reportTime); //checked expected output : 11
+    formData.newGeneralCommentTopText &&
+      bodyFormData.append(
+        "newGeneralCommentTopText",
+        formData.newGeneralCommentTopText
+      ); // ! requierd -can be empty
+    formData.timeOfReport &&
+      bodyFormData.append("timeOfReport", formData.timeOfReport); //checked expected output : 12/09/2023
+    bodyFormData.append("data", []); // ! requierd
 
-    bodyFormData.append("status", currentReport.getData("status")); //checked expected output : 1
+    bodyFormData.append("status", currentReport.getData("status")); // ! requierd
     bodyFormData.append(
       "newCategorys",
       ";" + formData.categorys.join("|;") + "|"
-    );
+    ); // ! requierd
 
     bodyFormData.append("file1", currentReport.getData("file1")); //checked expected output : ""
     bodyFormData.append("file2", currentReport.getData("file2")); //checked expected output : ""
@@ -1449,12 +1447,16 @@ const WorkerNewReport = () => {
                 </View>
               )}
               <ScrollView
+                onLayout={(event) => {
+                  const { height, width } = event.nativeEvent.layout;
+                  // setRichTextHeight(height);
+                }}
                 style={{
                   flex: 1,
                   overflow: "visible",
                   // height: Platform.OS === "ios" ? "100%" : "50%",
                   // minHeight: Platform.OS === "ios" ? 250 : 500,
-                  height: "100%",
+                  // height: 200,
                   minHeight: Platform.OS == "ios" ? 200 : 200,
                   direction: "rtl",
                   borderWidth: 1,
@@ -1483,8 +1485,13 @@ const WorkerNewReport = () => {
                     // shouldStartLoadWithRequest={(request) => {
                     //   return true;
                     // }}
+                    useContainer={false}
                     style={{
                       direction: "rtl",
+                      // backgroundColor: "#000",
+                      // borderWidth: 1,
+                      // borderColor: "#000",
+                      height: 200,
                     }}
                   />
                 </KeyboardAvoidingView>

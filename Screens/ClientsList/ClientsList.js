@@ -49,14 +49,14 @@ const ClientsList = () => {
     clients.slice(0, clientPerScreen)
   );
   // todo to see why the clients don't refresh well when the apply changes on edit
-  console.log(
-    "[ClientsList]clients",
-    clients.map((item) => item.reports.map((item) => item.data))
-  );
-  console.log(
-    "[ClientsList]filteredClients",
-    filteredClients.map((item) => item.reports.map((item) => item.data))
-  );
+  // console.log(
+  //   "[ClientsList]clients",
+  //   clients.map((item) => item.reports.map((item) => item.data))
+  // );
+  // console.log(
+  //   "[ClientsList]filteredClients",
+  //   filteredClients.map((item) => item.reports.map((item) => item.data))
+  // );
   const [searchActive, setSearchActive] = useState(false);
   // const [allClients, setAllClients] = useState([]);
   const [listOffset, setListOffset] = useState(clientPerScreen);

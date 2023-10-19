@@ -204,19 +204,19 @@ const ClientItem = ({ client, tablePadding, logo }) => {
     {
       id: 2,
       label: "מלווה",
-      width: "15%",
+      width: "13%",
       data: "accompany",
     },
     {
       id: 3,
       label: "ת. סקירה",
-      width: "12.5%",
+      width: "13.5%",
       data: "timeOfReport",
     },
     {
       id: 4,
       label: "ת. עדכון",
-      width: "12.5%",
+      width: "13.5%",
       data: "timeLastSave",
     },
     {
