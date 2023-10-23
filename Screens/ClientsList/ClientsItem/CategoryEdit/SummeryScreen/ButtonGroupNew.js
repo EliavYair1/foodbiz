@@ -193,12 +193,12 @@ const ButtonGroup = ({
             </TouchableOpacity>
             <TouchableOpacity
               onPress={async () => {
-                if (media !== null) {
-                  let url = `${process.env.API_BASE_URL}${selectedFileToDisplay}`;
-                  await WebBrowser.openBrowserAsync(url);
-                } else {
-                  console.log("error trying to display img");
-                }
+                // if (media !== null) {
+                let url = `${process.env.API_BASE_URL}${selectedFileToDisplay}`;
+                await WebBrowser.openBrowserAsync(url);
+                // } else {
+                // console.log("error trying to display img");
+                // }
               }}
             >
               <Text
