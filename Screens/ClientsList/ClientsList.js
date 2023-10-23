@@ -48,6 +48,15 @@ const ClientsList = () => {
   const [filteredClients, setFilteredClients] = useState(
     clients.slice(0, clientPerScreen)
   );
+  // todo to see why the clients don't refresh well when the apply changes on edit
+  // console.log(
+  //   "[ClientsList]clients",
+  //   clients.map((item) => item.reports.map((item) => item.data))
+  // );
+  // console.log(
+  //   "[ClientsList]filteredClients",
+  //   filteredClients.map((item) => item.reports.map((item) => item.data))
+  // );
   const [searchActive, setSearchActive] = useState(false);
   // const [allClients, setAllClients] = useState([]);
   const [listOffset, setListOffset] = useState(clientPerScreen);
@@ -56,6 +65,7 @@ const ClientsList = () => {
       setLoading(true);
       if (memoizedClients) {
         console.log(`hello user: ${user}`);
+        setFilteredClients(clients.slice(0, clientPerScreen));
         setLoading(false);
       } else {
         console.log("unable to fetch data");
@@ -63,7 +73,7 @@ const ClientsList = () => {
       }
     };
     fetchingClientsData();
-  }, []);
+  }, [clients, user]);
 
   // sign out button logic
   const handleSignOutUser = () => {
@@ -83,7 +93,7 @@ const ClientsList = () => {
     return company && company.includes(text);
   };
 
-  const handleRefresh = async () => {
+  const handleRefreshClients = async () => {
     setIsRefreshing(true);
 
     try {
@@ -104,7 +114,7 @@ const ClientsList = () => {
       }
     } catch (error) {
       setIsRefreshing(false);
-      console.log("[handleRefresh]error", error);
+      console.log("[handleRefreshClients]error", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -154,7 +164,7 @@ const ClientsList = () => {
               refreshControl={
                 <RefreshControl
                   refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
+                  onRefresh={handleRefreshClients}
                   colors={[colors.lightBlue]}
                   progressBackgroundColor={
                     Platform.OS === "android" ? colors.white : undefined

@@ -107,7 +107,7 @@ const SummeryScreen = () => {
       [name]: value,
     }));
     setIsSchemaValid(true);
-    console.log("isschemaValid", isSchemaValid);
+    // console.log("isschemaValid", isSchemaValid);
   };
 
   const handleSaveReport = async (navigationRoute, status) => {

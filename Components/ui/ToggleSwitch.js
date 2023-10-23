@@ -12,7 +12,7 @@ const ToggleSwitch = ({
 }) => (
   <View
     style={{
-      flexDirection: "row-reverse",
+      flexDirection: "row",
       alignItems: "center",
       gap: 11.5,
     }}
