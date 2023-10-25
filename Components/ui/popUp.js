@@ -48,6 +48,7 @@ const PopUp = ({
   selectWidth,
   stations,
   categoryId,
+  clientId,
   editFileObject = false,
 }) => {
   const [imagePicked, setImagePicked] = useState(null);
@@ -61,9 +62,10 @@ const PopUp = ({
     date: "",
     comments: "",
     imagePicker: "",
+    clientId: "",
   });
   const [isLoading, setisLoading] = useState(false);
-  const [clientId, setClientId] = useState(null);
+  // const [clientId, setClientId] = useState(null);
   const { navigateToRoute } = useScreenNavigator();
 
   const userId = useSelector((state) => state.user);
@@ -111,9 +113,6 @@ const PopUp = ({
       });
   }, [formData, schema]);
 
-  // const { name: stationName } = register("station");
-  // const { name: dateName } = register("date");
-  // console.log(errors);
   const inputRef = useRef();
   const popUpInputInformation = [
     {
@@ -272,7 +271,6 @@ const PopUp = ({
       }
     }
   };
-
   useEffect(() => {
     if (editFileObject) {
       setImagePicked(false);
@@ -281,14 +279,16 @@ const PopUp = ({
       handleFormChange("authorName", editFileObject.authorName);
       handleFormChange("date", editFileObject.date);
       handleFormChange("fileName", editFileObject.fileName);
-      handleFormChange("station", editFileObject.station_name);
+      handleFormChange("station", editFileObject.stationId);
       handleFormChange("comments", editFileObject.comments);
+      handleFormChange("clientId", clientId);
       setValue("imagePicker", editFileObject.url);
       setValue("authorName", editFileObject.authorName);
       setValue("date", editFileObject.date);
       setValue("fileName", editFileObject.fileName);
       setValue("station", editFileObject.station_name);
       setValue("comments", editFileObject.comments);
+      setValue("clientId", clientId);
     }
   }, [editFileObject]);
 
@@ -298,14 +298,14 @@ const PopUp = ({
     setImagePicked(false);
     setActiveOption(null);
   };
-
+  // console.log("station_name", editFileObject.station_name);
   const saveFileInfo = async () => {
     const bodyFormData = new FormData();
     bodyFormData.append("id", userId);
     bodyFormData.append("stationId", formData.station);
     bodyFormData.append("authorName", formData.authorName);
     bodyFormData.append("date", formData.date);
-    bodyFormData.append("comments", formData.comments);
+    formData.comments && bodyFormData.append("comments", formData.comments);
     bodyFormData.append("url", formData.imagePicker);
     bodyFormData.append("fileName", formData.fileName);
     bodyFormData.append("clientId", clientId);
@@ -313,21 +313,14 @@ const PopUp = ({
     if (editFileObject) {
       bodyFormData.append("id3", editFileObject.id);
     }
-    // console.log("bodyFormData", bodyFormData);
     const newFileSaved = await saveNewFile(bodyFormData);
-    if (newFileSaved) {
+    if (newFileSaved.message == "Ok!") {
       onCloseModalButtonPress();
       // navigateToRoute(routes.ONBOARDING.ClientsList);
     }
   };
 
   const onSubmitForm = async () => {
-    // checking if scheme is valid
-    // if (isSchemaValid) {
-    //   console.log("(onSubmitForm)formData", formData);
-    //   await saveFileInfo();
-    // }
-
     const formErrors = {};
     try {
       await schema.validate(formData, { abortEarly: false });
@@ -337,7 +330,12 @@ const PopUp = ({
       });
     }
     if (Object.keys(formErrors).length > 0) {
-      Alert.alert("Error", JSON.stringify(formErrors));
+      console.log("formErrors", formErrors);
+      Alert.alert(
+        "Error",
+
+        JSON.stringify(formErrors)
+      );
     } else {
       console.log("schema is valid");
       try {
@@ -356,6 +354,8 @@ const PopUp = ({
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
+  console.log(errors);
+
   return (
     <Modal
       visible={visible}
@@ -407,6 +407,7 @@ const PopUp = ({
                 {/* inputs */}
                 <View style={styles.inputWrapper}>
                   <Text style={styles.subtextStyle}>תחנה</Text>
+
                   <SelectMenu
                     control={control}
                     selectWidth={selectWidth}
@@ -419,23 +420,23 @@ const PopUp = ({
                     }}
                     defaultText={
                       editFileObject !== null
-                        ? editFileObject.station_name
+                        ? editFileObject?.station_name
                         : "בחירה"
                     }
                     optionsHeight={250}
-                    centeredViewStyling={
-                      {
-                        // marginRight: 0,
-                        // alignItems: "center",
-                        // marginTop: -150,
-                      }
-                    }
+                    // centeredViewStyling={
+
+                    // }
                     name={"station"}
                     errorMessage={errors.station && errors.station.message}
+                    // errorMessage={true}
                     onChange={(value) => {
                       handleFormChange("station", value.id);
-                      // console.log(value.clientId);
-                      setClientId(value.clientId);
+                      console.log("station:", value);
+                      // handleFormChange("station_name", value.company);
+                      // setClientId(value.clientId);
+                      setValue("station");
+                      trigger("station");
                     }}
                     propertyName="company"
                     returnObject={true}

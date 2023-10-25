@@ -30,12 +30,13 @@ const ButtonGroup = ({
   control,
   headerText,
   handleFormChange,
-  errors,
+  // errors,
   // imageCaptureErrMsg,
   // fileUploadErrMsg,
   imagePickedField,
-  fileField,
   cameraPhotoField,
+  fileField,
+  errorMsg,
   onImagePickChange,
   handleFileUploadCallback,
   onPhotoCapture,
@@ -48,15 +49,10 @@ const ButtonGroup = ({
   const [activeOption, setActiveOption] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFileToDisplay, setSelectedFileToDisplay] = useState(
-    existingFile == "" ? false : existingFile
+    existingFile == "" ? null : existingFile
   );
   const cameraRef = useRef(null);
-  // console.log("existingFile", existingFile, typeof existingFile);
-  // console.log(
-  //   "selectedFileToDisplay",
-  //   selectedFileToDisplay,
-  //   typeof selectedFileToDisplay
-  // );
+
   const smallDevice = windowWidth < 820;
 
   useEffect(() => {
@@ -121,7 +117,6 @@ const ButtonGroup = ({
       }
     }
   };
-
   // console.log(imagePickedField, media);
   const handleFileUpload = async () => {
     setIsLoading(true);
@@ -146,10 +141,10 @@ const ButtonGroup = ({
       setIsLoading(false);
     }
   };
-
+  // console.log("existingFile", existingFile);
   useEffect(() => {
     try {
-      if (existingFile !== "") {
+      if (selectedFileToDisplay !== null) {
         handleFormChange(fileField, existingFile);
       } else {
         // console.log("errr ");
@@ -170,7 +165,7 @@ const ButtonGroup = ({
   if (hasPermission === false) {
     return <Loader visible={isLoading} size={30} isSetting={false} />;
   }
-  console.log("selectedFileToDisplay", selectedFileToDisplay);
+  // console.log("selectedFileToDisplay", selectedFileToDisplay);
   return (
     <View style={styles.uploadGroup}>
       <Text style={styles.uploadText}>{headerText}</Text>
@@ -218,6 +213,194 @@ const ButtonGroup = ({
       ) : (
         <>
           <View style={styles.buttonGroupWrapper}>
+            <Controller
+              control={control}
+              name={fileField}
+              render={({
+                field: { onChange, onBlur, value },
+                fieldState: { error },
+              }) => {
+                // console.log("error", error);
+                return (
+                  <>
+                    <View style={{ flexDirection: "column" }}>
+                      <Button
+                        buttonStyle={[
+                          [
+                            styles.button,
+                            {
+                              borderColor: !fileSelected ? "red" : "blue",
+                            },
+                          ],
+                        ]}
+                        icon={true}
+                        buttonFunction={handleFileUpload}
+                        iconPath={uploadIcon1}
+                        iconStyle={styles.IconStyle}
+                        buttonTextStyle={styles.buttonText}
+                        buttonText={"בחירת קובץ"}
+                        buttonWidth={
+                          Platform.OS == "android"
+                            ? 245
+                            : smallDevice
+                            ? 245
+                            : 260
+                        }
+                        disableLogic={
+                          activeOption === "photo" || activeOption === "image"
+                        }
+                        // errorMessage={
+                        //   !fileSelected
+                        //     ? errors.fileField && errors.fileField.message
+                        //     : null
+                        // }
+                        // errorMessage={fileUploadErrMsg}
+                      />
+                      {error && error.message && (
+                        <HelperText type="error">{error.message}</HelperText>
+                      )}
+                    </View>
+                    <View style={{ flexDirection: "column" }}>
+                      <Button
+                        buttonStyle={[
+                          [
+                            styles.button,
+                            {
+                              color: !imagePicked
+                                ? colors.redish
+                                : colors.black,
+                            },
+                          ],
+                        ]}
+                        icon={true}
+                        buttonFunction={handleImagePick}
+                        iconPath={uploadIcon2}
+                        iconStyle={styles.IconStyle}
+                        buttonTextStyle={styles.buttonText}
+                        disableLogic={
+                          activeOption === "photo" || activeOption === "file"
+                        }
+                        buttonText={"מספריית התמונות"}
+                        buttonWidth={
+                          Platform.OS == "android"
+                            ? 245
+                            : smallDevice
+                            ? 200
+                            : 260
+                        }
+                        // errorMessage={
+                        //   !imagePicked
+                        //     ? errors.imagePickedField && errors.imagePickedField.message
+                        //     : null
+                        // }
+                        // errorMessage={uploadImageErrorMsg}
+                      />
+                    </View>
+                    <View style={{ flexDirection: "column" }}>
+                      {/* <Camera
+                      style={{
+                        borderRadius: 8,
+                        // backgroundColor: "transparent",
+                        height: 46,
+                      }}
+                      type={Camera.Constants.Type.back}
+                      // ref={cameraRef}
+                      ref={(ref) => (camera = ref)}
+                    > */}
+                      <Button
+                        buttonStyle={[
+                          styles.button,
+                          // {
+                          //   backgroundColor: "white",
+                          // },
+                        ]}
+                        icon={true}
+                        buttonFunction={handleTakePhoto}
+                        iconPath={uploadIcon3}
+                        iconStyle={styles.IconStyle}
+                        buttonTextStyle={styles.buttonText}
+                        buttonText={"מצלמה"}
+                        // buttonWidth={245}
+                        disableLogic={
+                          activeOption === "file" || activeOption === "image"
+                        }
+                        buttonWidth={
+                          Platform.OS == "android"
+                            ? 245
+                            : smallDevice
+                            ? 245
+                            : 260
+                        }
+                        // errorMessage={
+                        //   !CameraCaptureImageUrl
+                        //     ? errors.cameraPhoto && errors.cameraPhoto.message
+                        //     : null
+                        // }
+                        // errorMessage={imageCaptureErrMsg}
+                      />
+                      {/* </Camera> */}
+                    </View>
+                  </>
+                );
+              }}
+            />
+          </View>
+        </>
+      )}
+      {/* {errorMsg && (
+        <HelperText
+          type="error"
+          style={{ color: "red", fontSize: 16, fontFamily: fonts.ABold }}
+        >
+          {errorMsg}
+        </HelperText>
+      )} */}
+    </View>
+  );
+};
+
+export default ButtonGroup;
+
+const styles = StyleSheet.create({
+  uploadGroup: {
+    flexDirection: "column",
+    marginBottom: 32,
+  },
+
+  buttonGroupWrapper: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  uploadText: {
+    fontFamily: fonts.ABold,
+    fontSize: 16,
+    alignSelf: "flex-start",
+    marginBottom: 12,
+  },
+  button: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 13,
+    // width: 194,
+    gap: 8,
+  },
+  buttonText: {
+    fontFamily: fonts.ABold,
+    fontSize: 16,
+  },
+  IconStyle: {
+    width: 16,
+    height: 16,
+  },
+});
+
+// ! backup code
+
+/* 
+     <View style={styles.buttonGroupWrapper}>
             <Controller
               control={control}
               name={fileField}
@@ -327,7 +510,7 @@ const ButtonGroup = ({
                       type={Camera.Constants.Type.back}
                       // ref={cameraRef}
                       ref={(ref) => (camera = ref)}
-                    > */}
+                    > 
                     <Button
                       buttonStyle={[
                         styles.button,
@@ -355,63 +538,10 @@ const ButtonGroup = ({
                       // }
                       // errorMessage={imageCaptureErrMsg}
                     />
-                    {/* </Camera> */}
                   </View>
                 )}
               />
             </View>
           </View>
-        </>
-      )}
 
-      {/* {errors.fileField && errors.fileField.message && ( */}
-      {/* <HelperText
-        type="error"
-        style={{ backgroundColor: "red", color: colors.black }}
-      >
-        {!CameraCaptureImageUrl && !imagePicked && !fileSelected
-          ? errors.fileField && errors.fileField.message
-          : null}
-      </HelperText> */}
-      {/* )} */}
-    </View>
-  );
-};
-
-export default ButtonGroup;
-
-const styles = StyleSheet.create({
-  uploadGroup: {
-    flexDirection: "column",
-    marginBottom: 32,
-  },
-
-  buttonGroupWrapper: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  uploadText: {
-    fontFamily: fonts.ABold,
-    fontSize: 16,
-    alignSelf: "flex-start",
-    marginBottom: 12,
-  },
-  button: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 13,
-    // width: 194,
-    gap: 8,
-  },
-  buttonText: {
-    fontFamily: fonts.ABold,
-    fontSize: 16,
-  },
-  IconStyle: {
-    width: 16,
-    height: 16,
-  },
-});
+*/

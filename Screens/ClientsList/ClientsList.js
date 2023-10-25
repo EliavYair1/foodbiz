@@ -95,7 +95,6 @@ const ClientsList = () => {
 
   const handleRefreshClients = async () => {
     setIsRefreshing(true);
-
     try {
       const responseClients = await fetchData(
         process.env.API_BASE_URL + "api/clients.php",

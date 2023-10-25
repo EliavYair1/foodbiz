@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Platform,
   KeyboardAvoidingView,
 } from "react-native";
 
@@ -43,10 +44,12 @@ const SummaryDrawer = ({
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [colorSelected, setColorSelected] = useState(null);
-  const [content, setContent] = useState("");
 
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
+  );
+  const [content, setContent] = useState(
+    currentReport.getData("newGeneralCommentTopText") ?? ""
   );
 
   const haveSafetyGrade = currentReport.getData("haveSafetyGrade");
@@ -91,16 +94,17 @@ const SummaryDrawer = ({
 
   // * newGeneralCommentTopText drawer change handler
   const handleContentChange = debounce((content) => {
+    console.log("[SummaryDrawer]", content);
     setContent(content);
     onSetContent(content);
   }, 300);
 
   // * newGeneralCommentTopText color picker
-  useEffect(() => {
-    if (content == "") {
-      handleContentChange(currentReport.getData("newGeneralCommentTopText"));
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (content == "") {
+  //     handleContentChange(currentReport.getData("newGeneralCommentTopText"));
+  //   }
+  // }, []);
 
   // ! bug issue it gets undefined becouse the starcture of the data is changed in the backend
   const categoriesDataFromReport = currentReport.getCategoriesData();
@@ -303,10 +307,11 @@ const SummaryDrawer = ({
               style={{
                 flex: 1,
                 width: "100%",
-                marginTop: 20,
+                // marginTop: 20,
                 height: "100%",
                 direction: "rtl",
                 paddingHorizontal: 16,
+                paddingVertical: 20,
               }}
             >
               <View
@@ -373,37 +378,40 @@ const SummaryDrawer = ({
                 </View>
               )}
               <ScrollView
+                onLayout={(event) => {
+                  const { height, width } = event.nativeEvent.layout;
+                  // console.log(height, width);
+                  // setRichTextHeight(height);
+                }}
                 style={{
                   flex: 1,
-                  // direction: "ltr",
-                  // direction: "rtl",
                   overflow: "visible",
-                  height: "100%",
-                  minHeight: 250,
+                  // height: 200,
+                  minHeight: Platform.OS == "ios" ? 120 : 120,
+                  // height: 200,
+                  direction: "rtl",
+                  borderWidth: 1,
+                  // borderColor: "#000",
+                  borderColor: "#000",
+                  zIndex: 2,
                 }}
               >
                 <KeyboardAvoidingView
-                  behavior={Platform.OS === "ios" ? "padding" : "height"}
+                  behavior={Platform.OS == "ios" ? "height" : "height"}
                   style={{ flex: 1 }}
                 >
                   <RichEditor
                     ref={richText}
                     onChange={handleContentChange}
                     initialContentHTML={content}
-                    placeholder={
-                      "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
-                    }
-                    shouldStartLoadWithRequest={(request) => {
-                      return true;
-                    }}
+                    styleWithCSS={true}
+                    useContainer={false}
                     style={{
                       minHeight: 123,
-                      // direction: "ltr",
-                      // direction: "rtl",
+                      // minHeight: Platform.OS == "ios" ? 123 : 123,
                       borderWidth: 1,
-                      borderColor: "#eee",
-                      zIndex: 2,
-                      overflow: "visible",
+                      height: 123,
+                      // backgroundColor: "red",
                     }}
                   />
                 </KeyboardAvoidingView>

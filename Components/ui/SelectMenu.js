@@ -33,7 +33,6 @@ const SelectMenu = ({
   errorMessage,
   onChange,
   optionsHeight,
-
   centeredViewStyling,
   optionsLocation,
   propertyName = false,
@@ -48,8 +47,6 @@ const SelectMenu = ({
   const elementRef = useRef(null);
   const [positionHorizontal, setPositionHorizontal] = useState(0);
   const [PositionVertical, setPositionVertical] = useState(0);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const openMenu = () => {
     if (disabled) return;
@@ -132,11 +129,15 @@ const SelectMenu = ({
                         styles.button,
                         {
                           width: selectWidth,
-                          borderWidth: errorMessage && !selectedItem ? 2 : 1,
-                          borderColor:
-                            errorMessage && !selectedItem
-                              ? "#b3261e"
-                              : "rgba(12, 20, 48, 0.2)",
+                          // borderWidth: errorMessage && !selectedItem ? 2 : 1,
+                          // borderColor:
+                          //   errorMessage && !selectedItem
+                          //     ? "#b3261e"
+                          //     : "rgba(12, 20, 48, 0.2)",
+                          borderWidth: errorMessage ? 2 : 1,
+                          borderColor: errorMessage
+                            ? "#b3261e"
+                            : "rgba(12, 20, 48, 0.2)",
                         },
                       ]}
                     >
@@ -214,9 +215,12 @@ const SelectMenu = ({
                   type="error"
                   style={{
                     fontFamily: fonts.AMedium,
+                    fontSize: 16,
+                    color: colors.red,
                   }}
                 >
-                  {selectedItem ? null : errorMessage}
+                  {errorMessage}
+                  {/* {selectedItem ? null : errorMessage} */}
                 </HelperText>
               )}
             </View>
@@ -233,17 +237,11 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontFamily: fonts.AMedium,
     fontSize: 16,
-    // color: errorMessage && !selectedItem ? "#b3261e" : colors.black,
   },
   button: {
-    // width: selectWidth,
-    // borderWidth: errorMessage && !selectedItem ? 2 : 1,
     padding: 10,
-    // borderRadius: 4,
     justifyContent: "space-between",
     flexDirection: "row-reverse",
-    // borderColor:
-    //   errorMessage && !selectedItem ? "#b3261e" : "rgba(12, 20, 48, 0.2)",
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: "center",

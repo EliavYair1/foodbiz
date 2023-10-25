@@ -253,7 +253,7 @@ const WorkerNewReport = () => {
       setAccompanySelected(currentReport.getData("accompany"));
       setCurrentReportDate(currentReport.getData("timeOfReport"));
       setCurrentReportTime(reportTimeName);
-      // handleContentChange(currentReport.getData("newGeneralCommentTopText"));
+      handleContentChange(currentReport.getData("newGeneralCommentTopText"));
       handleCheckboxStatusChange(
         parsedArrayOfStr(currentReport.getData("categorys"))
       );
@@ -709,8 +709,9 @@ const WorkerNewReport = () => {
       console.error("Error making POST request:", error);
     }
   };
-
+  // console.log(formData);
   const postNewReport = async (formData) => {
+    console.log("postNewReport:", formData);
     try {
       setIsLoading(true);
       const response = await axios.post(
@@ -1454,8 +1455,6 @@ const WorkerNewReport = () => {
                 style={{
                   flex: 1,
                   overflow: "visible",
-                  // height: Platform.OS === "ios" ? "100%" : "50%",
-                  // minHeight: Platform.OS === "ios" ? 250 : 500,
                   // height: 200,
                   minHeight: Platform.OS == "ios" ? 200 : 200,
                   direction: "rtl",
@@ -1472,23 +1471,15 @@ const WorkerNewReport = () => {
                   <RichEditor
                     ref={richText}
                     onChange={handleContentChange}
-                    // initialContentHTML="<div></div>"
                     initialContentHTML={
                       currentReport
                         ? currentReport.getData("newGeneralCommentTopText")
                         : ""
                     }
                     styleWithCSS={true}
-                    // placeholder={
-                    //   "פה יכתב תמצית הדוח באופן אוטומטי או ידני או משולב בהתאם לבחירת הסוקר"
-                    // }
-                    // shouldStartLoadWithRequest={(request) => {
-                    //   return true;
-                    // }}
                     useContainer={false}
                     style={{
                       direction: "rtl",
-                      // backgroundColor: "#000",
                       // borderWidth: 1,
                       // borderColor: "#000",
                       height: 200,
@@ -1502,7 +1493,6 @@ const WorkerNewReport = () => {
       ],
     },
   ];
-
   // * accordion item
   const renderAccordion = ({ item }) => (
     <Accordion

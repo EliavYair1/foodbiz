@@ -22,7 +22,7 @@ import fonts from "../../../../../styles/fonts";
 import SummaryAndNote from "../innerComponents/SummaryAndNote";
 import Button from "../../../../../Components/ui/Button";
 import { FlatList } from "react-native-gesture-handler";
-import ButtonGroup from "./ButtonGroupNew";
+import ButtonGroup from "./ButtonGroup";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
@@ -60,7 +60,6 @@ const SummeryScreen = () => {
 
   const currentCategories = useSelector((state) => state.currentCategories);
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [SummeryForm, setSummeryForm] = useState({
     positiveFeedback: null,
     file1: null,
@@ -78,18 +77,11 @@ const SummeryScreen = () => {
     [globalCategories]
   );
 
-  useEffect(() => {
-    if (currentReport) {
-      handleFormChange(
-        "newGeneralCommentTopText",
-        currentReport.getData("newGeneralCommentTopText")
-      );
-    }
-  }, []);
   const schema = yup.object().shape({
     positiveFeedback: yup.string().required("Positive feedback is required"),
     file1: yup.string().required("File 1 is required"),
     file2: yup.string().required("File 2 is required"),
+    newGeneralCommentTopText: yup.string(),
   });
 
   const {
@@ -102,13 +94,23 @@ const SummeryScreen = () => {
 
   // handling the form changes
   const handleFormChange = (name, value) => {
+    console.log("handleFormChange:", name, value);
     setSummeryForm((prevFormData) => ({
       ...prevFormData,
       [name]: value,
     }));
-    setIsSchemaValid(true);
+    // setIsSchemaValid(true);
     // console.log("isschemaValid", isSchemaValid);
   };
+
+  useEffect(() => {
+    if (currentReport) {
+      handleFormChange(
+        "newGeneralCommentTopText",
+        currentReport.getData("newGeneralCommentTopText")
+      );
+    }
+  }, []);
 
   const handleSaveReport = async (navigationRoute, status) => {
     const bodyFormData = new FormData();
@@ -144,9 +146,12 @@ const SummeryScreen = () => {
   useEffect(() => {
     schema
       .validate(SummeryForm)
-      .then(() => setIsSchemaValid(true))
+      .then((res) => {
+        console.log("res", res);
+        setIsSchemaValid(true);
+      })
       .catch((err) => {
-        // console.log("err:", err);
+        console.log("err:", err);
         setIsSchemaValid(false);
       });
   }, [SummeryForm, schema]);
@@ -196,6 +201,7 @@ const SummeryScreen = () => {
 
   const sendForManagerApproval = async () => {
     const formErrors = {};
+
     try {
       await schema.validate(SummeryForm, { abortEarly: false });
     } catch (err) {
@@ -215,7 +221,10 @@ const SummeryScreen = () => {
       }
     }
   };
-  console.log(currentReport.getData("file1"));
+  // console.log(currentReport.getData("file1"));
+
+  console.log("file1", SummeryForm.file1);
+  console.log("file2", SummeryForm.file2);
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
@@ -293,14 +302,12 @@ const SummeryScreen = () => {
               control={control}
               headerText={"העלאת קבצים 1"}
               handleFormChange={handleFormChange}
-              errors={errors}
+              // errors={errors}
               fileField={"file1"}
-              // loading={PostLoading}
               handleFileUploadCallback={(value) => {
                 // console.log("here", value);
                 handleFormChange("file1", value);
               }}
-              imagePickedField={"imagePicked"}
               onImagePickChange={(value) => {
                 handleFormChange("file1", value);
               }}
@@ -308,17 +315,21 @@ const SummeryScreen = () => {
                 // console.log(value);
                 handleFormChange("file1", value);
               }}
-              cameraPhotoField={"cameraPhoto"}
               existingFile={currentReport.getData("file1")}
               // existingFile={false}
+
+              errorMsg={errors.file1 && errors.file1.message}
             />
+
+            {errors.file1 && (
+              <HelperText type="error">{errors.file1.message}</HelperText>
+            )}
 
             <ButtonGroup
               control={control}
               headerText={"העלאת קבצים 2"}
               handleFormChange={handleFormChange}
-              imagePickedField={"imagePicked2"}
-              errors={errors}
+              // errors={errors}
               onImagePickChange={(value) => handleFormChange("file2", value)}
               handleFileUploadCallback={(value) => {
                 // console.log("here", value);
@@ -328,13 +339,14 @@ const SummeryScreen = () => {
                 // console.log(value);
                 handleFormChange("file2", value);
               }}
-              // imageCaptureErrMsg={
-              //   errors.cameraPhoto2 && errors.cameraPhoto2.message
-              // }
               fileField={"file2"}
-              cameraPhotoField={"cameraPhoto2"}
               existingFile={currentReport.getData("file2")}
+              errorMsg={errors.file2 && errors.file2.message}
             />
+
+            {errors.file2 && (
+              <HelperText type="error">{errors.file2.message}</HelperText>
+            )}
           </View>
 
           <SummaryAndNote

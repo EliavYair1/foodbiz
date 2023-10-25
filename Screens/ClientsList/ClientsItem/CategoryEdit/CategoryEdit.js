@@ -36,6 +36,9 @@ import {
 import SummaryDrawer from "./innerComponents/SummeryDrawer";
 import { setCurrentCategories } from "../../../../store/redux/reducers/getCurrentCategories";
 import useSaveCurrentScreenData from "../../../../Hooks/useSaveReport";
+import FetchDataService from "../../../../Services/FetchDataService";
+import { setClients } from "../../../../store/redux/reducers/clientSlice";
+import Client from "../../../../Components/modals/client";
 const CategoryEdit = () => {
   // console.log("EditExistingReport");
   const { navigateToRoute } = useScreenNavigator();
@@ -43,7 +46,7 @@ const CategoryEdit = () => {
   const dispatch = useDispatch();
   const currentStation = useSelector((state) => state.currentStation);
   // const categories = useSelector((state) => state.categories);
-
+  const { fetchData } = FetchDataService();
   const currentSubCategoryId = useSelector((state) => state.currentCategory);
   const currentCategories = useSelector((state) => state.currentCategories);
   const globalCategories = useSelector((state) => state.globalCategories);
@@ -53,6 +56,7 @@ const CategoryEdit = () => {
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
+  const userId = useSelector((state) => state.user);
   const initialIndexOfSubCategory = useSelector((state) => state.categoryIndex);
 
   // console.log("to b", initialIndexOfSubCategory);
@@ -440,7 +444,7 @@ const CategoryEdit = () => {
       saveReport();
     }
   };
-
+  console.log("categoryEdit", content);
   // * post request on the changes of the report edit
   const saveReport = async () => {
     const targetId = currentCategories.categories[currentCategoryIndex];
@@ -480,9 +484,23 @@ const CategoryEdit = () => {
         let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
         currentReport.setData("data", updatedValues);
         currentReport.setData("newGeneralCommentTopText", content);
+        const responseClients = await fetchData(
+          process.env.API_BASE_URL + "api/clients.php",
+          { id: userId }
+        );
+        if (responseClients.success) {
+          let clients = [];
+          responseClients.data.forEach((element) => {
+            clients.push(new Client(element));
+          });
+          dispatch(setClients({ clients: clients }));
+          console.log("client refreshed");
+        }
         dispatch(getCurrentReport(currentReport));
+
         setIsLoading(false);
         console.log("[CategoryEdit]success saving report");
+        return response.data;
       }
     } catch (error) {
       setIsLoading(false);
@@ -570,8 +588,16 @@ const CategoryEdit = () => {
             marginBottom: 16,
             marginTop: 16,
           }}
-          onBackPress={() => {
-            debounce(saveReport(), 300);
+          onBackPress={async () => {
+            setIsLoading(true);
+            try {
+              setIsLoading(false);
+              const res = await saveReport();
+              console.log("response", res);
+            } catch (error) {
+              setIsLoading(false);
+              console.log("err", error);
+            }
           }}
         />
         <View style={styles.headerWrapper}>

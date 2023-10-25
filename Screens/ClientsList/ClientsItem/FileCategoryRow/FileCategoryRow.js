@@ -49,7 +49,7 @@ const FileCategoryRow = ({
   const [fileObj, setFileObj] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedItemName, setSelectedItemName] = useState(null);
-
+  const [clientId, setClientId] = useState(null);
   useMemo(() => {
     if (categoryId) {
       const selectedItem = items.find(
@@ -176,6 +176,7 @@ const FileCategoryRow = ({
           action: (file) => {
             console.log("Edit_icon", file.getData("url"));
             console.log("file", file.data);
+            setClientId(file.data.clientId);
             setIsEditFile(true);
             setFileObj(file.data);
             setIsEditFile(true);
@@ -318,6 +319,7 @@ const FileCategoryRow = ({
           animationType={"fade"}
           icon1={libraryIcon}
           icon2={CameraIcon}
+          clientId={clientId}
         />
       )}
     </View>
