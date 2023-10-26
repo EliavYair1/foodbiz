@@ -8,24 +8,18 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
-  TextInput,
 } from "react-native";
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import ScreenWrapper from "../../../../../utiles/ScreenWrapper";
 import GoBackNavigator from "../../../../../utiles/GoBackNavigator";
 import Header from "../../../../../Components/ui/Header";
 import { LinearGradient } from "expo-linear-gradient";
-import Drawer from "../../../../../Components/ui/Drawer";
-import FileIcon from "../../../../../assets/icons/iconImgs/FileIcon.png";
-import colors from "../../../../../styles/colors";
 import fonts from "../../../../../styles/fonts";
 import SummaryAndNote from "../innerComponents/SummaryAndNote";
-import Button from "../../../../../Components/ui/Button";
-import { FlatList } from "react-native-gesture-handler";
 import ButtonGroup from "./ButtonGroup";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import ReportCard from "./ReportCard";
 import { useDispatch, useSelector } from "react-redux";
 import { HelperText } from "react-native-paper";
@@ -37,12 +31,10 @@ import Loader from "../../../../../utiles/Loader";
 import ModalUi from "../../../../../Components/ui/ModalUi";
 import { setIndex } from "../../../../../store/redux/reducers/indexSlice";
 import routes from "../../../../../Navigation/routes";
-import * as WebBrowser from "expo-web-browser";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import useSaveCurrentScreenData from "../../../../../Hooks/useSaveReport";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
-  const { navigateTogoBack, navigateToRoute } = useScreenNavigator();
+  const { navigateToRoute } = useScreenNavigator();
   const dispatch = useDispatch();
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
@@ -99,8 +91,6 @@ const SummeryScreen = () => {
       ...prevFormData,
       [name]: value,
     }));
-    // setIsSchemaValid(true);
-    // console.log("isschemaValid", isSchemaValid);
   };
 
   useEffect(() => {
@@ -108,6 +98,10 @@ const SummeryScreen = () => {
       handleFormChange(
         "newGeneralCommentTopText",
         currentReport.getData("newGeneralCommentTopText")
+      );
+      handleFormChange(
+        "positiveFeedback",
+        currentReport.getData("positiveFeedback")
       );
     }
   }, []);
@@ -199,32 +193,49 @@ const SummeryScreen = () => {
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
   };
 
+  const formatErrors = (formErrors) => {
+    const errorFields = Object.keys(formErrors);
+    if (errorFields.length === 0) {
+      return "No errors found.";
+    }
+
+    const errorMessages = errorFields.map((field) => formErrors[field]);
+    return `${errorMessages.join(" and ")}`;
+  };
+
   const sendForManagerApproval = async () => {
     const formErrors = {};
-
     try {
       await schema.validate(SummeryForm, { abortEarly: false });
-    } catch (err) {
-      err.inner.forEach((validationError) => {
-        formErrors[validationError.path] = validationError.message;
-      });
-    }
-    if (Object.keys(formErrors).length > 0) {
-      Alert.alert("Error", JSON.stringify(formErrors));
-    } else {
       console.log("schema is valid");
+      // Proceed with form submission
+      await handleSaveReport(routes.ONBOARDING.ClientsList, 2);
+      console.log("object");
+    } catch (error) {
+      if (error.name === "ValidationError") {
+        error.inner.forEach((validationError) => {
+          formErrors[validationError.path] = validationError.message;
+        });
 
-      try {
-        await handleSaveReport(routes.ONBOARDING.ClientsList, 2);
-      } catch (error) {
-        console.error("Error sending for manager approval:", error);
+        const formattedErrors = formatErrors(formErrors);
+
+        Alert.alert(
+          "Error",
+          formattedErrors,
+          [
+            {
+              text: "OK",
+              style: "cancel",
+            },
+          ],
+          { cancelable: true }
+        );
+      } else {
+        console.error("Error posting data:", error);
       }
     }
   };
-  // console.log(currentReport.getData("file1"));
 
-  console.log("file1", SummeryForm.file1);
-  console.log("file2", SummeryForm.file2);
   return (
     <ScreenWrapper edges={[]} wrapperStyle={{}}>
       <GoBackNavigator
@@ -272,9 +283,9 @@ const SummeryScreen = () => {
                   activeOutlineColor={"grey"}
                   outlineColor={"grey"}
                   mode={"outlined"}
-                  rules={{
-                    required: "positiveFeedback is required",
-                  }}
+                  // rules={{
+                  //   required: "positiveFeedback is required",
+                  // }}
                   inputStyle={{
                     backgroundColor: "transparent",
                     height: 150,

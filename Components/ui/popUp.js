@@ -358,13 +358,13 @@ const PopUp = ({
           { cancelable: true }
         );
       } else {
-        console.log("schema is valid");
-        try {
-          await saveFileInfo();
-          console.log("object");
-        } catch (error) {
-          console.error("Error posting data:", error);
-        }
+        console.error("Error posting data:", error);
+        // try {
+        //   await saveFileInfo();
+        //   console.log("object");
+        // } catch (error) {
+        //   console.error("Error posting data:", error);
+        // }
       }
     }
   };

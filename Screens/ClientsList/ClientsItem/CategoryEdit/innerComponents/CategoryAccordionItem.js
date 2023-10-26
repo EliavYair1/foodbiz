@@ -521,27 +521,43 @@ const CategoryAccordionItem = ({
           <View style={styles.headerWrapper}>
             <Text style={styles.header}>תמונות:</Text>
 
-            {imageLoader ? (
-              <Loader
-                isSetting={false}
-                visible={imageLoader}
-                loaderStyling={{
-                  width: 12,
-                  height: 12,
-                }}
-                loaderWrapperStyle={{
-                  zIndex: 1,
-                  alignSelf: "center",
-                  justifyContent: "center",
-                }}
-                color={colors.black}
-              />
-            ) : (
-              <TouchableOpacity onPress={showImagePickerOptions}>
-                <Text style={styles.ImageUploadText}>הוספת תמונה</Text>
-              </TouchableOpacity>
-            )}
-            <ScrollView horizontal>
+            <View>
+              {imageLoader ? (
+                <Loader
+                  isSetting={false}
+                  visible={imageLoader}
+                  loaderStyling={{
+                    flex: 1,
+                    width: 12,
+                    height: 12,
+                  }}
+                  loaderWrapperStyle={{
+                    zIndex: 1,
+                    flex: 1,
+                    alignSelf: "flex-start",
+                    // justifyContent: "flex-start",
+                    position: "relative",
+                    bottom: 10,
+                  }}
+                  color={colors.black}
+                />
+              ) : (
+                <TouchableOpacity onPress={showImagePickerOptions}>
+                  <Text style={styles.ImageUploadText}>הוספת תמונה</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <ScrollView
+              horizontal
+              contentContainerStyle={{
+                flex: 1,
+                justifyContent: "flex-start",
+                // alignItems: "flex-start",
+                // alignSelf: "flex-start",
+                // textAlign: "left",
+              }}
+            >
               {images.map((image, index) => {
                 console.log("imagggge", image);
                 if (image !== "") {
@@ -803,7 +819,8 @@ const styles = StyleSheet.create({
   },
   headerWrapper: {
     flexDirection: "row",
-    height: 50,
+    height: 70,
+    alignItems: "flex-start",
   },
   uploadedPhoto: {
     width: 40,

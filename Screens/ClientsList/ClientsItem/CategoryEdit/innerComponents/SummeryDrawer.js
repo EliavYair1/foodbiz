@@ -68,8 +68,6 @@ const SummaryDrawer = ({
     setColorSelected(!colorSelected);
     console.log("Custom action triggered");
   };
-  const [text, setText] = useState("");
-  const textInputRef = useRef(null);
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;

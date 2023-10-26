@@ -193,6 +193,7 @@ const CategoryEdit = () => {
       (category) =>
         category.id == currentCategories.categories[currentCategoryIndex]
     );
+    console.log(relevantData);
     return relevantData.items;
   }, [currentCategoryIndex]);
   // console.log("findRelevantReportData:", findRelevantReportData);
