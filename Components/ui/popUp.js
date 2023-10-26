@@ -72,7 +72,7 @@ const PopUp = ({
   const { saveNewFile } = useSaveNewFile(onCloseModal);
   const [activeOption, setActiveOption] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-
+  console.log(formData);
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -435,7 +435,7 @@ const PopUp = ({
                       console.log("station:", value);
                       // handleFormChange("station_name", value.company);
                       // setClientId(value.clientId);
-                      setValue("station");
+                      setValue("station", value.company);
                       trigger("station");
                     }}
                     propertyName="company"
