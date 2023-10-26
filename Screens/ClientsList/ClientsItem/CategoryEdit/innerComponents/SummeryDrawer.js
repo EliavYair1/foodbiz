@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  TextInput,
 } from "react-native";
 
 import fonts from "../../../../../styles/fonts";
@@ -67,7 +68,8 @@ const SummaryDrawer = ({
     setColorSelected(!colorSelected);
     console.log("Custom action triggered");
   };
-
+  const [text, setText] = useState("");
+  const textInputRef = useRef(null);
   // * Simulating your debounce function
   const debounce = (fn, delay) => {
     let timer;
@@ -352,7 +354,7 @@ const SummaryDrawer = ({
                     direction: "ltr",
                     width: 200,
                     position: "absolute",
-                    top: 20,
+                    top: -15,
                     zIndex: 3,
                   }}
                 >
@@ -362,7 +364,7 @@ const SummaryDrawer = ({
                       richText.current?.setForeColor(color);
                     }}
                     sliderSize={20}
-                    thumbSize={60}
+                    thumbSize={40}
                     gapSize={5}
                     // noSnap={true}
                     color="#000000"
@@ -377,45 +379,34 @@ const SummaryDrawer = ({
                   />
                 </View>
               )}
-              <ScrollView
-                onLayout={(event) => {
-                  const { height, width } = event.nativeEvent.layout;
-                  // console.log(height, width);
-                  // setRichTextHeight(height);
-                }}
+
+              <KeyboardAvoidingView
+                behavior={Platform.OS == "ios" ? "height" : "padding"}
                 style={{
                   flex: 1,
-                  overflow: "visible",
-                  // height: 200,
-                  minHeight: Platform.OS == "ios" ? 120 : 120,
-                  // height: 200,
-                  direction: "rtl",
                   borderWidth: 1,
-                  // borderColor: "#000",
-                  borderColor: "#000",
-                  zIndex: 2,
+                  overflow: "visible",
+                  direction: "rtl",
+                  borderColor: "#eee",
+                  textAlign: "right",
                 }}
               >
-                <KeyboardAvoidingView
-                  behavior={Platform.OS == "ios" ? "height" : "height"}
-                  style={{ flex: 1 }}
-                >
-                  <RichEditor
-                    ref={richText}
-                    onChange={handleContentChange}
-                    initialContentHTML={content}
-                    styleWithCSS={true}
-                    useContainer={false}
-                    style={{
-                      minHeight: 123,
-                      // minHeight: Platform.OS == "ios" ? 123 : 123,
-                      borderWidth: 1,
-                      height: 123,
-                      // backgroundColor: "red",
-                    }}
-                  />
-                </KeyboardAvoidingView>
-              </ScrollView>
+                <RichEditor
+                  ref={richText}
+                  onChange={handleContentChange}
+                  initialContentHTML={content}
+                  styleWithCSS={true}
+                  useContainer={false}
+                  style={{
+                    minHeight: 123,
+                    // minHeight: Platform.OS == "ios" ? 123 : 123,
+                    // borderWidth: 1,
+                    height: 123,
+                    zIndex: 5,
+                    textAlign: "right",
+                  }}
+                />
+              </KeyboardAvoidingView>
             </View>
           }
         />,

@@ -296,8 +296,6 @@ const PopUp = ({
     setImagePicked(false);
     setActiveOption(null);
   };
-  console.log(formData);
-  console.log(clientId);
   // console.log("station_name", editFileObject.station_name);
   const saveFileInfo = async () => {
     const bodyFormData = new FormData();
@@ -370,32 +368,6 @@ const PopUp = ({
       }
     }
   };
-  // const onSubmitForm = async () => {
-  //   const formErrors = {};
-  //   try {
-  //     await schema.validate(formData, { abortEarly: false });
-  //   } catch (err) {
-  //     err.inner.forEach((validationError) => {
-  //       formErrors[validationError.path] = validationError.message;
-  //     });
-  //   }
-  //   if (Object.keys(formErrors).length > 0) {
-  //     console.log("formErrors", formErrors);
-  //     Alert.alert(
-  //       "Error",
-
-  //       JSON.stringify(formErrors)
-  //     );
-  //   } else {
-  //     console.log("schema is valid");
-  //     try {
-  //       await saveFileInfo();
-  //       console.log("object");
-  //     } catch (error) {
-  //       console.error("Error posting data:", error);
-  //     }
-  //   }
-  // };
 
   if (hasPermission === null) {
     return <View />;
@@ -404,7 +376,7 @@ const PopUp = ({
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
-  console.log(errors);
+
   return (
     <Modal
       visible={visible}
