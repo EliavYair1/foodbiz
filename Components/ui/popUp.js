@@ -65,14 +65,12 @@ const PopUp = ({
     clientId: "",
   });
   const [isLoading, setisLoading] = useState(false);
-  // const [clientId, setClientId] = useState(null);
-  const { navigateToRoute } = useScreenNavigator();
-
+  const [selectorClientId, setSelectorClientId] = useState(false);
   const userId = useSelector((state) => state.user);
   const { saveNewFile } = useSaveNewFile(onCloseModal);
   const [activeOption, setActiveOption] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
-  console.log(formData);
+
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -298,6 +296,8 @@ const PopUp = ({
     setImagePicked(false);
     setActiveOption(null);
   };
+  console.log(formData);
+  console.log(clientId);
   // console.log("station_name", editFileObject.station_name);
   const saveFileInfo = async () => {
     const bodyFormData = new FormData();
@@ -308,44 +308,94 @@ const PopUp = ({
     formData.comments && bodyFormData.append("comments", formData.comments);
     bodyFormData.append("url", formData.imagePicker);
     bodyFormData.append("fileName", formData.fileName);
-    bodyFormData.append("clientId", clientId);
+    clientId == null
+      ? bodyFormData.append("clientId", selectorClientId)
+      : bodyFormData.append("clientId", clientId);
     bodyFormData.append("categoryId", categoryId);
     if (editFileObject) {
       bodyFormData.append("id3", editFileObject.id);
     }
+    console.log(bodyFormData);
     const newFileSaved = await saveNewFile(bodyFormData);
     if (newFileSaved.message == "Ok!") {
       onCloseModalButtonPress();
       // navigateToRoute(routes.ONBOARDING.ClientsList);
     }
   };
+  // * validate and display generic errors
+  const formatErrors = (formErrors) => {
+    const errorFields = Object.keys(formErrors);
+    if (errorFields.length === 0) {
+      return "No errors found.";
+    }
 
+    const errorMessages = errorFields.map((field) => formErrors[field]);
+    return `The following errors occurred: ${errorMessages.join(" and ")}`;
+  };
   const onSubmitForm = async () => {
     const formErrors = {};
     try {
       await schema.validate(formData, { abortEarly: false });
-    } catch (err) {
-      err.inner.forEach((validationError) => {
-        formErrors[validationError.path] = validationError.message;
-      });
-    }
-    if (Object.keys(formErrors).length > 0) {
-      console.log("formErrors", formErrors);
-      Alert.alert(
-        "Error",
-
-        JSON.stringify(formErrors)
-      );
-    } else {
       console.log("schema is valid");
-      try {
-        await saveFileInfo();
-        console.log("object");
-      } catch (error) {
-        console.error("Error posting data:", error);
+      // Proceed with form submission
+      await saveFileInfo();
+      console.log("object");
+    } catch (error) {
+      if (error.name === "ValidationError") {
+        error.inner.forEach((validationError) => {
+          formErrors[validationError.path] = validationError.message;
+        });
+
+        const formattedErrors = formatErrors(formErrors);
+
+        Alert.alert(
+          "Error",
+          formattedErrors,
+          [
+            {
+              text: "OK",
+              style: "cancel",
+            },
+          ],
+          { cancelable: true }
+        );
+      } else {
+        console.log("schema is valid");
+        try {
+          await saveFileInfo();
+          console.log("object");
+        } catch (error) {
+          console.error("Error posting data:", error);
+        }
       }
     }
   };
+  // const onSubmitForm = async () => {
+  //   const formErrors = {};
+  //   try {
+  //     await schema.validate(formData, { abortEarly: false });
+  //   } catch (err) {
+  //     err.inner.forEach((validationError) => {
+  //       formErrors[validationError.path] = validationError.message;
+  //     });
+  //   }
+  //   if (Object.keys(formErrors).length > 0) {
+  //     console.log("formErrors", formErrors);
+  //     Alert.alert(
+  //       "Error",
+
+  //       JSON.stringify(formErrors)
+  //     );
+  //   } else {
+  //     console.log("schema is valid");
+  //     try {
+  //       await saveFileInfo();
+  //       console.log("object");
+  //     } catch (error) {
+  //       console.error("Error posting data:", error);
+  //     }
+  //   }
+  // };
 
   if (hasPermission === null) {
     return <View />;
@@ -355,7 +405,6 @@ const PopUp = ({
     return <Text>No access to camera</Text>;
   }
   console.log(errors);
-
   return (
     <Modal
       visible={visible}
@@ -434,7 +483,7 @@ const PopUp = ({
                       handleFormChange("station", value.id);
                       console.log("station:", value);
                       // handleFormChange("station_name", value.company);
-                      // setClientId(value.clientId);
+                      setSelectorClientId(value.clientId);
                       setValue("station", value.company);
                       trigger("station");
                     }}
