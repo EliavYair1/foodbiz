@@ -1,47 +1,21 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  SectionList,
-  Platform,
-} from "react-native";
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import { View, StyleSheet } from "react-native";
+import React, { useEffect, useState, useMemo } from "react";
 import Dashboard from "../../Components/ui/Dashboard";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
 // import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import colors from "../../styles/colors";
 import Loader from "../../utiles/Loader";
-import ClientItem from "./ClientsItem/ClientItem";
-import { useDispatch, useSelector } from "react-redux";
-import fonts from "../../styles/fonts";
-import useScreenNavigator from "../../Hooks/useScreenNavigator";
-import { removeData } from "../../Services/StorageService";
-import routes from "../../Navigation/routes";
-import { setUser } from "../../store/redux/reducers/userSlice";
-import uuid from "uuid-random";
-import FetchDataService from "../../Services/FetchDataService";
+import { useSelector } from "react-redux";
 import Client from "../../Components/modals/client";
-import { setClients } from "../../store/redux/reducers/clientSlice";
 import ClientListComponent from "./ClientListComponent/ClientListComponent";
+import ClientSignOut from "./ClientSignOut/ClientSignOut";
 
 const ClientsList = () => {
   const clientPerScreen = 10;
   const clients = useSelector((state) => state.clients);
   const user = useSelector((state) => state.user);
-  const { navigateToRoute } = useScreenNavigator();
-  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-
   const memoizedClients = useMemo(() => clients, [clients]);
-
   const [filteredClients, setFilteredClients] = useState(
     clients.slice(0, clientPerScreen)
   );
@@ -62,13 +36,6 @@ const ClientsList = () => {
     fetchingClientsData();
   }, [clients, user]);
 
-  // sign out button logic
-  const handleSignOutUser = () => {
-    removeData("user_id");
-    dispatch(setUser(null));
-    navigateToRoute(routes.ONBOARDING.Login);
-  };
-
   // search bar filtering
   const handleSearch = (filteredClients) => {
     setFilteredClients(filteredClients.slice(0, clientPerScreen));
@@ -78,6 +45,11 @@ const ClientsList = () => {
     setSearchActive(text !== "");
     const company = item.company;
     return company && company.includes(text);
+  };
+
+  const toggleLoading = (status) => {
+    // console.log("[ClientsList]loading...", status);
+    setLoading(status);
   };
 
   return (
@@ -108,34 +80,12 @@ const ClientsList = () => {
               searchActive={searchActive}
               clientPerScreen={clientPerScreen}
               user={user}
+              toggleLoading={toggleLoading}
             />
           </>
         )}
       </View>
-
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#EBF5FF",
-          width: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-        onPress={() => {
-          handleSignOutUser();
-        }}
-      >
-        <Text
-          style={{
-            alignSelf: "center",
-            textDecorationLine: "underline",
-            paddingVertical: 12,
-            fontSize: 16,
-            fontFamily: fonts.ARegular,
-          }}
-        >
-          התנתק
-        </Text>
-      </TouchableOpacity>
+      <ClientSignOut />
     </ScreenWrapper>
   );
 };

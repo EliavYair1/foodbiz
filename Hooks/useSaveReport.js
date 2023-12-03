@@ -2,15 +2,12 @@ import { useState } from "react";
 import axios from "axios";
 import "@env";
 import { Alert } from "react-native";
-import routes from "../Navigation/routes";
-import useScreenNavigator from "./useScreenNavigator";
 import { setClients } from "../store/redux/reducers/clientSlice";
 import { useDispatch, useSelector } from "react-redux";
 import FetchDataService from "../Services/FetchDataService";
 import Client from "../Components/modals/client";
 const useSaveCurrentScreenData = () => {
   const [PostLoading, setPostLoading] = useState(false);
-  const { navigateToRoute } = useScreenNavigator();
   const dispatch = useDispatch();
   const { fetchData } = FetchDataService();
   const userId = useSelector((state) => state.user);

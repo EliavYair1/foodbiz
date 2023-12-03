@@ -18,7 +18,6 @@ import fonts from "../../styles/fonts";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../styles/colors";
 import Accordion from "../../Components/ui/Accordion";
-import { FlatList } from "react-native-gesture-handler";
 import SelectMenu from "../../Components/ui/SelectMenu";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -40,7 +39,6 @@ import ClientItemArrowOpen from "../../assets/imgs/accodionOpenIndicatorBlack.pn
 import onDragIcon from "../../assets/imgs/onDragIcon.png";
 import { debounce } from "lodash";
 import "@env";
-import axios from "axios";
 import CheckboxItem from "./CheckboxItem/CheckboxItem";
 import Loader from "../../utiles/Loader";
 import { HelperText } from "react-native-paper";
@@ -48,28 +46,27 @@ import Drawer from "../../Components/ui/Drawer";
 import routes from "../../Navigation/routes";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
 import { setCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
-import { setCurrentReport } from "../../store/redux/reducers/getCurrentReport";
-import "@env";
 import Header from "../../Components/ui/Header";
 import GoBackNavigator from "../../utiles/GoBackNavigator";
-import Client from "../../Components/modals/client";
-import { setClients } from "../../store/redux/reducers/clientSlice";
-import FetchDataService from "../../Services/FetchDataService";
-import Report from "../../Components/modals/report";
 import ModalUi from "../../Components/ui/ModalUi";
 import { setIndex } from "../../store/redux/reducers/indexSlice";
 import {
   setCategoryNamesSubHeaders,
   setMajorCategoryHeaders,
 } from "../../store/redux/reducers/summerySlice";
-
+import useSaveEditedReport from "../../Hooks/useSaveEditedReport";
+import usePostNewReport from "../../Hooks/usePostNewReport";
+import AccordionContentList from "./AccordionContent/AccordionContentList";
+import { accordionCategoriesItem } from "./AccordionCategoriesItem/AccordionCategoriesItem";
+// import AccordionCategoriesItem from "./AccordionCategoriesItem/AccordionCategoriesItem";
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
-  const { fetchData } = FetchDataService();
   const richText = useRef();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const { navigateToRoute } = useScreenNavigator();
+  const saveEditedReport = useSaveEditedReport();
+  const { postNewReport } = usePostNewReport();
   const [colorSelected, setColorSelected] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -82,7 +79,6 @@ const WorkerNewReport = () => {
   const userId = useSelector((state) => state.user);
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
   const globalCategories = useSelector((state) => state.globalCategories);
-  let clients = useSelector((state) => state.clients);
 
   const memoizedCategories = useMemo(
     () => globalCategories,
@@ -122,7 +118,7 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
   });
   const [currentReportDate, setCurrentReportDate] = useState(null);
-  const [richTextHeight, setRichTextHeight] = useState(0);
+  // const [richTextHeight, setRichTextHeight] = useState(0);
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
     memoizedCategories?.categories?.[1]?.categories ?? []
@@ -174,8 +170,7 @@ const WorkerNewReport = () => {
         );
       }),
   });
-  // console.log(`switchStates:`, switchStates);
-  // console.log(`formData:`, formData);
+
   const {
     control,
     handleSubmit,
@@ -187,6 +182,7 @@ const WorkerNewReport = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   useEffect(() => {
     schema
       .validate(formData)
@@ -198,6 +194,7 @@ const WorkerNewReport = () => {
     setValue("clientId", currentClient?.id);
   }, [formData, schema]);
 
+  // * modal major category reorder by type
   function sortSubCategoriesByType(data, ids) {
     const type1Ids = [];
     const type2Ids = [];
@@ -230,12 +227,14 @@ const WorkerNewReport = () => {
 
     return result;
   }
+
   const findReportTimeName = (data) => {
     const reportTimeId = currentReport?.getReportTime();
 
     const reportTime = data.find((item) => item.id === reportTimeId);
     return reportTime ? reportTime.name : "";
   };
+
   //  * edit mode existing current report initialization
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
@@ -261,41 +260,45 @@ const WorkerNewReport = () => {
   }, [currentReport]);
 
   // * inner accordionCategoriesItem
-  function accordionCategoriesItem(names, categoryName) {
-    // console.log("names", names);
-    return names.map((item, index) => {
-      // console.log("checkboxStatus", checkboxStatus);
-      const checkboxKey = `${categoryName}${index + 1}`;
-      const categoryStatus = checkboxStatus[`${categoryName}Status`];
-      const checkboxValue =
-        categoryStatus && Array.isArray(categoryStatus)
-          ? categoryStatus.includes(parseInt(item.id))
-          : false;
-      // console.log("checkboxValue:", checkboxValue);
+  // function accordionCategoriesItem(names, categoryName) {
+  //   return names.map((item, index) => {
+  //     const checkboxKey = `${categoryName}${index + 1}`;
+  //     const categoryStatus = checkboxStatus[`${categoryName}Status`];
+  //     const checkboxValue =
+  //       categoryStatus && Array.isArray(categoryStatus)
+  //         ? categoryStatus.includes(parseInt(item.id))
+  //         : false;
+  //     return {
+  //       id: item.id,
+  //       text: (
+  //         <View>
+  //           <CheckboxItem
+  //             key={checkboxKey + checkboxValue}
+  //             label={checkboxKey}
+  //             checkboxItemText={item.name}
+  //             checked={checkboxValue}
+  //             handleChange={(checked) => {
+  //               const updatedStatus = handleCategoriesCheckboxesToggle(
+  //                 checkboxStatus,
+  //                 `${categoryName}Status`,
+  //                 checked,
+  //                 item.id
+  //               );
 
-      return {
-        id: item.id,
-        text: (
-          <View>
-            <CheckboxItem
-              key={checkboxKey + checkboxValue}
-              label={checkboxKey}
-              checkboxItemText={item.name}
-              checked={checkboxValue}
-              handleChange={(checked) => {
-                handleCategoriesCheckboxesToggle(
-                  `${categoryName}Status`,
-                  checked,
-                  item.id
-                );
-              }}
-            />
-          </View>
-        ),
-        boxItem: <Image style={{ width: 9, height: 14 }} source={onDragIcon} />,
-      };
-    });
-  }
+  //               setCheckboxStatus(updatedStatus);
+  //               // handleCategoriesCheckboxesToggle(
+  //               //   `${categoryName}Status`,
+  //               //   checked,
+  //               //   item.id
+  //               // );
+  //             }}
+  //           />
+  //         </View>
+  //       ),
+  //       boxItem: <Image style={{ width: 9, height: 14 }} source={onDragIcon} />,
+  //     };
+  //   });
+  // }
 
   // * checkbox counter
   const getCheckedCount = (category) => {
@@ -316,6 +319,8 @@ const WorkerNewReport = () => {
   const filteredStationsResult = currentClient
     .getReports()
     .filter((report) => report.getData("clientStationId") === selectedStation);
+
+  // console.log("[worker]filteredStationsResult", filteredStationsResult);
 
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
@@ -448,25 +453,23 @@ const WorkerNewReport = () => {
   };
 
   // * get the array of categories from the report and updates the state
-  const handleCategoriesCheckboxesToggle = (category, checked, label) => {
-    // console.log("handleCategoriesCheckboxesToggle:", category, checked);
+  // const handleCategoriesCheckboxesToggle = (category, checked, label) => {
+  //   setCheckboxStatus((prevStatus) => {
+  //     const updatedCategoryStatus = [...prevStatus[category]];
+  //     // find && parsing the index of the array
+  //     const index = updatedCategoryStatus.indexOf(parseInt(label));
 
-    setCheckboxStatus((prevStatus) => {
-      const updatedCategoryStatus = [...prevStatus[category]];
-      // find && parsing the index of the array
-      const index = updatedCategoryStatus.indexOf(parseInt(label));
+  //     //if checked and label is not found in the array add to the array
+  //     if (checked && index === -1) {
+  //       updatedCategoryStatus.push(parseInt(label));
+  //       // if unchecked and label is found in the array remove to the array
+  //     } else if (!checked && index !== -1) {
+  //       updatedCategoryStatus.splice(index, 1);
+  //     }
 
-      //if checked and label is not found in the array add to the array
-      if (checked && index === -1) {
-        updatedCategoryStatus.push(parseInt(label));
-        // if unchecked and label is found in the array remove to the array
-      } else if (!checked && index !== -1) {
-        updatedCategoryStatus.splice(index, 1);
-      }
-      // handleFormChange(category, updatedCategoryStatus);
-      return { ...prevStatus, [category]: updatedCategoryStatus };
-    });
-  };
+  //     return { ...prevStatus, [category]: updatedCategoryStatus };
+  //   });
+  // };
 
   useEffect(() => {
     const categories = [
@@ -532,6 +535,7 @@ const WorkerNewReport = () => {
       }));
     }
   };
+
   //  * handling report time
   const handleReportTime = (selectedReport) => {
     const reportTimeDisplayed = selectedReport.getData("reportTime");
@@ -542,6 +546,7 @@ const WorkerNewReport = () => {
     setValue("reportTime", reportTime.name);
     trigger("reportTime");
   };
+
   // * general handle form change
   const handleFormChange = debounce((name, value) => {
     setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
@@ -598,6 +603,7 @@ const WorkerNewReport = () => {
       }
     }
   }, 300);
+
   // todo to return error for date picker
   // * toggle switch function
   const toggleSwitch = (id) => {
@@ -607,7 +613,7 @@ const WorkerNewReport = () => {
         [id]: !prevState[id],
       };
       const value = newState[id] ? 1 : 0;
-      handleFormChange(id, value); // Call handleFormChange with the new switch state
+      handleFormChange(id, value);
       return newState;
     });
   };
@@ -626,141 +632,7 @@ const WorkerNewReport = () => {
   const checkedCategories =
     formData && formData.categorys?.map((id) => idToNameMap[id]);
 
-  // * post request on the changes of the report edit
-  const saveEditedReport = async () => {
-    console.log(formData);
-
-    const bodyFormData = new FormData();
-    bodyFormData.append("id", currentReport.getData("id")); // ! requierd
-    bodyFormData.append("workerId", currentReport.getData("workerId")); //! requierd 4069114 (userid)
-    bodyFormData.append("clientId", currentReport.getData("clientId")); // ! requierd
-    formData.clientStationId &&
-      bodyFormData.append("clientStationId", formData.clientStationId); //checked expected output : 66
-    formData.accompany && bodyFormData.append("accompany", formData.accompany); //checked expected output : 66
-    bodyFormData.append("haveFine", formData.haveFine); //checked expected output : 66
-
-    bodyFormData.append("haveAmountOfItems", formData.haveAmountOfItems); //checked expected output : 1
-
-    bodyFormData.append("haveSafetyGrade", formData.haveSafetyGrade); //checked expected output : 1
-
-    bodyFormData.append("haveCulinaryGrade", formData.haveCulinaryGrade); //checked expected output : 1
-
-    bodyFormData.append("haveNutritionGrade", formData.haveNutritionGrade); //checked expected output : 1
-
-    bodyFormData.append(
-      "haveCategoriesNameForCriticalItems",
-      formData.haveCategoriesNameForCriticalItems
-    ); //checked expected output : 0
-    formData.reportTime &&
-      bodyFormData.append("reportTime", formData.reportTime); //checked expected output : 11
-    formData.newGeneralCommentTopText &&
-      bodyFormData.append(
-        "newGeneralCommentTopText",
-        formData.newGeneralCommentTopText
-      ); // ! requierd -can be empty
-    formData.timeOfReport &&
-      bodyFormData.append("timeOfReport", formData.timeOfReport); //checked expected output : 12/09/2023
-    bodyFormData.append("data", []); // ! requierd
-
-    bodyFormData.append("status", currentReport.getData("status")); // ! requierd
-    bodyFormData.append(
-      "newCategorys",
-      ";" + formData.categorys.join("|;") + "|"
-    ); // ! requierd
-
-    bodyFormData.append("file1", currentReport.getData("file1")); //checked expected output : ""
-    bodyFormData.append("file2", currentReport.getData("file2")); //checked expected output : ""
-    bodyFormData.append(
-      "positiveFeedback",
-      currentReport.getData("positiveFeedback")
-    ); //checked expected output: ""
-
-    try {
-      setIsLoading(true);
-      const apiUrl = process.env.API_BASE_URL + "ajax/saveReport2.php";
-      // console.log("saving...", apiUrl);
-      const response = await axios.post(apiUrl, bodyFormData);
-      console.log("saving edited report..");
-      if (response.status == 200 || response.status == 201) {
-        currentReport.setData(
-          "newGeneralCommentTopText",
-          formData.newGeneralCommentTopText
-        );
-
-        const responseClients = await fetchData(
-          process.env.API_BASE_URL + "api/clients.php",
-          { id: userId }
-        );
-        if (responseClients.success) {
-          let clients = [];
-          responseClients.data.forEach((element) => {
-            clients.push(new Client(element));
-          });
-          dispatch(setClients({ clients: clients }));
-        }
-        dispatch(setCurrentReport(currentReport));
-        dispatch(setCurrentCategories(formData.categorys));
-        setIsLoading(false);
-        console.log("success saving the changes...");
-      }
-      return response.data;
-    } catch (error) {
-      setIsLoading(false);
-      console.error("Error making POST request:", error);
-    }
-  };
-  // console.log(formData);
-  const postNewReport = async (formData) => {
-    console.log("postNewReport:", formData);
-    try {
-      setIsLoading(true);
-      const response = await axios.post(
-        process.env.API_BASE_URL + "api/duplicateReport.php",
-        { ...formData, rearrangement: IsRearrangement }
-      );
-      // console.log("(postNewReport)response:", response.status);
-      if (response.status === 200 || response.status === 201) {
-        const responseClients = await fetchData(
-          process.env.API_BASE_URL + "api/clients.php",
-          { id: userId }
-        );
-        if (responseClients.success) {
-          console.log("new reoport 1");
-          let clients = [];
-          responseClients.data.forEach((element) => {
-            clients.push(new Client(element));
-          });
-          dispatch(setClients({ clients: clients }));
-          setIsLoading(false);
-          Alert.alert(
-            "Success",
-            "Data posted successfully!",
-            [
-              {
-                text: "ok",
-                onPress: () => {
-                  navigateToRoute(routes.ONBOARDING.ClientsList);
-                },
-              },
-              {
-                text: "Cancel",
-                onPress: () => {},
-                style: "cancel",
-              },
-            ],
-            { cancelable: false }
-          );
-        }
-      }
-      return response.data;
-    } catch (error) {
-      setIsLoading(false);
-      console.error("(postNewReport)Error posting data:", error);
-      throw error; // You can handle the error or throw it to be caught elsewhere
-    }
-  };
   // * submit the form
-
   const onSubmitForm = async () => {
     const formErrors = {};
     try {
@@ -775,33 +647,39 @@ const WorkerNewReport = () => {
     } else {
       console.log("schema is valid");
 
+      setIsLoading(true);
       try {
-        await postNewReport(formData);
+        await postNewReport(formData, IsRearrangement);
+        setIsLoading(false);
       } catch (error) {
+        setIsLoading(false);
         console.error("Error posting data:", error);
       }
     }
   };
+
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
   };
 
-  // * paginations between categories names : Next
+  // * pagination between categories names : Next
   const saveEditEdReportAndNavigate = async () => {
     if (currentReport) {
       try {
-        const response = await saveEditedReport();
+        setIsLoading(true);
+        const response = await saveEditedReport(formData);
         console.log("edit post response:", response);
         dispatch(setIndex(0));
         dispatch(getCurrentCategory(formData.categorys[0]));
+        setIsLoading(false);
         navigateToRoute(routes.ONBOARDING.CategoryEdit);
       } catch (error) {
         console.error("Error posting data:", error);
       }
     }
   };
-  // console.log(windowWidth);
+
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
     {
@@ -1135,7 +1013,9 @@ const WorkerNewReport = () => {
                       }
                     })
                   : [],
-                "foodSafetyReviewCb"
+                "foodSafetyReviewCb",
+                checkboxStatus,
+                setCheckboxStatus
               )}
               onDragEndCb={(data) => {
                 const { from, to } = data;
@@ -1221,7 +1101,9 @@ const WorkerNewReport = () => {
                       }
                     })
                   : [],
-                "culinaryReviewCb"
+                "culinaryReviewCb",
+                checkboxStatus,
+                setCheckboxStatus
               )}
               onDragEndCb={(data) => {
                 const { from, to } = data;
@@ -1308,7 +1190,9 @@ const WorkerNewReport = () => {
                         }
                       })
                     : [],
-                  "nutritionReviewCb"
+                  "nutritionReviewCb",
+                  checkboxStatus,
+                  setCheckboxStatus
                 )}
                 onDragEndCb={(data) => {
                   const { from, to } = data;
@@ -1493,27 +1377,27 @@ const WorkerNewReport = () => {
       ],
     },
   ];
-  // * accordion item
-  const renderAccordion = ({ item }) => (
-    <Accordion
-      headerText={item.headerText}
-      contentText={item.contentText}
-      contentHeight={item.contentHeight}
-      headerHeight={item.headerHeight}
-      headerTogglerStyling={styles.headerStyle}
-      iconDisplay={true}
-      boxHeight={item.boxHeight}
-      accordionContent={item.accordionContent}
-      contentItemStyling={item.contentItemStyling}
-      hasDivider={item.hasDivider}
-      headerTextStyling={item.headerTextStyling}
-      accordionCloseIndicator={item.accordionCloseIndicator}
-      accordionOpenIndicator={item.accordionOpenIndicator}
-      scrollEnabled={item.scrollEnabled}
-      toggleHandler={item.toggleHandler}
-      draggable={item.draggable}
-    />
-  );
+  // const renderAccordion = ({ item }) => (
+  //   <Accordion
+  //     headerText={item.headerText}
+  //     contentText={item.contentText}
+  //     contentHeight={item.contentHeight}
+  //     headerHeight={item.headerHeight}
+  //     headerTogglerStyling={styles.headerStyle}
+  //     iconDisplay={true}
+  //     boxHeight={item.boxHeight}
+  //     accordionContent={item.accordionContent}
+  //     contentItemStyling={item.contentItemStyling}
+  //     hasDivider={item.hasDivider}
+  //     headerTextStyling={item.headerTextStyling}
+  //     accordionCloseIndicator={item.accordionCloseIndicator}
+  //     accordionOpenIndicator={item.accordionOpenIndicator}
+  //     scrollEnabled={item.scrollEnabled}
+  //     toggleHandler={item.toggleHandler}
+  //     draggable={item.draggable}
+  //   />
+  // );
+
   // * filtering out timeofReport when on edit mode.
   const modifiedAccordionContent = currentReport
     ? NewReportAccordionContent.map((section) => {
@@ -1569,6 +1453,7 @@ const WorkerNewReport = () => {
     setModalVisible(false);
     setIsLoading(false);
   };
+
   // * modal pick handler
   const handleOptionClick = async (option) => {
     // * todo add saveedit report // done
@@ -1579,13 +1464,13 @@ const WorkerNewReport = () => {
     );
 
     dispatch(setIndex(indexOfCategory));
-    await saveEditedReport();
-
+    await saveEditedReport(formData);
     dispatch(setCurrentCategories(formData.categorys));
-
+    setIsLoading(false);
     navigateToRoute(routes.ONBOARDING.CategoryEdit);
     handleModalClose();
   };
+  // console.log("W checkboxStatus",checkboxStatus);
   return (
     <>
       <ScreenWrapper
@@ -1598,12 +1483,14 @@ const WorkerNewReport = () => {
           <GoBackNavigator
             text={"חזרה לרשימת הלקוחות"}
             onBackPress={async () => {
+              setIsLoading(true);
               if (currentReport) {
-                // * working
-                // await saveEditedReport();
-                const response = await saveEditedReport();
-                console.log("back press response:", response);
+                const res = await saveEditedReport(formData);
+                setIsLoading(false);
+                console.log("edit on back press button successfully", res);
+                // console.log("back press response:", response);
               } else {
+                setIsLoading(false);
                 console.log("unable o save on back press..");
               }
             }}
@@ -1626,9 +1513,10 @@ const WorkerNewReport = () => {
                 // * working
                 setIsLoading(true);
                 try {
-                  await saveEditedReport();
+                  await saveEditedReport(formData);
                   dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
                   dispatch(setCategoryNamesSubHeaders(sortedCategories));
+                  setIsLoading(false);
                 } catch (error) {
                   console.log("WorkerNewReport[err]", error);
                 } finally {
@@ -1640,10 +1528,24 @@ const WorkerNewReport = () => {
           {isLoading ? (
             <Loader visible={isLoading} isSetting={true} />
           ) : (
-            <FlatList
+            // <FlatList
+            //   data={modifiedAccordionContent}
+            //   renderItem={renderAccordion}
+            //   keyExtractor={(item, index) => index.toString()}
+            // />
+            <AccordionContentList
+              // control={control}
+              // errors={errors}
+              // selectedStation={selectedStation}
+              // switchStates={switchStates}
+              // toggleSwitch={toggleSwitch}
+              // formData={formData}
+              // currentReportTime={currentReportTime}
+              // reportsTimes={reportsTimes}
+              // memoizedCategories={memoizedCategories}
+              // checkboxStatus={checkboxStatus}
+              // handleContentChange={handleContentChange}
               data={modifiedAccordionContent}
-              renderItem={renderAccordion}
-              keyExtractor={(item, index) => index.toString()}
             />
           )}
         </View>

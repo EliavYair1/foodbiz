@@ -9,7 +9,6 @@ import {
   Dimensions,
   Alert,
   Linking,
-  Platform,
 } from "react-native";
 import React, {
   useState,
@@ -18,7 +17,6 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-
 import colors from "../../../styles/colors";
 import fonts from "../../../styles/fonts";
 import Button from "../../../Components/ui/Button";
@@ -40,17 +38,13 @@ import { getCurrentStation } from "../../../store/redux/reducers/getCurrentStati
 import { getCurrentReport } from "../../../store/redux/reducers/getCurrentReport";
 import axios from "axios";
 import Loader from "../../../utiles/Loader";
-import { setReportsTimes } from "../../../store/redux/reducers/reportsTimesSlice";
-import { setCurrentCategories } from "../../../store/redux/reducers/getCurrentCategories";
 import Client from "../../../Components/modals/client";
 import { setClients } from "../../../store/redux/reducers/clientSlice";
 import FetchDataService from "../../../Services/FetchDataService";
-import { UIManager, LayoutAnimation } from "react-native";
-
+import { UIManager, LayoutAnimation, InteractionManager } from "react-native";
+import { debounce } from "lodash";
 const windowWidth = Dimensions.get("screen").width;
-const ClientItem = ({ client, tablePadding, logo }) => {
-  // console.log("ClientItem", client.getCompany());
-  // console.log("client render", Platform.OS, client.id);
+const ClientItem = ({ client, tablePadding, logo, loadingCallback }) => {
   const contentRef = useRef();
   const { fetchData } = FetchDataService();
   const [open, setOpen] = useState(false);
@@ -407,30 +401,8 @@ const ClientItem = ({ client, tablePadding, logo }) => {
       data: "station",
     },
   ];
-  // console.log(client);
+
   // handling nested tables
-  // const handleDisplayedTab = useMemo(() => {
-  //   if (activeTab === "דוחות") {
-  //     const reports = client.getReports();
-  //     return <ClientTable rowsData={reports} headers={reportsTable} />;
-  //   } else if (activeTab === "קבצים") {
-  //     const files = client.getFilesCategory();
-  //     const stations = client.getStations();
-  //     const company = client.getCompany();
-  //     // console.log(stations[]);
-  //     return (
-  //       <FileCategoryRow
-  //         stations={stations}
-  //         items={files}
-  //         icon={fileIcon}
-  //         tableHeadText={"קבצים"}
-  //         company={company}
-  //       ></FileCategoryRow>
-  //     );
-  //   } else {
-  //     return <ClientTable rowsData={filteredData} headers={usersTable} />;
-  //   }
-  // }, [activeTab, client, filteredData]);
   const handleDisplayedTab = () => {
     if (activeTab === "דוחות") {
       const reports = client.getReports();
@@ -448,13 +420,12 @@ const ClientItem = ({ client, tablePadding, logo }) => {
           icon={fileIcon}
           tableHeadText={"קבצים"}
           company={company}
-        ></FileCategoryRow>
+        />
       );
     } else {
       return <ClientTable rowsData={filteredData} headers={usersTable} />;
     }
   };
-  // styling
 
   // handling users filter on search bar
   const handleSearch = (filteredUsers) => {
@@ -469,10 +440,15 @@ const ClientItem = ({ client, tablePadding, logo }) => {
   const memoizedUsers = useMemo(() => users, [users]);
 
   const handleNewReport = () => {
+    loadingCallback(true);
     dispatch(getCurrentReport(null));
     dispatch(getCurrentClient(client));
+    loadingCallback(false);
     navigateToRoute(routes.ONBOARDING.WorkerNewReport);
   };
+
+  const handleNewReportDebounced = debounce(handleNewReport, 300);
+
   return (
     <>
       <TouchableOpacity
@@ -555,10 +531,19 @@ const ClientItem = ({ client, tablePadding, logo }) => {
             justifyContent: "space-around",
           }}
         >
-          <LastFiveReportDetails lastFiveReport={lastFiveReport} />
+          {lastFiveReport.culinaryGrade ||
+          lastFiveReport.grade ||
+          lastFiveReport.nutritionGrade ||
+          lastFiveReport.safetyGrade ? (
+            <LastFiveReportDetails lastFiveReport={lastFiveReport} />
+          ) : (
+            <View style={{ flexBasis: "30%" }} />
+          )}
+
           <View
             style={{
               alignSelf: "center",
+              flexBasis: "10%",
             }}
           >
             <Button
@@ -569,11 +554,11 @@ const ClientItem = ({ client, tablePadding, logo }) => {
               iconPath={plusIconWhite}
               iconStyle={styles.buttonIcon}
               buttonWidth={113}
-              buttonFunction={handleNewReport}
+              buttonFunction={handleNewReportDebounced}
             />
           </View>
 
-          <View style={{ alignSelf: "center" }}>
+          <View style={{ alignSelf: "center", flexBasis: "10%" }}>
             <Text>
               {open ? (
                 <Image

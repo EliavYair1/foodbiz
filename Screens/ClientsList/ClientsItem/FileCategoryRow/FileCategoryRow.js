@@ -50,6 +50,7 @@ const FileCategoryRow = ({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedItemName, setSelectedItemName] = useState(null);
   const [clientId, setClientId] = useState(null);
+
   useMemo(() => {
     if (categoryId) {
       const selectedItem = items.find(

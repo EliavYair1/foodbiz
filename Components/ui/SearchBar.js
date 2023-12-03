@@ -1,7 +1,7 @@
 import { Searchbar } from "react-native-paper";
 import colors from "../../styles/colors";
 import React, { useRef } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet } from "react-native";
 const SearchBar = ({
   placeholder,
   onChangeText,
@@ -9,8 +9,17 @@ const SearchBar = ({
   searchBarStyling,
   loading = false,
 }) => {
+  const searchbarRef = useRef(null);
+
+  const handleIconPress = () => {
+    if (searchbarRef && searchbarRef.current) {
+      searchbarRef.current.focus();
+    }
+  };
+
   return (
     <Searchbar
+      ref={searchbarRef}
       style={[styles.barStyle, searchBarStyling ?? ""]}
       placeholder={placeholder}
       onChangeText={onChangeText}
@@ -18,13 +27,13 @@ const SearchBar = ({
       mode="bar"
       showDivider={true}
       loading={loading}
+      onIconPress={handleIconPress}
     />
   );
 };
 const styles = StyleSheet.create({
   barStyle: {
     width: 286,
-
     backgroundColor: colors.white,
     borderColor: "rgba(255, 255, 255, 0.5)",
     borderWidth: 1,

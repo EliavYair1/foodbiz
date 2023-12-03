@@ -7,17 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/imgs/background.png",
+      "image": "./assets/imgs/maskBackground.png",
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
-    "platforms": [
-      "ios",
-      "android"
-    ],
-    "assetBundlePatterns": [
-      "assets/*"
-    ],
+    "platforms": ["ios", "android"],
+    "assetBundlePatterns": ["assets/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.moburst.foodbiz",

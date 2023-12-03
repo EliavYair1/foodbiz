@@ -43,12 +43,6 @@ const Dashboard = ({ tablePadding, data, onSearch, filterFunction }) => {
             <Image source={DashboardAvatar} style={{ width: 32, height: 32 }} />
           </View>
 
-          <SearchBar
-            placeholder={"חיפוש לפי שם לקוח"}
-            onChangeText={handleSearchTextChange}
-            onSearch={handleSearch}
-            inputStyle={styles.searchInput}
-          />
           <BackgroundImageWrapper
             backgroundImagePath={DashboardBg}
             styling={{
@@ -58,6 +52,12 @@ const Dashboard = ({ tablePadding, data, onSearch, filterFunction }) => {
               right: 0,
             }}
           ></BackgroundImageWrapper>
+          <SearchBar
+            placeholder={"חיפוש לפי שם לקוח"}
+            onChangeText={handleSearchTextChange}
+            onSearch={handleSearch}
+            searchBarStyling={styles.searchInput}
+          />
         </View>
       </LinearGradient>
 

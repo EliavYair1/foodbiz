@@ -4,6 +4,8 @@ import { FlatList, RefreshControl } from "react-native-gesture-handler";
 import FetchDataService from "../../../Services/FetchDataService";
 import colors from "../../../styles/colors";
 import ClientItem from "../ClientsItem/ClientItem";
+import Client from "../../../Components/modals/client";
+import Loader from "../../../utiles/Loader";
 const windowWidth = Dimensions.get("screen").width;
 const windowHeight = Dimensions.get("window").height;
 const bigDevice = windowHeight > 1200;
@@ -14,12 +16,12 @@ const ClientListComponent = ({
   clientFilterCallback,
   clientPerScreen,
   user,
+  toggleLoading,
 }) => {
   const flatListRef = useRef(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [listOffset, setListOffset] = useState(clientPerScreen);
   const { fetchData } = FetchDataService();
-
   const handleRefreshClients = async () => {
     setIsRefreshing(true);
     try {
@@ -35,7 +37,6 @@ const ClientListComponent = ({
           clients.push(new Client(element));
         });
 
-        // setAllClients(clients);
         clientFilterCallback(clients.slice(0, clientPerScreen));
       }
     } catch (error) {
@@ -52,6 +53,7 @@ const ClientListComponent = ({
       setListOffset(listOffset + clientPerScreen);
     }
   };
+
   return (
     <View
       style={{
@@ -82,6 +84,9 @@ const ClientListComponent = ({
               logo={item.getData("logo")}
               client={item}
               tablePadding={12}
+              loadingCallback={(val) => {
+                toggleLoading(val);
+              }}
             />
           );
         }}
