@@ -1,7 +1,9 @@
 import React from "react";
-import { View } from "react-native";
+import { Image, View } from "react-native";
 import CheckboxItem from "../CheckboxItem/CheckboxItem";
+import onDragIcon from "../../../assets/imgs/onDragIcon.png";
 
+// * get the array of categories from the report and updates the state
 const handleCategoriesCheckboxesToggle = (status, category, checked, label) => {
   const updatedStatus = { ...status };
   const updatedCategoryStatus = [...updatedStatus[category]];
@@ -23,7 +25,6 @@ export function accordionCategoriesItem(
   checkboxStatus,
   handleToggle
 ) {
-  console.log("accordionCategoriesItem", names, categoryName, checkboxStatus);
   return names.map((item, index) => {
     const checkboxKey = `${categoryName}${index + 1}`;
     const categoryStatus = checkboxStatus[`${categoryName}Status`];
