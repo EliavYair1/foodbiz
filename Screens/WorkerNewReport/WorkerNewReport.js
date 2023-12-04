@@ -36,7 +36,6 @@ import accordionCloseIcon from "../../assets/imgs/accordionCloseIndicator.png";
 import accordionOpenIcon from "../../assets/imgs/accordionOpenIndicator.png";
 import ClientItemArrow from "../../assets/imgs/ClientItemArrow.png";
 import ClientItemArrowOpen from "../../assets/imgs/accodionOpenIndicatorBlack.png";
-import onDragIcon from "../../assets/imgs/onDragIcon.png";
 import { debounce } from "lodash";
 import "@env";
 import CheckboxItem from "./CheckboxItem/CheckboxItem";
@@ -108,7 +107,6 @@ const WorkerNewReport = () => {
   const [selectedStation, setSelectedStation] = useState(null);
   const [currentReportTime, setCurrentReportTime] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
-  const [categoryAccordionHeight, setCategoryAccordionHeight] = useState(172);
   const [switchStates, setSwitchStates] = useState({
     haveFine: false,
     haveAmountOfItems: false,
@@ -259,47 +257,6 @@ const WorkerNewReport = () => {
     }
   }, [currentReport]);
 
-  // * inner accordionCategoriesItem
-  // function accordionCategoriesItem(names, categoryName) {
-  //   return names.map((item, index) => {
-  //     const checkboxKey = `${categoryName}${index + 1}`;
-  //     const categoryStatus = checkboxStatus[`${categoryName}Status`];
-  //     const checkboxValue =
-  //       categoryStatus && Array.isArray(categoryStatus)
-  //         ? categoryStatus.includes(parseInt(item.id))
-  //         : false;
-  //     return {
-  //       id: item.id,
-  //       text: (
-  //         <View>
-  //           <CheckboxItem
-  //             key={checkboxKey + checkboxValue}
-  //             label={checkboxKey}
-  //             checkboxItemText={item.name}
-  //             checked={checkboxValue}
-  //             handleChange={(checked) => {
-  //               const updatedStatus = handleCategoriesCheckboxesToggle(
-  //                 checkboxStatus,
-  //                 `${categoryName}Status`,
-  //                 checked,
-  //                 item.id
-  //               );
-
-  //               setCheckboxStatus(updatedStatus);
-  //               // handleCategoriesCheckboxesToggle(
-  //               //   `${categoryName}Status`,
-  //               //   checked,
-  //               //   item.id
-  //               // );
-  //             }}
-  //           />
-  //         </View>
-  //       ),
-  //       boxItem: <Image style={{ width: 9, height: 14 }} source={onDragIcon} />,
-  //     };
-  //   });
-  // }
-
   // * checkbox counter
   const getCheckedCount = (category) => {
     const categoryStatus = checkboxStatus[`${category}Status`];
@@ -307,12 +264,8 @@ const WorkerNewReport = () => {
   };
 
   // * redefine the Accordion height
-  const changeCategoryAccordionHeight = (height, toggle) => {
-    if (toggle) {
-      setCategoryAccordionHeight((prev) => prev + height);
-    } else {
-      setCategoryAccordionHeight((prev) => prev - height);
-    }
+  const changeCategoryAccordionHeight = (contentHeight, isOpen) => {
+    return isOpen ? 172 + contentHeight : 172;
   };
 
   // * filtering the current client based on selected station
@@ -451,25 +404,6 @@ const WorkerNewReport = () => {
     trigger("categorys");
     setCheckboxStatus(newOrderedCategories);
   };
-
-  // * get the array of categories from the report and updates the state
-  // const handleCategoriesCheckboxesToggle = (category, checked, label) => {
-  //   setCheckboxStatus((prevStatus) => {
-  //     const updatedCategoryStatus = [...prevStatus[category]];
-  //     // find && parsing the index of the array
-  //     const index = updatedCategoryStatus.indexOf(parseInt(label));
-
-  //     //if checked and label is not found in the array add to the array
-  //     if (checked && index === -1) {
-  //       updatedCategoryStatus.push(parseInt(label));
-  //       // if unchecked and label is found in the array remove to the array
-  //     } else if (!checked && index !== -1) {
-  //       updatedCategoryStatus.splice(index, 1);
-  //     }
-
-  //     return { ...prevStatus, [category]: updatedCategoryStatus };
-  //   });
-  // };
 
   useEffect(() => {
     const categories = [
@@ -945,14 +879,13 @@ const WorkerNewReport = () => {
       key: "categories",
       headerText: "קטגוריות",
       contentText: "world",
-      contentHeight: categoryAccordionHeight,
+      contentHeight: 336,
       headerHeight: 48,
       headerTogglerStyling: styles.headerStyle,
       iconDisplay: true,
       boxHeight: 46,
       hasDivider: true,
       draggable: true,
-      // toggleHandler: () => resetCategoryAccordionHeight,
       accordionCloseIndicator: accordionCloseIcon,
       accordionOpenIndicator: accordionOpenIcon,
       contentItemStyling: styles.contentBoxCategories,
@@ -1019,32 +952,26 @@ const WorkerNewReport = () => {
               )}
               onDragEndCb={(data) => {
                 const { from, to } = data;
-
                 // deepcopy the current checkboxStatus.foodSafetyReviewCbStatus array
                 const newCheckboxStatus = [
                   ...checkboxStatus.foodSafetyReviewCbStatus,
                 ];
-
                 // reordering the checkbox statuses to match the new item order
                 newCheckboxStatus.splice(
                   to,
                   0,
                   newCheckboxStatus.splice(from, 1)[0]
                 );
-
                 // updateing the checkboxStatus state
                 setCheckboxStatus({
                   ...checkboxStatus,
                   foodSafetyReviewCbStatus: newCheckboxStatus,
                 });
-
                 // reorder the items in foodSafetyReviewTexts to match the new order
                 const newData = [...foodSafetyReviewTexts];
                 newData.splice(to, 0, newData.splice(from, 1)[0]);
-
                 // update the newData state
                 setFoodSafetyReviewTexts(newData);
-
                 setIsRearrangement(true);
               }}
               contentItemStyling={{
