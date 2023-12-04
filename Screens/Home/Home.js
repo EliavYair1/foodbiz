@@ -15,6 +15,7 @@ import { setUser } from "../../store/redux/reducers/userSlice";
 import axios from "axios";
 import { setReportsTimes } from "../../store/redux/reducers/reportsTimesSlice";
 import { setGlobalCategories } from "../../store/redux/reducers/globalCategories";
+import { fetchAllClients } from "../../Services/fetchClients";
 const Home = () => {
   const { navigateToRoute } = useScreenNavigator();
   const dispatch = useDispatch();
@@ -36,16 +37,16 @@ const Home = () => {
           console.log(1);
 
           const [responseClients, responseCategories] = await Promise.all([
-            axios.post(process.env.API_BASE_URL + "api/clients.php", {
-              id: user_id,
+            fetchAllClients({
+              user: user_id,
+              errorCallback: (error) => console.log("Clients error:", error),
             }),
             axios.get(process.env.API_BASE_URL + "api/categories.php"),
           ]);
+          // const responseClients  = await fetchClients(user_id);
 
-          if (responseClients.status == 200) {
-            const clients = responseClients.data.data.map(
-              (element) => new Client(element)
-            );
+          if (responseClients) {
+            const clients = responseClients;
             console.log(1.5);
             dispatch(setClients({ clients: clients }));
             dispatch(setUser(user_id));
@@ -56,7 +57,7 @@ const Home = () => {
             navigateToRoute(routes.ONBOARDING.ClientsList);
             // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
           } else {
-            console.log("Clients error:", responseClients.error);
+            console.log("Clients error:", responseClients);
           }
         } else {
           navigateToRoute(routes.ONBOARDING.Login);

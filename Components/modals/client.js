@@ -1,3 +1,9 @@
+import { retrieveData } from "../../Services/StorageService";
+import {
+  fetchClientLastReport,
+  fetchClientLast5Reports,
+  fetchClientReports,
+} from "../../Services/fetchClients";
 import LastFiveReports from "./LastFiveReport";
 import LastReport from "./LastReport";
 import FileCategory from "./fileCategory";
@@ -14,17 +20,18 @@ export default class Client {
     this.order = data.order;
     this.logo = data.logo;
 
-    this.reports = [];
+    this.reports = false;
     this.files_catgories = [];
     this.users = [];
     this.stations = data.stations;
     // this.stations = [];
 
-    this.lastReport = data.last_report ? new Report(data.last_report) : null;
-    this.last_five_reports = data.last_five_reports;
-    this.createReportsModels(data.reports);
-    this.createCategoriesModels(data.files_catgories);
-    this.createUsersModels(data.users);
+    this.lastReport = null; //data.last_report ? new Report(data.last_report) : null;
+    this.last_five_reports = null; //data.last_five_reports;
+    // if (data.reports) this.createReportsModels(data.reports);
+    if (data.files_catgories) this.createCategoriesModels(data.files_catgories);
+    if (data.users) this.createUsersModels(data.users);
+
     // this.createStationsModels(data.stations);
   }
   createReportsModels(reports) {
@@ -49,7 +56,14 @@ export default class Client {
   //     this.stations.push(new Station(element));
   //   });
   // }
-  getLastReportData() {
+  async getLastReportData() {
+    if (!this.lastReport) {
+      const user_id = await retrieveData("user_id");
+      this.lastReport = await fetchClientLastReport({
+        user: user_id,
+        client: this.id,
+      });
+    }
     return this.lastReport;
   }
 
@@ -57,8 +71,25 @@ export default class Client {
     return this.stations;
   }
 
-  getLastFiveReportsData() {
+  async getLastFiveReportsData() {
+    if (!this.last_five_reports) {
+      const user_id = await retrieveData("user_id");
+      this.last_five_reports = await fetchClientLast5Reports({
+        user: user_id,
+        client: this.id,
+      });
+    }
     return this.last_five_reports;
+  }
+  async fetchReports() {
+    if (!this.reports) {
+      const user_id = await retrieveData("user_id");
+      this.reports = await fetchClientReports({
+        user: user_id,
+        client: this.id,
+      });
+    }
+    return this.reports;
   }
   getReports() {
     return this.reports;

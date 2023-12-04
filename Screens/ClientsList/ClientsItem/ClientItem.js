@@ -48,6 +48,8 @@ const ClientItem = ({ client, tablePadding, logo, loadingCallback }) => {
   const contentRef = useRef();
   const { fetchData } = FetchDataService();
   const [open, setOpen] = useState(false);
+  const [lastReport, setLastReport] = useState(false);
+  const [lastFiveReport, setLastFiveReport] = useState(false);
   const arrayOfTabs = ["דוחות", "קבצים", "בעלי גישה"];
   const [activeTab, setActiveTab] = useState(arrayOfTabs[0]);
   const heightAnim = useRef(new Animated.Value(0)).current;
@@ -74,7 +76,9 @@ const ClientItem = ({ client, tablePadding, logo, loadingCallback }) => {
   // accodrion handler
   const handleAccordionOpening = () => {
     LayoutAnimation.configureNext(customLayoutAnimation);
+    setIsLoading(true);
     setOpen(!open);
+    client.fetchReports().then(() => setIsLoading(false));
   };
 
   // tabs handler
@@ -166,18 +170,14 @@ const ClientItem = ({ client, tablePadding, logo, loadingCallback }) => {
     }
   };
 
-  const lastReport = client.getLastReportData();
-  let haveCulinaryGrade = false;
-  let haveGrade = false;
-  let haveNutritionGrade = false;
-  let haveSafetyGrade = false;
-  if (lastReport && lastReport.data) {
-    haveCulinaryGrade = lastReport.data.haveCulinaryGrade;
-    haveGrade = lastReport.data.haveGrade;
-    haveNutritionGrade = lastReport.data.haveNutritionGrade;
-    haveSafetyGrade = lastReport.data.haveSafetyGrade;
-  }
-  const lastFiveReport = client.getLastFiveReportsData();
+  useEffect(() => {
+    client.getLastReportData().then((data) => {
+      setLastReport(data);
+    });
+    client.getLastFiveReportsData().then((data) => {
+      setLastFiveReport(data);
+    });
+  }, []);
   const initiateLoader = (status) => {
     setIsLoading(status);
   };
@@ -512,14 +512,7 @@ const ClientItem = ({ client, tablePadding, logo, loadingCallback }) => {
           )}
         </View>
 
-        <ReportDetails
-          wrapperWidth={"14.5%"}
-          lastReport={lastReport}
-          haveGrade={haveGrade}
-          haveNutritionGrade={haveNutritionGrade}
-          haveSafetyGrade={haveSafetyGrade}
-          haveCulinaryGrade={haveCulinaryGrade}
-        />
+        <ReportDetails wrapperWidth={"14.5%"} lastReport={lastReport} />
 
         <View
           style={{
