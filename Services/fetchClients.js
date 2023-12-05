@@ -52,6 +52,7 @@ export const fetchAllClients = async ({
   }
   return false;
 };
+
 export const fetchClientLastReport = async ({
   user,
   client,
@@ -71,6 +72,7 @@ export const fetchClientLastReport = async ({
   }
   return false;
 };
+
 export const fetchClientLast5Reports = async ({
   user,
   client,
@@ -90,6 +92,7 @@ export const fetchClientLast5Reports = async ({
   }
   return false;
 };
+
 export const fetchClientReports = async ({
   user,
   client,

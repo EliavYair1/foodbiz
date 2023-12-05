@@ -127,6 +127,7 @@ const WorkerNewReport = () => {
   const [nutritionReviewTexts, setNutritionReviewTexts] = useState(
     memoizedCategories?.categories?.[3]?.categories ?? []
   );
+  const [filteredStationsResult, setFilteredStationsResult] = useState([]);
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
     previousReports: yup.string().required("previous report is required"),
@@ -269,11 +270,32 @@ const WorkerNewReport = () => {
   };
 
   // * filtering the current client based on selected station
-  const filteredStationsResult = currentClient
-    .getReports()
-    .filter((report) => report.getData("clientStationId") === selectedStation);
+  // const filteredStationsResult = currentClient
+  //   .getReports()
+  //   .filter((report) => report.getData("clientStationId") === selectedStation);
 
-  // console.log("[worker]filteredStationsResult", filteredStationsResult);
+  // todo refactor this.
+  useEffect(() => {
+    async function fetchReports() {
+      try {
+        const reports = await currentClient.fetchReports();
+        // const reports = await currentClient.getReports();
+
+        if (selectedStation) {
+          const filteredReports = reports.filter(
+            (report) => report.getData("clientStationId") === selectedStation
+          );
+          console.log("[worker]filteredStationsResult", filteredReports);
+          setFilteredStationsResult(filteredReports);
+        }
+      } catch (error) {
+        console.error("Error fetching or filtering reports:", error);
+      }
+    }
+    fetchReports();
+  }, [currentClient, selectedStation]);
+
+  // console.log("[worker]filteredStationsResult", getFilteredReports());
 
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
@@ -520,6 +542,7 @@ const WorkerNewReport = () => {
         const selectedReport = filteredStationsResult.find(
           (report) => report.getData("timeOfReport") === value
         );
+
         if (selectedReport) {
           handleReportIdAndWorkerId(selectedReport);
           const parsedSelectedReportCategory =
