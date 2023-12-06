@@ -57,6 +57,7 @@ import useSaveEditedReport from "../../Hooks/useSaveEditedReport";
 import usePostNewReport from "../../Hooks/usePostNewReport";
 import AccordionContentList from "./AccordionContent/AccordionContentList";
 import { accordionCategoriesItem } from "./AccordionCategoriesItem/AccordionCategoriesItem";
+import CategoriesPickerModal from "./CategoriesPickerModal/CategoriesPickerModal";
 // import AccordionCategoriesItem from "./AccordionCategoriesItem/AccordionCategoriesItem";
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
@@ -128,6 +129,10 @@ const WorkerNewReport = () => {
     memoizedCategories?.categories?.[3]?.categories ?? []
   );
   const [filteredStationsResult, setFilteredStationsResult] = useState([]);
+  const [majorCategoryHeadersToPass, setMajorCategoryHeadersToPass] = useState(
+    []
+  );
+  const [sortedCategories, setSortedCategories] = useState({});
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
     previousReports: yup.string().required("previous report is required"),
@@ -193,40 +198,6 @@ const WorkerNewReport = () => {
     setValue("clientId", currentClient?.id);
   }, [formData, schema]);
 
-  // * modal major category reorder by type
-  function sortSubCategoriesByType(data, ids) {
-    const type1Ids = [];
-    const type2Ids = [];
-    const type3Ids = [];
-    if (ids) {
-      for (const item of data) {
-        if (ids.includes(parseInt(item.id))) {
-          switch (item.type) {
-            case "1":
-              type1Ids.push({ id: item.id, name: item.name });
-              break;
-            case "2":
-              type2Ids.push({ id: item.id, name: item.name });
-              break;
-            case "3":
-              type3Ids.push({ id: item.id, name: item.name });
-              break;
-            default:
-              break;
-          }
-        }
-      }
-    }
-
-    const result = {
-      1: type1Ids,
-      2: type2Ids,
-      3: type3Ids,
-    };
-
-    return result;
-  }
-
   const findReportTimeName = (data) => {
     const reportTimeId = currentReport?.getReportTime();
 
@@ -271,16 +242,15 @@ const WorkerNewReport = () => {
 
   // * filtering the current client based on selected station
   // const filteredStationsResult = currentClient
-  //   .getReports()
+  //   .fetchReports()
   //   .filter((report) => report.getData("clientStationId") === selectedStation);
 
+  // * filtering the current client based on selected station
   // todo refactor this.
   useEffect(() => {
-    async function fetchReports() {
+    async function getReports() {
       try {
         const reports = await currentClient.fetchReports();
-        // const reports = await currentClient.getReports();
-
         if (selectedStation) {
           const filteredReports = reports.filter(
             (report) => report.getData("clientStationId") === selectedStation
@@ -292,10 +262,8 @@ const WorkerNewReport = () => {
         console.error("Error fetching or filtering reports:", error);
       }
     }
-    fetchReports();
+    getReports();
   }, [currentClient, selectedStation]);
-
-  // console.log("[worker]filteredStationsResult", getFilteredReports());
 
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
@@ -1327,26 +1295,6 @@ const WorkerNewReport = () => {
       ],
     },
   ];
-  // const renderAccordion = ({ item }) => (
-  //   <Accordion
-  //     headerText={item.headerText}
-  //     contentText={item.contentText}
-  //     contentHeight={item.contentHeight}
-  //     headerHeight={item.headerHeight}
-  //     headerTogglerStyling={styles.headerStyle}
-  //     iconDisplay={true}
-  //     boxHeight={item.boxHeight}
-  //     accordionContent={item.accordionContent}
-  //     contentItemStyling={item.contentItemStyling}
-  //     hasDivider={item.hasDivider}
-  //     headerTextStyling={item.headerTextStyling}
-  //     accordionCloseIndicator={item.accordionCloseIndicator}
-  //     accordionOpenIndicator={item.accordionOpenIndicator}
-  //     scrollEnabled={item.scrollEnabled}
-  //     toggleHandler={item.toggleHandler}
-  //     draggable={item.draggable}
-  //   />
-  // );
 
   // * filtering out timeofReport when on edit mode.
   const modifiedAccordionContent = currentReport
@@ -1361,66 +1309,6 @@ const WorkerNewReport = () => {
       })
     : NewReportAccordionContent;
 
-  let categoriesModal = [];
-  const sortedCategories = sortSubCategoriesByType(
-    globalCategoriesObj,
-    formData.categorys
-  );
-  if (Array.isArray(formData.categorys) && sortedCategories[1].length > 0) {
-    sortedCategories[1] = formData.categorys
-      .map((id) => sortedCategories[1].find((category) => category.id == id))
-      .filter((category) => category !== undefined);
-    categoriesModal.push({
-      subheader: "ביקורת בטיחות מזון",
-      options: sortedCategories[1],
-    });
-  }
-  if (Array.isArray(formData.categorys) && sortedCategories[2].length > 0) {
-    sortedCategories[2] = formData.categorys
-      .map((id) => sortedCategories[2].find((category) => category.id == id))
-      .filter((category) => category !== undefined);
-    categoriesModal.push({
-      subheader: "ביקורת קולינארית",
-      options: sortedCategories[2],
-    });
-  }
-  if (Array.isArray(formData.categorys) && sortedCategories[3].length > 0) {
-    sortedCategories[3] = formData.categorys
-      .map((id) => sortedCategories[3].find((category) => category.id == id))
-      .filter((category) => category !== undefined);
-    categoriesModal.push({
-      subheader: "ביקורת תזונה",
-      options: sortedCategories[3],
-    });
-  }
-
-  const majorCategoryHeadersToPass = categoriesModal.map(
-    (category) => category.subheader
-  );
-
-  // * categories picker close function
-  const handleModalClose = () => {
-    setModalVisible(false);
-    setIsLoading(false);
-  };
-
-  // * modal pick handler
-  const handleOptionClick = async (option) => {
-    // * todo add saveedit report // done
-
-    setIsLoading(true);
-    const indexOfCategory = formData.categorys.findIndex(
-      (category) => category == option
-    );
-
-    dispatch(setIndex(indexOfCategory));
-    await saveEditedReport(formData);
-    dispatch(setCurrentCategories(formData.categorys));
-    setIsLoading(false);
-    navigateToRoute(routes.ONBOARDING.CategoryEdit);
-    handleModalClose();
-  };
-  // console.log("W checkboxStatus",checkboxStatus);
   return (
     <>
       <ScreenWrapper
@@ -1478,25 +1366,7 @@ const WorkerNewReport = () => {
           {isLoading ? (
             <Loader visible={isLoading} isSetting={true} />
           ) : (
-            // <FlatList
-            //   data={modifiedAccordionContent}
-            //   renderItem={renderAccordion}
-            //   keyExtractor={(item, index) => index.toString()}
-            // />
-            <AccordionContentList
-              // control={control}
-              // errors={errors}
-              // selectedStation={selectedStation}
-              // switchStates={switchStates}
-              // toggleSwitch={toggleSwitch}
-              // formData={formData}
-              // currentReportTime={currentReportTime}
-              // reportsTimes={reportsTimes}
-              // memoizedCategories={memoizedCategories}
-              // checkboxStatus={checkboxStatus}
-              // handleContentChange={handleContentChange}
-              data={modifiedAccordionContent}
-            />
+            <AccordionContentList data={modifiedAccordionContent} />
           )}
         </View>
         {currentReport ? (
@@ -1593,16 +1463,15 @@ const WorkerNewReport = () => {
           </LinearGradient>
         )}
         {modalVisible && (
-          <View>
-            <ModalUi
-              isLoading={isLoading}
-              categoryEdit={false}
-              header="קטגוריות"
-              modalContent={categoriesModal}
-              onClose={handleModalClose}
-              handleOptionClick={handleOptionClick}
-            />
-          </View>
+          <CategoriesPickerModal
+            formData={formData}
+            setLoading={setIsLoading}
+            globalCategoriesObj={globalCategoriesObj}
+            isLoading={isLoading}
+            setModalVisible={setModalVisible}
+            setMajorCategoryHeadersToPass={setMajorCategoryHeadersToPass}
+            setSortedCategories={setSortedCategories}
+          />
         )}
       </ScreenWrapper>
     </>
