@@ -56,9 +56,12 @@ import {
 import useSaveEditedReport from "../../Hooks/useSaveEditedReport";
 import usePostNewReport from "../../Hooks/usePostNewReport";
 import AccordionContentList from "./AccordionContent/AccordionContentList";
-import { accordionCategoriesItem } from "./AccordionCategoriesItem/AccordionCategoriesItem";
+import CheckboxList, {
+  accordionCategoriesItem,
+} from "./AccordionCategoriesItem/AccordionCategoriesItem";
 import CategoriesPickerModal from "./CategoriesPickerModal/CategoriesPickerModal";
 // import AccordionCategoriesItem from "./AccordionCategoriesItem/AccordionCategoriesItem";
+
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
   const richText = useRef();
@@ -255,7 +258,7 @@ const WorkerNewReport = () => {
           const filteredReports = reports.filter(
             (report) => report.getData("clientStationId") === selectedStation
           );
-          console.log("[worker]filteredStationsResult", filteredReports);
+          // console.log("[worker]filteredStationsResult", filteredReports);
           setFilteredStationsResult(filteredReports);
         }
       } catch (error) {
@@ -314,6 +317,7 @@ const WorkerNewReport = () => {
   //  * 1. checking if the ids of the categories match to the selected report
   // *  2.  sorting them by type to their right location of major category
   const handleCheckboxStatusChange = (parsedSelectedReportCategory) => {
+    // console.log("innn", 1);
     const memoRizedCats = memoizedCategories?.categories;
     const globalStateCategories = memoRizedCats
       ? Object.values(memoRizedCats).flatMap((category) => category.categories)
@@ -394,7 +398,6 @@ const WorkerNewReport = () => {
     trigger("categorys");
     setCheckboxStatus(newOrderedCategories);
   };
-
   useEffect(() => {
     const categories = [
       ...checkboxStatus.foodSafetyReviewCbStatus,
@@ -522,7 +525,7 @@ const WorkerNewReport = () => {
           handleAccompanyChange(selectedReport);
           handleReportTime(selectedReport);
         } else {
-          setIsSchemaValid(true);
+          true;
           setSwitchStates(newSwitchStates);
         }
       }
@@ -548,14 +551,14 @@ const WorkerNewReport = () => {
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
     : null;
   // * comparing between the categories names to the ids in the forms to display it in the drawer
-  const idToNameMap = {};
+  const categoryIdToNameMap = {};
   globalCategoriesObj && formData.categorys
     ? globalCategoriesObj?.forEach((item) => {
-        idToNameMap[item.id] = item.name;
+        categoryIdToNameMap[item.id] = item.name;
       })
     : [];
   const checkedCategories =
-    formData && formData.categorys?.map((id) => idToNameMap[id]);
+    formData && formData.categorys?.map((id) => categoryIdToNameMap[id]);
 
   // * submit the form
   const onSubmitForm = async () => {
@@ -920,27 +923,83 @@ const WorkerNewReport = () => {
                 fontFamily: fonts.ABold,
               }}
               scrollEnabled={true}
-              accordionContent={accordionCategoriesItem(
-                formData && formData.categorys
-                  ? [...foodSafetyReviewTexts].sort((a, b) => {
-                      const aIdx = formData.categorys.indexOf(Number(a.id));
-                      const bIdx = formData.categorys.indexOf(Number(b.id));
+              accordionContent={
+                accordionCategoriesItem(
+                  formData && formData.categorys
+                    ? [...foodSafetyReviewTexts].sort((a, b) => {
+                        const aIdx = formData.categorys.indexOf(Number(a.id));
+                        const bIdx = formData.categorys.indexOf(Number(b.id));
 
-                      if (aIdx >= 0 && bIdx >= 0) {
-                        return aIdx - bIdx;
-                      } else if (aIdx >= 0) {
-                        return -1;
-                      } else if (bIdx >= 0) {
-                        return 1;
-                      } else {
-                        return 0;
-                      }
-                    })
-                  : [],
-                "foodSafetyReviewCb",
-                checkboxStatus,
-                setCheckboxStatus
-              )}
+                        if (aIdx >= 0 && bIdx >= 0) {
+                          return aIdx - bIdx;
+                        } else if (aIdx >= 0) {
+                          return -1;
+                        } else if (bIdx >= 0) {
+                          return 1;
+                        } else {
+                          return 0;
+                        }
+                      })
+                    : [],
+                  "foodSafetyReviewCb",
+                  checkboxStatus,
+                  setCheckboxStatus
+                )
+
+                // <CheckboxList
+                //   data={
+                //     formData && formData.categorys
+                //       ? [...foodSafetyReviewTexts].sort((a, b) => {
+                //           const aIdx = formData.categorys.indexOf(Number(a.id));
+                //           const bIdx = formData.categorys.indexOf(Number(b.id));
+
+                //           if (aIdx >= 0 && bIdx >= 0) {
+                //             return aIdx - bIdx;
+                //           } else if (aIdx >= 0) {
+                //             return -1;
+                //           } else if (bIdx >= 0) {
+                //             return 1;
+                //           } else {
+                //             return 0;
+                //           }
+                //         })
+                //       : []
+                //   }
+                //   checkboxStatus={checkboxStatus}
+                //   categoryName={"foodSafetyReviewCb"}
+                //   handleToggle={setCheckboxStatus}
+                // />
+
+                // todo set the right values
+                // formData && formData.categorys
+                // ? formData.categorys.map((item,index) => {
+                //   const checkboxKey = `${categoryName}${index + 1}`;
+                //     return {
+                //       id: item.id,
+                //       text: (
+                //         <View key={`checkbox_${item.id}`}>
+                //           <CheckboxItem
+                //       label={checkboxKey}
+                //       // checkboxItemText={name}
+                //       // checked={checkboxValue}
+                //       // handleChange={(checked) => {
+                //       //   const updatedStatus = handleCategoriesCheckboxesToggle(
+                //       //     checkboxStatus,
+                //       //     `${categoryName}Status`,
+                //       //     checked,
+                //       //     id
+                //       //   );
+                //       //   handleToggle(updatedStatus);
+                //       // }}
+                //           />
+                //           <Image style={{ width: 9, height: 14 }} source={onDragIcon} />
+                //         </View>
+                //       ),
+                //       boxItem: null, // Set to null as you don't have boxItem for now
+                //     };
+                //   })
+                // : []
+              }
               onDragEndCb={(data) => {
                 const { from, to } = data;
                 // deepcopy the current checkboxStatus.foodSafetyReviewCbStatus array
@@ -1002,27 +1061,53 @@ const WorkerNewReport = () => {
                 color: colors.black,
                 fontFamily: fonts.ABold,
               }}
-              accordionContent={accordionCategoriesItem(
-                formData && formData.categorys
-                  ? [...culinaryReviewTexts].sort((a, b) => {
-                      const aIdx = formData.categorys.indexOf(Number(a.id));
-                      const bIdx = formData.categorys.indexOf(Number(b.id));
+              accordionContent={
+                accordionCategoriesItem(
+                  formData && formData.categorys
+                    ? [...culinaryReviewTexts].sort((a, b) => {
+                        const aIdx = formData.categorys.indexOf(Number(a.id));
+                        const bIdx = formData.categorys.indexOf(Number(b.id));
 
-                      if (aIdx >= 0 && bIdx >= 0) {
-                        return aIdx - bIdx;
-                      } else if (aIdx >= 0) {
-                        return -1;
-                      } else if (bIdx >= 0) {
-                        return 1;
-                      } else {
-                        return 0;
-                      }
-                    })
-                  : [],
-                "culinaryReviewCb",
-                checkboxStatus,
-                setCheckboxStatus
-              )}
+                        if (aIdx >= 0 && bIdx >= 0) {
+                          return aIdx - bIdx;
+                        } else if (aIdx >= 0) {
+                          return -1;
+                        } else if (bIdx >= 0) {
+                          return 1;
+                        } else {
+                          return 0;
+                        }
+                      })
+                    : [],
+                  "culinaryReviewCb",
+                  checkboxStatus,
+                  setCheckboxStatus
+                )
+
+                // <CheckboxList
+                //   data={
+                //     formData && formData.categorys
+                //       ? [...culinaryReviewTexts].sort((a, b) => {
+                //           const aIdx = formData.categorys.indexOf(Number(a.id));
+                //           const bIdx = formData.categorys.indexOf(Number(b.id));
+
+                //           if (aIdx >= 0 && bIdx >= 0) {
+                //             return aIdx - bIdx;
+                //           } else if (aIdx >= 0) {
+                //             return -1;
+                //           } else if (bIdx >= 0) {
+                //             return 1;
+                //           } else {
+                //             return 0;
+                //           }
+                //         })
+                //       : []
+                //   }
+                //   checkboxStatus={checkboxStatus}
+                //   categoryName={"culinaryReviewCb"}
+                //   handleToggle={setCheckboxStatus}
+                // />
+              }
               onDragEndCb={(data) => {
                 const { from, to } = data;
 
@@ -1091,27 +1176,57 @@ const WorkerNewReport = () => {
                   color: colors.black,
                   fontFamily: fonts.ABold,
                 }}
-                accordionContent={accordionCategoriesItem(
-                  formData && formData.categorys
-                    ? [...nutritionReviewTexts].sort((a, b) => {
-                        const aIdx = formData.categorys.indexOf(Number(a.id));
-                        const bIdx = formData.categorys.indexOf(Number(b.id));
+                accordionContent={
+                  accordionCategoriesItem(
+                    formData && formData.categorys
+                      ? [...nutritionReviewTexts].sort((a, b) => {
+                          const aIdx = formData.categorys.indexOf(Number(a.id));
+                          const bIdx = formData.categorys.indexOf(Number(b.id));
 
-                        if (aIdx >= 0 && bIdx >= 0) {
-                          return aIdx - bIdx;
-                        } else if (aIdx >= 0) {
-                          return -1;
-                        } else if (bIdx >= 0) {
-                          return 1;
-                        } else {
-                          return 0;
-                        }
-                      })
-                    : [],
-                  "nutritionReviewCb",
-                  checkboxStatus,
-                  setCheckboxStatus
-                )}
+                          if (aIdx >= 0 && bIdx >= 0) {
+                            return aIdx - bIdx;
+                          } else if (aIdx >= 0) {
+                            return -1;
+                          } else if (bIdx >= 0) {
+                            return 1;
+                          } else {
+                            return 0;
+                          }
+                        })
+                      : [],
+                    "nutritionReviewCb",
+                    checkboxStatus,
+                    setCheckboxStatus
+                  )
+
+                  // <CheckboxList
+                  //   data={
+                  //     formData && formData.categorys
+                  //       ? [...nutritionReviewTexts].sort((a, b) => {
+                  //           const aIdx = formData.categorys.indexOf(
+                  //             Number(a.id)
+                  //           );
+                  //           const bIdx = formData.categorys.indexOf(
+                  //             Number(b.id)
+                  //           );
+
+                  //           if (aIdx >= 0 && bIdx >= 0) {
+                  //             return aIdx - bIdx;
+                  //           } else if (aIdx >= 0) {
+                  //             return -1;
+                  //           } else if (bIdx >= 0) {
+                  //             return 1;
+                  //           } else {
+                  //             return 0;
+                  //           }
+                  //         })
+                  //       : []
+                  //   }
+                  //   checkboxStatus={checkboxStatus}
+                  //   categoryName={"nutritionReviewCb"}
+                  //   handleToggle={setCheckboxStatus}
+                  // />
+                }
                 onDragEndCb={(data) => {
                   const { from, to } = data;
 

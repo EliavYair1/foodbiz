@@ -71,6 +71,7 @@ const Accordion = ({
     },
     [contentItemStyling, hasDivider]
   );
+
   return (
     <View>
       <TouchableOpacity
@@ -120,7 +121,7 @@ const Accordion = ({
         ]}
       >
         <View style={[styles.contentWrapper]}>
-          {draggable ? (
+          {/* {draggable && Array.isArray(accordionContent) ? (
             <DraggableFlatList
               data={accordionContent}
               renderItem={renderAccordionItem}
@@ -134,6 +135,16 @@ const Accordion = ({
               data={accordionContent}
               renderItem={renderAccordionItem}
             />
+          )} */}
+          {Array.isArray(accordionContent) && accordionContent.length > 0 ? (
+            <DraggableFlatList
+              data={accordionContent}
+              renderItem={renderAccordionItem}
+              keyExtractor={(item, index) => `draggable-item${index}`}
+              onDragEnd={onDragEndCb}
+            />
+          ) : (
+            <Text>No content available</Text>
           )}
         </View>
       </Animated.View>
