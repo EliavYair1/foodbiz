@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text } from "react-native";
 import Checkbox from "../../../Components/ui/Checkbox";
 import colors from "../../../styles/colors";
@@ -8,7 +8,12 @@ const CheckboxItem = React.memo(
       handleChange(checked ? 1 : 0, label);
       console.log(`${label} is ${checked}`);
     };
-
+    // const handleCheckboxToggle = useCallback(
+    //   (checked) => {
+    //     handleChange(checked ? 1 : 0, label);
+    //   },
+    //   [handleChange, label]
+    // );
     return (
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <Checkbox

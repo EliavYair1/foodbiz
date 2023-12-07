@@ -38,16 +38,13 @@ import ClientItemArrow from "../../assets/imgs/ClientItemArrow.png";
 import ClientItemArrowOpen from "../../assets/imgs/accodionOpenIndicatorBlack.png";
 import { debounce } from "lodash";
 import "@env";
-import CheckboxItem from "./CheckboxItem/CheckboxItem";
 import Loader from "../../utiles/Loader";
 import { HelperText } from "react-native-paper";
 import Drawer from "../../Components/ui/Drawer";
 import routes from "../../Navigation/routes";
 import { getCurrentCategory } from "../../store/redux/reducers/getCurrentCategory";
-import { setCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
 import Header from "../../Components/ui/Header";
 import GoBackNavigator from "../../utiles/GoBackNavigator";
-import ModalUi from "../../Components/ui/ModalUi";
 import { setIndex } from "../../store/redux/reducers/indexSlice";
 import {
   setCategoryNamesSubHeaders,
@@ -56,12 +53,11 @@ import {
 import useSaveEditedReport from "../../Hooks/useSaveEditedReport";
 import usePostNewReport from "../../Hooks/usePostNewReport";
 import AccordionContentList from "./AccordionContent/AccordionContentList";
-import CheckboxList, {
+import {
+  useAccordionCategoriesItem,
   accordionCategoriesItem,
 } from "./AccordionCategoriesItem/AccordionCategoriesItem";
 import CategoriesPickerModal from "./CategoriesPickerModal/CategoriesPickerModal";
-// import AccordionCategoriesItem from "./AccordionCategoriesItem/AccordionCategoriesItem";
-
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
   const richText = useRef();
@@ -70,6 +66,13 @@ const WorkerNewReport = () => {
   const { navigateToRoute } = useScreenNavigator();
   const saveEditedReport = useSaveEditedReport();
   const { postNewReport } = usePostNewReport();
+  const {
+    accordionCategoriesItem,
+    checkboxStatus,
+    setCheckboxStatus,
+    getCheckedCount,
+  } = useAccordionCategoriesItem();
+
   const [colorSelected, setColorSelected] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -103,11 +106,13 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
     rearrangement: IsRearrangement,
   });
-  const [checkboxStatus, setCheckboxStatus] = useState({
-    foodSafetyReviewCbStatus: [],
-    culinaryReviewCbStatus: [],
-    nutritionReviewCbStatus: [],
-  });
+  // const [checkboxStatus, setCheckboxStatus] = useState({
+  //   foodSafetyReviewCbStatus: [],
+  //   culinaryReviewCbStatus: [],
+  //   nutritionReviewCbStatus: [],
+  // });
+
+  // const setCheckboxStatus = debounce(setCheckboxStatus, 0);
   const [selectedStation, setSelectedStation] = useState(null);
   const [currentReportTime, setCurrentReportTime] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
@@ -151,24 +156,24 @@ const WorkerNewReport = () => {
           Array.isArray(value) &&
           value.some(
             (id) =>
-              Array.isArray(checkboxStatus.foodSafetyReviewCbStatus) &&
-              checkboxStatus.foodSafetyReviewCbStatus.includes(id)
+              Array.isArray(checkboxStatus?.foodSafetyReviewCbStatus) &&
+              checkboxStatus?.foodSafetyReviewCbStatus.includes(id)
           );
 
         const culinaryReviewSelected =
           Array.isArray(value) &&
           value.some(
             (id) =>
-              Array.isArray(checkboxStatus.culinaryReviewCbStatus) &&
-              checkboxStatus.culinaryReviewCbStatus.includes(id)
+              Array.isArray(checkboxStatus?.culinaryReviewCbStatus) &&
+              checkboxStatus?.culinaryReviewCbStatus.includes(id)
           );
 
         const nutritionReviewSelected =
           Array.isArray(value) &&
           value.some(
             (id) =>
-              Array.isArray(checkboxStatus.nutritionReviewCbStatus) &&
-              checkboxStatus.nutritionReviewCbStatus.includes(id)
+              Array.isArray(checkboxStatus?.nutritionReviewCbStatus) &&
+              checkboxStatus?.nutritionReviewCbStatus.includes(id)
           );
         return (
           foodSafetyReviewSelected ||
@@ -231,12 +236,6 @@ const WorkerNewReport = () => {
       );
     }
   }, [currentReport]);
-
-  // * checkbox counter
-  const getCheckedCount = (category) => {
-    const categoryStatus = checkboxStatus[`${category}Status`];
-    return categoryStatus ? categoryStatus.length : 0;
-  };
 
   // * redefine the Accordion height
   const changeCategoryAccordionHeight = (contentHeight, isOpen) => {
@@ -353,7 +352,7 @@ const WorkerNewReport = () => {
 
       const myArray = Array.from(parsedSelectedReportCategory);
       myArray.map((element) => {
-        let index = newCheckboxStatus.foodSafetyReviewCbStatus.findIndex(
+        let index = newCheckboxStatus?.foodSafetyReviewCbStatus.findIndex(
           (id) => id == element
         );
 
@@ -361,7 +360,7 @@ const WorkerNewReport = () => {
           newOrderedCategories.foodSafetyReviewCbStatus.push(element);
           return element;
         }
-        index = newCheckboxStatus.culinaryReviewCbStatus.findIndex(
+        index = newCheckboxStatus?.culinaryReviewCbStatus.findIndex(
           (id) => id == element
         );
         if (index !== -1) {
@@ -369,7 +368,7 @@ const WorkerNewReport = () => {
           return element;
         }
 
-        index = newCheckboxStatus.nutritionReviewCbStatus.findIndex(
+        index = newCheckboxStatus?.nutritionReviewCbStatus.findIndex(
           (id) => id == element
         );
         if (index !== -1) {
@@ -398,20 +397,22 @@ const WorkerNewReport = () => {
     trigger("categorys");
     setCheckboxStatus(newOrderedCategories);
   };
+
   useEffect(() => {
-    const categories = [
-      ...checkboxStatus.foodSafetyReviewCbStatus,
-      ...checkboxStatus.culinaryReviewCbStatus,
-      ...checkboxStatus.nutritionReviewCbStatus,
-    ];
+    if (checkboxStatus !== undefined) {
+      const categories = [
+        ...checkboxStatus?.foodSafetyReviewCbStatus,
+        ...checkboxStatus?.culinaryReviewCbStatus,
+        ...checkboxStatus?.nutritionReviewCbStatus,
+      ];
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        categorys: categories,
+      }));
 
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      categorys: categories,
-    }));
-
-    setValue("categorys", categories);
-    trigger("categorys");
+      setValue("categorys", categories);
+      trigger("categorys");
+    }
   }, [checkboxStatus]);
 
   // * checking if the report parameters match to their state true / false
@@ -905,7 +906,10 @@ const WorkerNewReport = () => {
                 memoizedCategories &&
                 memoizedCategories.categories &&
                 memoizedCategories.categories[1].name
-              } (נבחרו ${getCheckedCount("foodSafetyReviewCb")} דוחות)`}
+              } (נבחרו ${getCheckedCount(
+                checkboxStatus,
+                "foodSafetyReviewCb"
+              )} דוחות)`}
               contentHeight={336}
               headerHeight={50}
               accordionCloseIndicator={ClientItemArrow}
@@ -923,94 +927,38 @@ const WorkerNewReport = () => {
                 fontFamily: fonts.ABold,
               }}
               scrollEnabled={true}
-              accordionContent={
-                accordionCategoriesItem(
-                  formData && formData.categorys
-                    ? [...foodSafetyReviewTexts].sort((a, b) => {
-                        const aIdx = formData.categorys.indexOf(Number(a.id));
-                        const bIdx = formData.categorys.indexOf(Number(b.id));
+              accordionContent={accordionCategoriesItem(
+                formData && formData.categorys
+                  ? [...foodSafetyReviewTexts].sort((a, b) => {
+                      const aIdx = formData.categorys.indexOf(Number(a.id));
+                      const bIdx = formData.categorys.indexOf(Number(b.id));
 
-                        if (aIdx >= 0 && bIdx >= 0) {
-                          return aIdx - bIdx;
-                        } else if (aIdx >= 0) {
-                          return -1;
-                        } else if (bIdx >= 0) {
-                          return 1;
-                        } else {
-                          return 0;
-                        }
-                      })
-                    : [],
-                  "foodSafetyReviewCb",
-                  checkboxStatus,
-                  setCheckboxStatus
-                )
-
-                // <CheckboxList
-                //   data={
-                //     formData && formData.categorys
-                //       ? [...foodSafetyReviewTexts].sort((a, b) => {
-                //           const aIdx = formData.categorys.indexOf(Number(a.id));
-                //           const bIdx = formData.categorys.indexOf(Number(b.id));
-
-                //           if (aIdx >= 0 && bIdx >= 0) {
-                //             return aIdx - bIdx;
-                //           } else if (aIdx >= 0) {
-                //             return -1;
-                //           } else if (bIdx >= 0) {
-                //             return 1;
-                //           } else {
-                //             return 0;
-                //           }
-                //         })
-                //       : []
-                //   }
-                //   checkboxStatus={checkboxStatus}
-                //   categoryName={"foodSafetyReviewCb"}
-                //   handleToggle={setCheckboxStatus}
-                // />
-
-                // todo set the right values
-                // formData && formData.categorys
-                // ? formData.categorys.map((item,index) => {
-                //   const checkboxKey = `${categoryName}${index + 1}`;
-                //     return {
-                //       id: item.id,
-                //       text: (
-                //         <View key={`checkbox_${item.id}`}>
-                //           <CheckboxItem
-                //       label={checkboxKey}
-                //       // checkboxItemText={name}
-                //       // checked={checkboxValue}
-                //       // handleChange={(checked) => {
-                //       //   const updatedStatus = handleCategoriesCheckboxesToggle(
-                //       //     checkboxStatus,
-                //       //     `${categoryName}Status`,
-                //       //     checked,
-                //       //     id
-                //       //   );
-                //       //   handleToggle(updatedStatus);
-                //       // }}
-                //           />
-                //           <Image style={{ width: 9, height: 14 }} source={onDragIcon} />
-                //         </View>
-                //       ),
-                //       boxItem: null, // Set to null as you don't have boxItem for now
-                //     };
-                //   })
-                // : []
-              }
+                      if (aIdx >= 0 && bIdx >= 0) {
+                        return aIdx - bIdx;
+                      } else if (aIdx >= 0) {
+                        return -1;
+                      } else if (bIdx >= 0) {
+                        return 1;
+                      } else {
+                        return 0;
+                      }
+                    })
+                  : [],
+                "foodSafetyReviewCb",
+                checkboxStatus,
+                setCheckboxStatus
+              )}
               onDragEndCb={(data) => {
                 const { from, to } = data;
-                // deepcopy the current checkboxStatus.foodSafetyReviewCbStatus array
+                // deepcopy the current checkboxStatus?.foodSafetyReviewCbStatus array
                 const newCheckboxStatus = [
-                  ...checkboxStatus.foodSafetyReviewCbStatus,
+                  ...checkboxStatus?.foodSafetyReviewCbStatus,
                 ];
                 // reordering the checkbox statuses to match the new item order
-                newCheckboxStatus.splice(
+                newCheckboxStatus?.splice(
                   to,
                   0,
-                  newCheckboxStatus.splice(from, 1)[0]
+                  newCheckboxStatus?.splice(from, 1)[0]
                 );
                 // updateing the checkboxStatus state
                 setCheckboxStatus({
@@ -1042,7 +990,10 @@ const WorkerNewReport = () => {
                 memoizedCategories &&
                 memoizedCategories.categories &&
                 memoizedCategories.categories[2].name
-              } (נבחרו  ${getCheckedCount("culinaryReviewCb")} דוחות)`}
+              } (נבחרו  ${getCheckedCount(
+                checkboxStatus,
+                "culinaryReviewCb"
+              )} דוחות)`}
               contentHeight={336}
               headerHeight={50}
               draggable={true}
@@ -1061,66 +1012,40 @@ const WorkerNewReport = () => {
                 color: colors.black,
                 fontFamily: fonts.ABold,
               }}
-              accordionContent={
-                accordionCategoriesItem(
-                  formData && formData.categorys
-                    ? [...culinaryReviewTexts].sort((a, b) => {
-                        const aIdx = formData.categorys.indexOf(Number(a.id));
-                        const bIdx = formData.categorys.indexOf(Number(b.id));
+              accordionContent={accordionCategoriesItem(
+                formData && formData.categorys
+                  ? [...culinaryReviewTexts].sort((a, b) => {
+                      const aIdx = formData.categorys.indexOf(Number(a.id));
+                      const bIdx = formData.categorys.indexOf(Number(b.id));
 
-                        if (aIdx >= 0 && bIdx >= 0) {
-                          return aIdx - bIdx;
-                        } else if (aIdx >= 0) {
-                          return -1;
-                        } else if (bIdx >= 0) {
-                          return 1;
-                        } else {
-                          return 0;
-                        }
-                      })
-                    : [],
-                  "culinaryReviewCb",
-                  checkboxStatus,
-                  setCheckboxStatus
-                )
-
-                // <CheckboxList
-                //   data={
-                //     formData && formData.categorys
-                //       ? [...culinaryReviewTexts].sort((a, b) => {
-                //           const aIdx = formData.categorys.indexOf(Number(a.id));
-                //           const bIdx = formData.categorys.indexOf(Number(b.id));
-
-                //           if (aIdx >= 0 && bIdx >= 0) {
-                //             return aIdx - bIdx;
-                //           } else if (aIdx >= 0) {
-                //             return -1;
-                //           } else if (bIdx >= 0) {
-                //             return 1;
-                //           } else {
-                //             return 0;
-                //           }
-                //         })
-                //       : []
-                //   }
-                //   checkboxStatus={checkboxStatus}
-                //   categoryName={"culinaryReviewCb"}
-                //   handleToggle={setCheckboxStatus}
-                // />
-              }
+                      if (aIdx >= 0 && bIdx >= 0) {
+                        return aIdx - bIdx;
+                      } else if (aIdx >= 0) {
+                        return -1;
+                      } else if (bIdx >= 0) {
+                        return 1;
+                      } else {
+                        return 0;
+                      }
+                    })
+                  : [],
+                "culinaryReviewCb",
+                checkboxStatus,
+                setCheckboxStatus
+              )}
               onDragEndCb={(data) => {
                 const { from, to } = data;
 
-                // deepcopy the current checkboxStatus.culinaryReviewCbStatus array
+                // deepcopy the current checkboxStatus?.culinaryReviewCbStatus array
                 const newCheckboxStatus = [
-                  ...checkboxStatus.culinaryReviewCbStatus,
+                  ...checkboxStatus?.culinaryReviewCbStatus,
                 ];
 
                 // reordering the checkbox statuses to match the new item order
-                newCheckboxStatus.splice(
+                newCheckboxStatus?.splice(
                   to,
                   0,
-                  newCheckboxStatus.splice(from, 1)[0]
+                  newCheckboxStatus?.splice(from, 1)[0]
                 );
 
                 // updateing the checkboxStatus state
@@ -1157,7 +1082,10 @@ const WorkerNewReport = () => {
                   memoizedCategories &&
                   memoizedCategories.categories &&
                   memoizedCategories.categories[3].name
-                } (נבחרו  ${getCheckedCount("nutritionReviewCb")} דוחות)`}
+                } (נבחרו  ${getCheckedCount(
+                  checkboxStatus,
+                  "nutritionReviewCb"
+                )} דוחות)`}
                 contentHeight={336}
                 headerHeight={50}
                 draggable={true}
@@ -1176,70 +1104,40 @@ const WorkerNewReport = () => {
                   color: colors.black,
                   fontFamily: fonts.ABold,
                 }}
-                accordionContent={
-                  accordionCategoriesItem(
-                    formData && formData.categorys
-                      ? [...nutritionReviewTexts].sort((a, b) => {
-                          const aIdx = formData.categorys.indexOf(Number(a.id));
-                          const bIdx = formData.categorys.indexOf(Number(b.id));
+                accordionContent={accordionCategoriesItem(
+                  formData && formData.categorys
+                    ? [...nutritionReviewTexts].sort((a, b) => {
+                        const aIdx = formData.categorys.indexOf(Number(a.id));
+                        const bIdx = formData.categorys.indexOf(Number(b.id));
 
-                          if (aIdx >= 0 && bIdx >= 0) {
-                            return aIdx - bIdx;
-                          } else if (aIdx >= 0) {
-                            return -1;
-                          } else if (bIdx >= 0) {
-                            return 1;
-                          } else {
-                            return 0;
-                          }
-                        })
-                      : [],
-                    "nutritionReviewCb",
-                    checkboxStatus,
-                    setCheckboxStatus
-                  )
-
-                  // <CheckboxList
-                  //   data={
-                  //     formData && formData.categorys
-                  //       ? [...nutritionReviewTexts].sort((a, b) => {
-                  //           const aIdx = formData.categorys.indexOf(
-                  //             Number(a.id)
-                  //           );
-                  //           const bIdx = formData.categorys.indexOf(
-                  //             Number(b.id)
-                  //           );
-
-                  //           if (aIdx >= 0 && bIdx >= 0) {
-                  //             return aIdx - bIdx;
-                  //           } else if (aIdx >= 0) {
-                  //             return -1;
-                  //           } else if (bIdx >= 0) {
-                  //             return 1;
-                  //           } else {
-                  //             return 0;
-                  //           }
-                  //         })
-                  //       : []
-                  //   }
-                  //   checkboxStatus={checkboxStatus}
-                  //   categoryName={"nutritionReviewCb"}
-                  //   handleToggle={setCheckboxStatus}
-                  // />
-                }
+                        if (aIdx >= 0 && bIdx >= 0) {
+                          return aIdx - bIdx;
+                        } else if (aIdx >= 0) {
+                          return -1;
+                        } else if (bIdx >= 0) {
+                          return 1;
+                        } else {
+                          return 0;
+                        }
+                      })
+                    : [],
+                  "nutritionReviewCb",
+                  checkboxStatus,
+                  setCheckboxStatus
+                )}
                 onDragEndCb={(data) => {
                   const { from, to } = data;
 
-                  // deepcopy the current checkboxStatus.nutritionReviewCbStatus array
+                  // deepcopy the current checkboxStatus?.nutritionReviewCbStatus array
                   const newCheckboxStatus = [
-                    ...checkboxStatus.nutritionReviewCbStatus,
+                    ...checkboxStatus?.nutritionReviewCbStatus,
                   ];
 
                   // reordering the checkbox statuses to match the new item order
-                  newCheckboxStatus.splice(
+                  newCheckboxStatus?.splice(
                     to,
                     0,
-                    newCheckboxStatus.splice(from, 1)[0]
+                    newCheckboxStatus?.splice(from, 1)[0]
                   );
 
                   // updateing the checkboxStatus state
@@ -1366,7 +1264,7 @@ const WorkerNewReport = () => {
               )}
               <ScrollView
                 onLayout={(event) => {
-                  const { height, width } = event.nativeEvent.layout;
+                  // const { height, width } = event.nativeEvent.layout;
                   // setRichTextHeight(height);
                 }}
                 style={{
@@ -1441,7 +1339,6 @@ const WorkerNewReport = () => {
                 const res = await saveEditedReport(formData);
                 setIsLoading(false);
                 console.log("edit on back press button successfully", res);
-                // console.log("back press response:", response);
               } else {
                 setIsLoading(false);
                 console.log("unable o save on back press..");
@@ -1459,11 +1356,9 @@ const WorkerNewReport = () => {
               }
               iconList={currentReport}
               onCategoriesIconPress={() => {
-                // navigateToRoute(routes.ONBOARDING.CategoryEdit);
                 setModalVisible(true);
               }}
               onSummeryIconPress={async () => {
-                // * working
                 setIsLoading(true);
                 try {
                   await saveEditedReport(formData);

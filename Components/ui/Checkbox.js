@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useCallback } from "react";
+import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
 import cbIcon from "../../assets/imgs/checkboxIcon.png";
 const Checkbox = React.memo(
   ({ label, checkedColor, unCheckedColor, checked, onToggle }) => {
