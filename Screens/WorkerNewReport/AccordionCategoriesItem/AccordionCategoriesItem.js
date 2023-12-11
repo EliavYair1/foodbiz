@@ -39,12 +39,12 @@ export const handleCategoriesCheckboxesToggle = (
 };
 
 export const useAccordionCategoriesItem = () => {
-  const globalCategories = useSelector((state) => state.globalCategories);
+  // const globalCategories = useSelector((state) => state.globalCategories);
 
-  const memoizedCategories = useMemo(
-    () => globalCategories,
-    [globalCategories]
-  );
+  // const memoizedCategories = useMemo(
+  //   () => globalCategories,
+  //   [globalCategories]
+  // );
 
   // console.log("initialStatus", initialStatus);
   const [checkboxStatus, setCheckboxStatus] = useState({
