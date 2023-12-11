@@ -54,24 +54,25 @@ const Accordion = ({
     }).start();
   }, [open, heightAnim, contentHeight]);
 
-  const renderAccordionItem = useCallback(
-    ({ item, index, drag, isActive }) => {
-      return (
-        <TouchableOpacity style={{}} onLongPress={drag}>
-          <View
-            style={[styles.contentBox, contentItemStyling ?? ""]}
-            key={item.id}
-          >
-            {item.text && <View>{item.text}</View>}
-            {item.boxItem}
-          </View>
-          {hasDivider && <Divider />}
-        </TouchableOpacity>
-      );
-    },
-    [contentItemStyling, hasDivider]
-  );
+  const renderAccordionItem = ({ item, index, drag, isActive }) => {
+    // console.log("innnn", item.text);
+    return (
+      <TouchableOpacity style={{}} onLongPress={drag}>
+        <View
+          style={[styles.contentBox, contentItemStyling ?? ""]}
+          key={item.id}
+        >
+          {item.text && <View>{item.text}</View>}
+          {item.boxItem}
+        </View>
+        {hasDivider && <Divider />}
+      </TouchableOpacity>
+    );
+  };
 
+  // console.log(accordionContent);
+  // console.log(draggable);
+  // console.log(Array.isArray(accordionContent) && accordionContent.length > 0);
   return (
     <View>
       <TouchableOpacity
@@ -121,7 +122,7 @@ const Accordion = ({
         ]}
       >
         <View style={[styles.contentWrapper]}>
-          {/* {draggable && Array.isArray(accordionContent) ? (
+          {draggable && Array.isArray(accordionContent) ? (
             <DraggableFlatList
               data={accordionContent}
               renderItem={renderAccordionItem}
@@ -135,8 +136,8 @@ const Accordion = ({
               data={accordionContent}
               renderItem={renderAccordionItem}
             />
-          )} */}
-          {Array.isArray(accordionContent) && accordionContent.length > 0 ? (
+          )}
+          {/* {Array.isArray(accordionContent) && accordionContent.length > 0 ? (
             <DraggableFlatList
               data={accordionContent}
               renderItem={renderAccordionItem}
@@ -145,7 +146,7 @@ const Accordion = ({
             />
           ) : (
             <Text>No content available</Text>
-          )}
+          )} */}
         </View>
       </Animated.View>
     </View>

@@ -2,8 +2,8 @@ import React, { useCallback, useState } from "react";
 import { Image, View } from "react-native";
 import CheckboxItem from "../CheckboxItem/CheckboxItem";
 import onDragIcon from "../../../assets/imgs/onDragIcon.png";
-
-// import { FlatList } from "react-native-gesture-handler";
+import { FlatList } from "react-native-gesture-handler";
+import { debounce } from "lodash";
 // * get the array of categories from the report and updates the state
 export const handleCategoriesCheckboxesToggle = (
   status,
@@ -11,6 +11,12 @@ export const handleCategoriesCheckboxesToggle = (
   checked,
   label
 ) => {
+  console.log("handleCategoriesCheckboxesToggle", {
+    status,
+    category,
+    checked,
+    label,
+  });
   const updatedStatus = { ...status };
   const updatedCategoryStatus = [...updatedStatus[category]];
   const index = updatedCategoryStatus.indexOf(parseInt(label));
@@ -32,61 +38,21 @@ export const handleCategoriesCheckboxesToggle = (
   return statusChanged ? updatedStatus : status;
 };
 
-// export function accordionCategoriesItem(
-//   names,
-//   categoryName,
-//   checkboxStatus,
-//   handleToggle
-// ) {
-//   return names.map((item, index) => {
-//     // console.log("categoryName", categoryName);
-//     // console.log("checkboxStatus", checkboxStatus);
-//     const checkboxKey = `${categoryName}${index + 1}`;
-//     // console.log("checkboxKey", checkboxKey);
-
-//     const categoryStatus = checkboxStatus[`${categoryName}Status`];
-//     // console.log("categoryStatus", categoryStatus);
-
-//     const checkboxValue =
-//       categoryStatus && Array.isArray(categoryStatus)
-//         ? categoryStatus.includes(parseInt(item.id))
-//         : false;
-//     // console.log("checkboxValue", checkboxValue);
-
-//     // console.log("item", item.name);
-
-//     return {
-//       id: item.id,
-//       text: (
-//         <View>
-//           <CheckboxItem
-//             key={checkboxKey + checkboxValue}
-//             label={checkboxKey}
-//             checkboxItemText={item.name}
-//             checked={checkboxValue}
-//             handleChange={(checked) => {
-//               const updatedStatus = handleCategoriesCheckboxesToggle(
-//                 checkboxStatus,
-//                 `${categoryName}Status`,
-//                 checked,
-//                 item.id
-//               );
-//               handleToggle(updatedStatus);
-//             }}
-//           />
-//         </View>
-//       ),
-//       boxItem: <Image style={{ width: 9, height: 14 }} source={onDragIcon} />,
-//     };
-//   });
-// }
 export const useAccordionCategoriesItem = () => {
+  const globalCategories = useSelector((state) => state.globalCategories);
+
+  const memoizedCategories = useMemo(
+    () => globalCategories,
+    [globalCategories]
+  );
+
   // console.log("initialStatus", initialStatus);
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
     nutritionReviewCbStatus: [],
   });
+  const debounceCheckboxStatus = debounce(setCheckboxStatus, 0);
 
   // * checkbox counter
   const getCheckedCount = (category) => {
@@ -118,7 +84,7 @@ export const useAccordionCategoriesItem = () => {
                   checked,
                   item.id
                 );
-                setCheckboxStatus(updatedStatus);
+                debounceCheckboxStatus(updatedStatus);
               }}
             />
           </View>

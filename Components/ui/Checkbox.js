@@ -1,18 +1,19 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
 import cbIcon from "../../assets/imgs/checkboxIcon.png";
 const Checkbox = React.memo(
   ({ label, checkedColor, unCheckedColor, checked, onToggle }) => {
+    const [isChecked, setIsChecked] = useState(checked);
     const handleToggle = () => {
       // console.log(`Before toggle - ${label}: ${checked}`);
       const newState = !checked;
-      // setIsChecked(newState);
+      setIsChecked(newState);
       onToggle(newState);
       // console.log(`After toggle - ${label}: ${newState}`);
     };
     useEffect(() => {
       // console.log(`Checkbox render - ${label}: ${checked}`);
-    }, [checked]);
+    }, [isChecked]);
 
     return (
       <TouchableOpacity onPress={handleToggle}>
@@ -23,13 +24,13 @@ const Checkbox = React.memo(
               height: 24,
               borderRadius: 4,
               borderWidth: 2,
-              borderColor: checked ? checkedColor : unCheckedColor,
+              borderColor: isChecked ? checkedColor : unCheckedColor,
               marginRight: 8,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            {checked && (
+            {isChecked && (
               <View
                 style={{
                   width: 20,
