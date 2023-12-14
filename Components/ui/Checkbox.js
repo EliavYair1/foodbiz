@@ -4,6 +4,11 @@ import cbIcon from "../../assets/imgs/checkboxIcon.png";
 const Checkbox = React.memo(
   ({ label, checkedColor, unCheckedColor, checked, onToggle }) => {
     const [isChecked, setIsChecked] = useState(checked);
+    // console.log(`toggle - ${label}: ${checked}`);
+    useEffect(() => {
+      setIsChecked(checked);
+    }, [checked]);
+
     const handleToggle = () => {
       // console.log(`Before toggle - ${label}: ${checked}`);
       const newState = !checked;
@@ -11,9 +16,6 @@ const Checkbox = React.memo(
       onToggle(newState);
       // console.log(`After toggle - ${label}: ${newState}`);
     };
-    useEffect(() => {
-      // console.log(`Checkbox render - ${label}: ${checked}`);
-    }, [isChecked]);
 
     return (
       <TouchableOpacity onPress={handleToggle}>

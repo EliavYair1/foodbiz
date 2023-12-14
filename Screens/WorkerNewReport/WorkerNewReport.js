@@ -71,6 +71,7 @@ const WorkerNewReport = () => {
     checkboxStatus,
     setCheckboxStatus,
     getCheckedCount,
+    handleCheckboxStatusChange,
   } = useAccordionCategoriesItem();
 
   const [colorSelected, setColorSelected] = useState(false);
@@ -106,7 +107,7 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
     rearrangement: IsRearrangement,
   });
-
+  // console.log(formData);
   const [selectedStation, setSelectedStation] = useState(null);
   const [currentReportTime, setCurrentReportTime] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
@@ -183,7 +184,6 @@ const WorkerNewReport = () => {
     formState: { errors },
     getValues,
     setValue,
-    watch,
     trigger,
   } = useForm({
     resolver: yupResolver(schema),
@@ -197,9 +197,9 @@ const WorkerNewReport = () => {
         setIsSchemaValid(false);
         // console.log("err:", err);
       });
-    setValue("clientId", currentClient?.id);
+    // setValue("clientId", currentClient?.id);
   }, [formData, schema]);
-
+  // console.log("form:", formData);
   const findReportTimeName = (data) => {
     const reportTimeId = currentReport?.getReportTime();
 
@@ -226,7 +226,9 @@ const WorkerNewReport = () => {
       setCurrentReportTime(reportTimeName);
       handleContentChange(currentReport.getData("newGeneralCommentTopText"));
       handleCheckboxStatusChange(
-        parsedArrayOfStr(currentReport.getData("categorys"))
+        parsedArrayOfStr(currentReport.getData("categorys")),
+        memoizedCategories,
+        updateCategoriesStatusOnPreviousReports
       );
     }
   }, [currentReport]);
@@ -307,89 +309,17 @@ const WorkerNewReport = () => {
     return parsedSelectedReportCategory;
   };
 
-  //  * 1. checking if the ids of the categories match to the selected report
-  // *  2.  sorting them by type to their right location of major category
-  const handleCheckboxStatusChange = (parsedSelectedReportCategory) => {
-    // console.log("innn", 1);
-    const memoRizedCats = memoizedCategories?.categories;
-    const globalStateCategories = memoRizedCats
-      ? Object.values(memoRizedCats).flatMap((category) => category.categories)
-      : null;
-
-    let newCheckboxStatus = {
-      foodSafetyReviewCbStatus: [],
-      culinaryReviewCbStatus: [],
-      nutritionReviewCbStatus: [],
-    };
-    let newOrderedCategories = {
-      foodSafetyReviewCbStatus: [],
-      culinaryReviewCbStatus: [],
-      nutritionReviewCbStatus: [],
-    };
-    // todo to change the way the categories change according to the onDragCb function logic
-
-    if (globalStateCategories) {
-      newCheckboxStatus = globalStateCategories.reduce((status, category) => {
-        const categoryId = parseInt(category.id, 10);
-        const categoryType = parseInt(category.type, 10);
-        if (parsedSelectedReportCategory.has(categoryId)) {
-          if (categoryType === 1) {
-            status.foodSafetyReviewCbStatus.push(categoryId);
-          } else if (categoryType === 2) {
-            status.culinaryReviewCbStatus.push(categoryId);
-          } else if (categoryType === 3) {
-            status.nutritionReviewCbStatus.push(categoryId);
-          }
-        }
-        return status;
-      }, newCheckboxStatus);
-
-      const myArray = Array.from(parsedSelectedReportCategory);
-      myArray.map((element) => {
-        let index = newCheckboxStatus?.foodSafetyReviewCbStatus.findIndex(
-          (id) => id == element
-        );
-
-        if (index !== -1) {
-          newOrderedCategories.foodSafetyReviewCbStatus.push(element);
-          return element;
-        }
-        index = newCheckboxStatus?.culinaryReviewCbStatus.findIndex(
-          (id) => id == element
-        );
-        if (index !== -1) {
-          newOrderedCategories.culinaryReviewCbStatus.push(element);
-          return element;
-        }
-
-        index = newCheckboxStatus?.nutritionReviewCbStatus.findIndex(
-          (id) => id == element
-        );
-        if (index !== -1) {
-          newOrderedCategories.nutritionReviewCbStatus.push(element);
-          return element;
-        }
-      });
-    }
-
-    // Saving the categories checkbox status
-    const categories = [
-      ...newOrderedCategories.foodSafetyReviewCbStatus,
-      ...newOrderedCategories.culinaryReviewCbStatus,
-      ...newOrderedCategories.nutritionReviewCbStatus,
-    ];
-    // console.log(typeof categories);
+  const updateCategoriesStatusOnPreviousReports = (data) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
       categorys:
-        categories.length > 0 || Object.keys(categories).length > 0
-          ? categories
+        data.length > 0 || Object.keys(data).length > 0
+          ? data
           : parsedSelectedReportCategory,
     }));
-
-    setValue("categorys", categories);
+    // console.log("data2222", data);
+    setValue("categorys", data);
     trigger("categorys");
-    setCheckboxStatus(newOrderedCategories);
   };
 
   useEffect(() => {
@@ -514,7 +444,11 @@ const WorkerNewReport = () => {
           const parsedSelectedReportCategory =
             handleSelectedReportCategory(selectedReport);
 
-          handleCheckboxStatusChange(parsedSelectedReportCategory);
+          handleCheckboxStatusChange(
+            parsedSelectedReportCategory,
+            memoizedCategories,
+            updateCategoriesStatusOnPreviousReports
+          );
 
           handleSwitchStateChange(selectedReport);
           handleAccompanyChange(selectedReport);
@@ -557,6 +491,8 @@ const WorkerNewReport = () => {
 
   // * submit the form
   const onSubmitForm = async () => {
+    // const isValid = await trigger();
+    // console.log("isValid", isValid);
     const formErrors = {};
     try {
       await schema.validate(formData, { abortEarly: false });
@@ -605,265 +541,265 @@ const WorkerNewReport = () => {
 
   // * accordion FlatList array of Content
   const NewReportAccordionContent = [
-    // {
-    //   key: "settings",
-    //   headerText: "הגדרות הדוח",
-    //   contentText: "world",
-    //   contentHeight: 959,
-    //   headerHeight: 48,
-    //   headerTogglerStyling: styles.headerStyle,
-    //   iconDisplay: true,
-    //   boxHeight: 80.5,
-    //   hasDivider: true,
-    //   draggable: false,
-    //   accordionCloseIndicator: accordionCloseIcon,
-    //   accordionOpenIndicator: accordionOpenIcon,
-    //   contentItemStyling: styles.contentBoxSetting,
-    //   accordionContent: [
-    //     {
-    //       id: 0,
-    //       text: <Text>תחנה</Text>,
-    //       boxItem: (
-    //         <SelectMenu
-    //           control={control}
-    //           selectWidth={240}
-    //           optionsHeight={200}
-    //           defaultText={
-    //             currentReport ? currentReport.getData("station_name") : "בחירה"
-    //           }
-    //           displayedValue={getValues().clientStationId}
-    //           selectMenuStyling={{
-    //             flexDirection: "column",
-    //             justifyContent: "center",
-    //             alignItems: "flex-start",
-    //           }}
-    //           centeredViewStyling={
-    //             {
-    //               // marginRight: 12,
-    //               // alignItems: "flex-end",
-    //               // marginTop: -530,
-    //             }
-    //           }
-    //           selectOptions={currentClient.getStations()}
-    //           name={"clientStationId"}
-    //           errorMessage={
-    //             errors.clientStationId && errors.clientStationId.message
-    //           }
-    //           onChange={(value) => {
-    //             handleFormChange("clientStationId", value.id);
-    //             setSelectedStation(value.id);
-    //             setValue("clientStationId", value.company);
-    //             trigger("clientStationId");
-    //             console.log("value-station:", value);
-    //           }}
-    //           propertyName="company"
-    //           returnObject={true}
-    //         />
-    //       ),
-    //     },
+    {
+      key: "settings",
+      headerText: "הגדרות הדוח",
+      contentText: "world",
+      contentHeight: 959,
+      headerHeight: 48,
+      headerTogglerStyling: styles.headerStyle,
+      iconDisplay: true,
+      boxHeight: 80.5,
+      hasDivider: true,
+      draggable: false,
+      accordionCloseIndicator: accordionCloseIcon,
+      accordionOpenIndicator: accordionOpenIcon,
+      contentItemStyling: styles.contentBoxSetting,
+      accordionContent: [
+        {
+          id: 0,
+          text: <Text>תחנה</Text>,
+          boxItem: (
+            <SelectMenu
+              control={control}
+              selectWidth={240}
+              optionsHeight={200}
+              defaultText={
+                currentReport ? currentReport.getData("station_name") : "בחירה"
+              }
+              displayedValue={getValues().clientStationId}
+              selectMenuStyling={{
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "flex-start",
+              }}
+              centeredViewStyling={
+                {
+                  // marginRight: 12,
+                  // alignItems: "flex-end",
+                  // marginTop: -530,
+                }
+              }
+              selectOptions={currentClient.getStations()}
+              name={"clientStationId"}
+              errorMessage={
+                errors.clientStationId && errors.clientStationId.message
+              }
+              onChange={(value) => {
+                handleFormChange("clientStationId", value.id);
+                setSelectedStation(value.id);
+                setValue("clientStationId", value.company);
+                trigger("clientStationId");
+                console.log("value-station:", value);
+              }}
+              propertyName="company"
+              returnObject={true}
+            />
+          ),
+        },
 
-    //     {
-    //       id: 1,
-    //       text: <Text>התבסס על דוח קודם</Text>,
-    //       boxItem: (
-    //         <SelectMenu
-    //           control={control}
-    //           selectWidth={240}
-    //           optionsHeight={750}
-    //           defaultText={"בחירה"}
-    //           // displayedValue={getValues().previousReports}
-    //           selectMenuStyling={{
-    //             flexDirection: "column",
-    //             justifyContent: "center",
-    //             alignItems: "flex-start",
-    //           }}
-    //           centeredViewStyling={
-    //             {
-    //               // marginRight: 12,
-    //               // alignItems: "flex-end",
-    //               // marginTop: 180,
-    //             }
-    //           }
-    //           selectOptions={[
-    //             { timeOfReport: "דוח חדש", id: 0 },
-    //             ...filteredStationsResult, //clientStationId
-    //           ]}
-    //           name={"previousReports"}
-    //           errorMessage={
-    //             errors.previousReports && errors.previousReports.message
-    //           }
-    //           onChange={(value) => {
-    //             handleFormChange("previousReports", value);
-    //             // setSelectedReport(value);
-    //             setValue("previousReports", value);
-    //             trigger("previousReports");
-    //             console.log("previousReports:", value);
-    //           }}
-    //           propertyName="timeOfReport"
-    //         />
-    //       ),
-    //     },
-    //     {
-    //       id: 2,
-    //       text: <Text>יש קנסות</Text>,
-    //       boxItem: (
-    //         <ToggleSwitch
-    //           id={"haveFine"}
-    //           switchStates={switchStates}
-    //           toggleSwitch={toggleSwitch}
-    //           truthyText={"כן"}
-    //           falsyText={"לא"}
-    //         />
-    //       ),
-    //     },
-    //     {
-    //       id: 3,
-    //       text: <Text>להציג כמות סעיפים</Text>,
-    //       boxItem: (
-    //         <ToggleSwitch
-    //           id={"haveAmountOfItems"}
-    //           switchStates={switchStates}
-    //           toggleSwitch={toggleSwitch}
-    //           truthyText={"כן"}
-    //           falsyText={"לא"}
-    //         />
-    //       ),
-    //     },
-    //     {
-    //       id: 4,
-    //       text: <Text>הצג ציון ביקורת בטיחות מזון</Text>,
-    //       boxItem: (
-    //         <ToggleSwitch
-    //           id={"haveSafetyGrade"}
-    //           switchStates={switchStates}
-    //           toggleSwitch={toggleSwitch}
-    //           truthyText={"כן"}
-    //           falsyText={"לא"}
-    //         />
-    //       ),
-    //     },
-    //     {
-    //       id: 5,
-    //       text: <Text>הצג ציון ביקורת קולינארית</Text>,
-    //       boxItem: (
-    //         <ToggleSwitch
-    //           id={"haveCulinaryGrade"}
-    //           switchStates={switchStates}
-    //           toggleSwitch={toggleSwitch}
-    //           truthyText={"כן"}
-    //           falsyText={"לא"}
-    //         />
-    //       ),
-    //     },
-    //     {
-    //       id: 6,
-    //       text: <Text>הצג ציון תזונה</Text>,
-    //       boxItem: (
-    //         <ToggleSwitch
-    //           id={"haveNutritionGrade"}
-    //           switchStates={switchStates}
-    //           toggleSwitch={toggleSwitch}
-    //           truthyText={"כן"}
-    //           falsyText={"לא"}
-    //         />
-    //       ),
-    //     },
-    //     {
-    //       id: 7,
-    //       text: <Text>הצג שמות קטגוריות בתמצית עבור ליקויים קריטיים</Text>,
-    //       boxItem: (
-    //         <ToggleSwitch
-    //           id={"haveCategoriesNameForCriticalItems"}
-    //           switchStates={switchStates}
-    //           toggleSwitch={toggleSwitch}
-    //           truthyText={"כן"}
-    //           falsyText={"לא"}
-    //         />
-    //       ),
-    //     },
-    //     {
-    //       id: 8,
-    //       text: <Text>שם המלווה</Text>,
-    //       boxItem: (
-    //         <View style={{ justifyContent: "flex-end", alignSelf: "center" }}>
-    //           <Input
-    //             mode={"outlined"}
-    //             control={control}
-    //             name={"accompany"}
-    //             inputStyle={{
-    //               backgroundColor: colors.white,
-    //               width: 240,
-    //               alignSelf: "center",
-    //             }}
-    //             activeOutlineColor={colors.blue}
-    //             // label={accompanySelected ? accompanySelected : "ללא  מלווה"}
-    //             // label={null}
-    //             defaultValue={
-    //               currentReport
-    //                 ? currentReport.getData("accompany")
-    //                 : formData.accompany
-    //             }
-    //             // placeholder={" "}
-    //             outlineColor={"rgba(12, 20, 48, 0.2)"}
-    //             onChangeFunction={(value) => {
-    //               handleFormChange("accompany", value);
-    //             }}
-    //           />
-    //         </View>
-    //       ),
-    //     },
-    //     {
-    //       id: 9,
-    //       text: <Text>תאריך ביקורת</Text>,
-    //       boxItem: (
-    //         <DatePicker
-    //           control={control}
-    //           name={"timeOfReport"}
-    //           errorMessage={errors.timeOfReport && errors.timeOfReport.message}
-    //           onchange={(value) => {
-    //             const date = new Date(value);
-    //             const formattedDate = date.toLocaleDateString("en-GB");
-    //             handleFormChange("timeOfReport", formattedDate);
-    //             setValue("timeOfReport", formattedDate);
-    //             trigger("timeOfReport");
-    //           }}
-    //           dateInputWidth={240}
-    //           defaultDate={currentReport?.getData("timeOfReport")}
-    //         />
-    //       ),
-    //     },
-    //     {
-    //       id: 10,
-    //       text: <Text>זמן הביקורת</Text>,
-    //       boxItem: (
-    //         <SelectMenu
-    //           control={control}
-    //           selectWidth={240}
-    //           optionsHeight={200}
-    //           defaultText={currentReport ? currentReportTime : "בחירה"}
-    //           displayedValue={currentReportTime}
-    //           selectMenuStyling={{
-    //             flexDirection: "column",
-    //             justifyContent: "center",
-    //             alignItems: "flex-start",
-    //           }}
-    //           selectOptions={reportsTimes}
-    //           name={"reportTime"}
-    //           errorMessage={errors.reportTime && errors.reportTime.message}
-    //           onChange={(value) => {
-    //             setCurrentReportTime(value.id);
-    //             handleFormChange("reportTime", value.id);
-    //             setValue("reportTime");
-    //             trigger("reportTime");
-    //             console.log("reportTime:", value);
-    //           }}
-    //           propertyName={"name"}
-    //           returnObject={true}
-    //         />
-    //       ),
-    //     },
-    //   ],
-    // },
+        {
+          id: 1,
+          text: <Text>התבסס על דוח קודם</Text>,
+          boxItem: (
+            <SelectMenu
+              control={control}
+              selectWidth={240}
+              optionsHeight={750}
+              defaultText={"בחירה"}
+              // displayedValue={getValues().previousReports}
+              selectMenuStyling={{
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "flex-start",
+              }}
+              centeredViewStyling={
+                {
+                  // marginRight: 12,
+                  // alignItems: "flex-end",
+                  // marginTop: 180,
+                }
+              }
+              selectOptions={[
+                { timeOfReport: "דוח חדש", id: 0 },
+                ...filteredStationsResult, //clientStationId
+              ]}
+              name={"previousReports"}
+              errorMessage={
+                errors.previousReports && errors.previousReports.message
+              }
+              onChange={(value) => {
+                handleFormChange("previousReports", value);
+                // setSelectedReport(value);
+                setValue("previousReports", value);
+                trigger("previousReports");
+                console.log("previousReports:", value);
+              }}
+              propertyName="timeOfReport"
+            />
+          ),
+        },
+        {
+          id: 2,
+          text: <Text>יש קנסות</Text>,
+          boxItem: (
+            <ToggleSwitch
+              id={"haveFine"}
+              switchStates={switchStates}
+              toggleSwitch={toggleSwitch}
+              truthyText={"כן"}
+              falsyText={"לא"}
+            />
+          ),
+        },
+        {
+          id: 3,
+          text: <Text>להציג כמות סעיפים</Text>,
+          boxItem: (
+            <ToggleSwitch
+              id={"haveAmountOfItems"}
+              switchStates={switchStates}
+              toggleSwitch={toggleSwitch}
+              truthyText={"כן"}
+              falsyText={"לא"}
+            />
+          ),
+        },
+        {
+          id: 4,
+          text: <Text>הצג ציון ביקורת בטיחות מזון</Text>,
+          boxItem: (
+            <ToggleSwitch
+              id={"haveSafetyGrade"}
+              switchStates={switchStates}
+              toggleSwitch={toggleSwitch}
+              truthyText={"כן"}
+              falsyText={"לא"}
+            />
+          ),
+        },
+        {
+          id: 5,
+          text: <Text>הצג ציון ביקורת קולינארית</Text>,
+          boxItem: (
+            <ToggleSwitch
+              id={"haveCulinaryGrade"}
+              switchStates={switchStates}
+              toggleSwitch={toggleSwitch}
+              truthyText={"כן"}
+              falsyText={"לא"}
+            />
+          ),
+        },
+        {
+          id: 6,
+          text: <Text>הצג ציון תזונה</Text>,
+          boxItem: (
+            <ToggleSwitch
+              id={"haveNutritionGrade"}
+              switchStates={switchStates}
+              toggleSwitch={toggleSwitch}
+              truthyText={"כן"}
+              falsyText={"לא"}
+            />
+          ),
+        },
+        {
+          id: 7,
+          text: <Text>הצג שמות קטגוריות בתמצית עבור ליקויים קריטיים</Text>,
+          boxItem: (
+            <ToggleSwitch
+              id={"haveCategoriesNameForCriticalItems"}
+              switchStates={switchStates}
+              toggleSwitch={toggleSwitch}
+              truthyText={"כן"}
+              falsyText={"לא"}
+            />
+          ),
+        },
+        {
+          id: 8,
+          text: <Text>שם המלווה</Text>,
+          boxItem: (
+            <View style={{ justifyContent: "flex-end", alignSelf: "center" }}>
+              <Input
+                mode={"outlined"}
+                control={control}
+                name={"accompany"}
+                inputStyle={{
+                  backgroundColor: colors.white,
+                  width: 240,
+                  alignSelf: "center",
+                }}
+                activeOutlineColor={colors.blue}
+                // label={accompanySelected ? accompanySelected : "ללא  מלווה"}
+                // label={null}
+                defaultValue={
+                  currentReport
+                    ? currentReport.getData("accompany")
+                    : formData.accompany
+                }
+                // placeholder={" "}
+                outlineColor={"rgba(12, 20, 48, 0.2)"}
+                onChangeFunction={(value) => {
+                  handleFormChange("accompany", value);
+                }}
+              />
+            </View>
+          ),
+        },
+        {
+          id: 9,
+          text: <Text>תאריך ביקורת</Text>,
+          boxItem: (
+            <DatePicker
+              control={control}
+              name={"timeOfReport"}
+              errorMessage={errors.timeOfReport && errors.timeOfReport.message}
+              onchange={(value) => {
+                const date = new Date(value);
+                const formattedDate = date.toLocaleDateString("en-GB");
+                handleFormChange("timeOfReport", formattedDate);
+                setValue("timeOfReport", formattedDate);
+                trigger("timeOfReport");
+              }}
+              dateInputWidth={240}
+              defaultDate={currentReport?.getData("timeOfReport")}
+            />
+          ),
+        },
+        {
+          id: 10,
+          text: <Text>זמן הביקורת</Text>,
+          boxItem: (
+            <SelectMenu
+              control={control}
+              selectWidth={240}
+              optionsHeight={200}
+              defaultText={currentReport ? currentReportTime : "בחירה"}
+              displayedValue={currentReportTime}
+              selectMenuStyling={{
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "flex-start",
+              }}
+              selectOptions={reportsTimes}
+              name={"reportTime"}
+              errorMessage={errors.reportTime && errors.reportTime.message}
+              onChange={(value) => {
+                setCurrentReportTime(value.id);
+                handleFormChange("reportTime", value.id);
+                setValue("reportTime");
+                trigger("reportTime");
+                console.log("reportTime:", value);
+              }}
+              propertyName={"name"}
+              returnObject={true}
+            />
+          ),
+        },
+      ],
+    },
     {
       key: "categories",
       headerText: "קטגוריות",
@@ -901,8 +837,7 @@ const WorkerNewReport = () => {
                 memoizedCategories.categories &&
                 memoizedCategories.categories[1].name
               } (נבחרו ${getCheckedCount(
-                checkboxStatus,
-                "foodSafetyReviewCb"
+                checkboxStatus.foodSafetyReviewCbStatus
               )} דוחות)`}
               contentHeight={336}
               headerHeight={50}
@@ -985,8 +920,7 @@ const WorkerNewReport = () => {
                 memoizedCategories.categories &&
                 memoizedCategories.categories[2].name
               } (נבחרו  ${getCheckedCount(
-                checkboxStatus,
-                "culinaryReviewCb"
+                checkboxStatus.culinaryReviewCbStatus
               )} דוחות)`}
               contentHeight={336}
               headerHeight={50}
@@ -1077,8 +1011,7 @@ const WorkerNewReport = () => {
                   memoizedCategories.categories &&
                   memoizedCategories.categories[3].name
                 } (נבחרו  ${getCheckedCount(
-                  checkboxStatus,
-                  "nutritionReviewCb"
+                  checkboxStatus.nutritionReviewCbStatus
                 )} דוחות)`}
                 contentHeight={336}
                 headerHeight={50}
@@ -1162,145 +1095,145 @@ const WorkerNewReport = () => {
         },
       ],
     },
-    // {
-    //   key: "summary",
-    //   headerText: "תמצית הדוח",
-    //   contentText: "world",
-    //   contentHeight: 300,
-    //   headerHeight: 48,
-    //   headerTogglerStyling: styles.headerStyle,
-    //   iconDisplay: true,
-    //   // boxHeight: 80.5,
-    //   draggable: false,
-    //   contentItemStyling: styles.contentBoxSettingSummery,
-    //   hasDivider: false,
-    //   accordionCloseIndicator: accordionCloseIcon,
-    //   accordionOpenIndicator: accordionOpenIcon,
-    //   accordionContent: [
-    //     {
-    //       id: 0,
-    //       boxItem: (
-    //         <View
-    //           style={{
-    //             flex: 1,
-    //             width: "100%",
-    //             marginTop: 20,
-    //             height: "100%",
-    //             direction: "rtl",
-    //             // backgroundColor: "red",
-    //           }}
-    //         >
-    //           <View
-    //             style={{
-    //               backgroundColor: "#D3E0FF",
-    //               width: "100%",
-    //               alignItems: "flex-start",
-    //               // marginBottom: 200,
-    //               position: "relative",
-    //               zIndex: 3,
-    //             }}
-    //           >
-    //             <RichToolbar
-    //               editor={richText}
-    //               selectedButtonStyle={{ backgroundColor: "#baceff" }}
-    //               unselectedButtonStyle={{ backgroundColor: "#D3E0FF" }}
-    //               iconTint="#000000"
-    //               selectedIconTint="#000000"
-    //               actions={[
-    //                 actions.insertOrderedList,
-    //                 actions.insertBulletsList,
-    //                 actions.setUnderline,
-    //                 actions.setItalic,
-    //                 actions.setBold,
-    //                 "custom",
-    //               ]}
-    //               // onPressAddImage={onPressAddImage}
-    //               // onAction={onAction} // Add the onAction prop for custom actions
-    //               iconMap={{
-    //                 ["custom"]: ({}) => <Text>C</Text>,
-    //               }}
-    //               custom={() => {
-    //                 setColorSelected(!colorSelected);
-    //                 console.log("object");
-    //               }}
-    //             />
-    //           </View>
-    //           {colorSelected && (
-    //             <View
-    //               style={{
-    //                 direction: "ltr",
-    //                 width: 200,
-    //                 position: "absolute",
-    //                 top: 20,
-    //                 zIndex: 3,
-    //               }}
-    //             >
-    //               <ColorPicker
-    //                 onColorChange={(color) => {
-    //                   console.log(color);
-    //                   richText.current?.setForeColor(color);
-    //                 }}
-    //                 sliderSize={20}
-    //                 thumbSize={60}
-    //                 gapSize={5}
-    //                 // noSnap={true}
-    //                 color="#000000"
-    //                 palette={[
-    //                   "#000000",
-    //                   "#ffff00",
-    //                   "#0000ff",
-    //                   "#ff0000",
-    //                   "#00ff00",
-    //                 ]}
-    //                 swatches={true}
-    //               />
-    //             </View>
-    //           )}
-    //           <ScrollView
-    //             onLayout={(event) => {
-    //               // const { height, width } = event.nativeEvent.layout;
-    //               // setRichTextHeight(height);
-    //             }}
-    //             style={{
-    //               flex: 1,
-    //               overflow: "visible",
-    //               // height: 200,
-    //               minHeight: Platform.OS == "ios" ? 200 : 200,
-    //               direction: "rtl",
-    //               borderWidth: 1,
-    //               // borderColor: "#000",
-    //               borderColor: "#eee",
-    //               zIndex: 2,
-    //             }}
-    //           >
-    //             <KeyboardAvoidingView
-    //               behavior={Platform.OS == "ios" ? "height" : "height"}
-    //               style={{ flex: 1, direction: "rtl" }}
-    //             >
-    //               <RichEditor
-    //                 ref={richText}
-    //                 onChange={handleContentChange}
-    //                 initialContentHTML={
-    //                   currentReport
-    //                     ? currentReport.getData("newGeneralCommentTopText")
-    //                     : ""
-    //                 }
-    //                 styleWithCSS={true}
-    //                 useContainer={false}
-    //                 style={{
-    //                   direction: "rtl",
-    //                   // borderWidth: 1,
-    //                   // borderColor: "#000",
-    //                   height: 200,
-    //                 }}
-    //               />
-    //             </KeyboardAvoidingView>
-    //           </ScrollView>
-    //         </View>
-    //       ),
-    //     },
-    //   ],
-    // },
+    {
+      key: "summary",
+      headerText: "תמצית הדוח",
+      contentText: "world",
+      contentHeight: 300,
+      headerHeight: 48,
+      headerTogglerStyling: styles.headerStyle,
+      iconDisplay: true,
+      // boxHeight: 80.5,
+      draggable: false,
+      contentItemStyling: styles.contentBoxSettingSummery,
+      hasDivider: false,
+      accordionCloseIndicator: accordionCloseIcon,
+      accordionOpenIndicator: accordionOpenIcon,
+      accordionContent: [
+        {
+          id: 0,
+          boxItem: (
+            <View
+              style={{
+                flex: 1,
+                width: "100%",
+                marginTop: 20,
+                height: "100%",
+                direction: "rtl",
+                // backgroundColor: "red",
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: "#D3E0FF",
+                  width: "100%",
+                  alignItems: "flex-start",
+                  // marginBottom: 200,
+                  position: "relative",
+                  zIndex: 3,
+                }}
+              >
+                <RichToolbar
+                  editor={richText}
+                  selectedButtonStyle={{ backgroundColor: "#baceff" }}
+                  unselectedButtonStyle={{ backgroundColor: "#D3E0FF" }}
+                  iconTint="#000000"
+                  selectedIconTint="#000000"
+                  actions={[
+                    actions.insertOrderedList,
+                    actions.insertBulletsList,
+                    actions.setUnderline,
+                    actions.setItalic,
+                    actions.setBold,
+                    "custom",
+                  ]}
+                  // onPressAddImage={onPressAddImage}
+                  // onAction={onAction} // Add the onAction prop for custom actions
+                  iconMap={{
+                    ["custom"]: ({}) => <Text>C</Text>,
+                  }}
+                  custom={() => {
+                    setColorSelected(!colorSelected);
+                    console.log("object");
+                  }}
+                />
+              </View>
+              {colorSelected && (
+                <View
+                  style={{
+                    direction: "ltr",
+                    width: 200,
+                    position: "absolute",
+                    top: 20,
+                    zIndex: 3,
+                  }}
+                >
+                  <ColorPicker
+                    onColorChange={(color) => {
+                      console.log(color);
+                      richText.current?.setForeColor(color);
+                    }}
+                    sliderSize={20}
+                    thumbSize={60}
+                    gapSize={5}
+                    // noSnap={true}
+                    color="#000000"
+                    palette={[
+                      "#000000",
+                      "#ffff00",
+                      "#0000ff",
+                      "#ff0000",
+                      "#00ff00",
+                    ]}
+                    swatches={true}
+                  />
+                </View>
+              )}
+              <ScrollView
+                onLayout={(event) => {
+                  // const { height, width } = event.nativeEvent.layout;
+                  // setRichTextHeight(height);
+                }}
+                style={{
+                  flex: 1,
+                  overflow: "visible",
+                  // height: 200,
+                  minHeight: Platform.OS == "ios" ? 200 : 200,
+                  direction: "rtl",
+                  borderWidth: 1,
+                  // borderColor: "#000",
+                  borderColor: "#eee",
+                  zIndex: 2,
+                }}
+              >
+                <KeyboardAvoidingView
+                  behavior={Platform.OS == "ios" ? "height" : "height"}
+                  style={{ flex: 1, direction: "rtl" }}
+                >
+                  <RichEditor
+                    ref={richText}
+                    onChange={handleContentChange}
+                    initialContentHTML={
+                      currentReport
+                        ? currentReport.getData("newGeneralCommentTopText")
+                        : ""
+                    }
+                    styleWithCSS={true}
+                    useContainer={false}
+                    style={{
+                      direction: "rtl",
+                      // borderWidth: 1,
+                      // borderColor: "#000",
+                      height: 200,
+                    }}
+                  />
+                </KeyboardAvoidingView>
+              </ScrollView>
+            </View>
+          ),
+        },
+      ],
+    },
   ];
 
   // * filtering out timeofReport when on edit mode.
