@@ -53,11 +53,10 @@ import {
 import useSaveEditedReport from "../../Hooks/useSaveEditedReport";
 import usePostNewReport from "../../Hooks/usePostNewReport";
 import AccordionContentList from "./AccordionContent/AccordionContentList";
-import {
-  useAccordionCategoriesItem,
-  accordionCategoriesItem,
-} from "./AccordionCategoriesItem/AccordionCategoriesItem";
+import { useAccordionCategoriesItem } from "./AccordionCategoriesItem/AccordionCategoriesItem";
 import CategoriesPickerModal from "./CategoriesPickerModal/CategoriesPickerModal";
+import useFilteredStations from "../../Hooks/useFilteredStations";
+import useToggleSwitch from "../../Hooks/useToggleSwitch";
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
   const richText = useRef();
@@ -73,16 +72,14 @@ const WorkerNewReport = () => {
     getCheckedCount,
     handleCheckboxStatusChange,
   } = useAccordionCategoriesItem();
-
-  const [colorSelected, setColorSelected] = useState(false);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
+  // ? global state management
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
   );
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
+
   const userId = useSelector((state) => state.user);
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
   const globalCategories = useSelector((state) => state.globalCategories);
@@ -91,6 +88,11 @@ const WorkerNewReport = () => {
     () => globalCategories,
     [globalCategories]
   );
+  console.log("render...");
+
+  // * local state management
+  const [colorSelected, setColorSelected] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [IsRearrangement, setIsRearrangement] = useState(false);
@@ -107,20 +109,11 @@ const WorkerNewReport = () => {
     haveCategoriesNameForCriticalItems: false,
     rearrangement: IsRearrangement,
   });
-  // console.log(formData);
-  const [selectedStation, setSelectedStation] = useState(null);
+
   const [currentReportTime, setCurrentReportTime] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
-  const [switchStates, setSwitchStates] = useState({
-    haveFine: false,
-    haveAmountOfItems: false,
-    haveSafetyGrade: true,
-    haveCulinaryGrade: true,
-    haveNutritionGrade: true,
-    haveCategoriesNameForCriticalItems: false,
-  });
+
   const [currentReportDate, setCurrentReportDate] = useState(null);
-  // const [richTextHeight, setRichTextHeight] = useState(0);
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
     memoizedCategories?.categories?.[1]?.categories ?? []
@@ -131,7 +124,18 @@ const WorkerNewReport = () => {
   const [nutritionReviewTexts, setNutritionReviewTexts] = useState(
     memoizedCategories?.categories?.[3]?.categories ?? []
   );
-  const [filteredStationsResult, setFilteredStationsResult] = useState([]);
+
+  const { filteredStationsResult, setSelectedStation } = useFilteredStations();
+
+  const {
+    switchStates,
+    handleSwitchStateChange,
+    toggleSwitch,
+    setSwitchStates,
+  } = useToggleSwitch();
+
+  console.log("[parent]:formData", formData);
+  console.log("[parent]:switchStates", switchStates);
   const [majorCategoryHeadersToPass, setMajorCategoryHeadersToPass] = useState(
     []
   );
@@ -238,30 +242,11 @@ const WorkerNewReport = () => {
     return isOpen ? 172 + contentHeight : 172;
   };
 
+  // old code
   // * filtering the current client based on selected station
   // const filteredStationsResult = currentClient
   //   .fetchReports()
   //   .filter((report) => report.getData("clientStationId") === selectedStation);
-
-  // * filtering the current client based on selected station
-  // todo refactor this.
-  useEffect(() => {
-    async function getReports() {
-      try {
-        const reports = await currentClient.fetchReports();
-        if (selectedStation) {
-          const filteredReports = reports.filter(
-            (report) => report.getData("clientStationId") === selectedStation
-          );
-          // console.log("[worker]filteredStationsResult", filteredReports);
-          setFilteredStationsResult(filteredReports);
-        }
-      } catch (error) {
-        console.error("Error fetching or filtering reports:", error);
-      }
-    }
-    getReports();
-  }, [currentClient, selectedStation]);
 
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
@@ -309,6 +294,7 @@ const WorkerNewReport = () => {
     return parsedSelectedReportCategory;
   };
 
+  // * when chosing an existing previous report it update's the previous seleted categories .
   const updateCategoriesStatusOnPreviousReports = (data) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -339,32 +325,20 @@ const WorkerNewReport = () => {
     }
   }, [checkboxStatus]);
 
-  // * checking if the report parameters match to their state true / false
-  const handleSwitchStateChange = (selectedReport) => {
-    const newSwitchStates = {
-      haveFine: selectedReport.getData("haveFine") == 1,
-      haveAmountOfItems: selectedReport.getData("haveAmountOfItems") == 1,
-      haveSafetyGrade: selectedReport.getData("haveSafetyGrade") == 1,
-      haveCulinaryGrade: selectedReport.getData("haveCulinaryGrade") == 1,
-      haveNutritionGrade: selectedReport.getData("haveNutritionGrade") == 1,
-      haveCategoriesNameForCriticalItems:
-        selectedReport.getData("haveCategoriesNameForCriticalItems") == 1,
-    };
+  // * when chosing an existing previous report it update's the previous seleted toggle switches .
+  const updateTogglesStatusOnPreviousReports = (data) => {
+    // ! updateTogglesStatusOnPreviousReports dosent update the formdata state from the hook.
+    console.log("data 000", data);
     setFormData((prevFormData) => ({
       ...prevFormData,
       ...Object.fromEntries(
-        Object.entries(newSwitchStates).map(([key, value]) => [
-          key,
-          value ? 1 : 0,
-        ])
+        Object.entries(data).map(([key, value]) => [key, value ? 1 : 0])
       ),
     }));
 
-    Object.entries(newSwitchStates).forEach(([key, value]) => {
+    Object.entries(data).forEach(([key, value]) => {
       setValue(key, value ? 1 : 0);
     });
-
-    setSwitchStates(newSwitchStates);
   };
 
   // * setting the accompany
@@ -395,7 +369,7 @@ const WorkerNewReport = () => {
       (item) => item.id === reportTimeDisplayed
     );
 
-    setValue("reportTime", reportTime.name);
+    setValue("reportTime", reportTime?.name);
     trigger("reportTime");
   };
 
@@ -450,7 +424,10 @@ const WorkerNewReport = () => {
             updateCategoriesStatusOnPreviousReports
           );
 
-          handleSwitchStateChange(selectedReport);
+          handleSwitchStateChange(
+            selectedReport,
+            updateTogglesStatusOnPreviousReports
+          );
           handleAccompanyChange(selectedReport);
           handleReportTime(selectedReport);
         } else {
@@ -463,17 +440,17 @@ const WorkerNewReport = () => {
 
   // todo to return error for date picker
   // * toggle switch function
-  const toggleSwitch = (id) => {
-    setSwitchStates((prevState) => {
-      const newState = {
-        ...prevState,
-        [id]: !prevState[id],
-      };
-      const value = newState[id] ? 1 : 0;
-      handleFormChange(id, value);
-      return newState;
-    });
-  };
+  // const toggleSwitch = (id) => {
+  //   setSwitchStates((prevState) => {
+  //     const newState = {
+  //       ...prevState,
+  //       [id]: !prevState[id],
+  //     };
+  //     const value = newState[id] ? 1 : 0;
+  //     handleFormChange(id, value);
+  //     return newState;
+  //   });
+  // };
 
   const memoRizedCats = memoizedCategories?.categories;
   const globalCategoriesObj = memoRizedCats
@@ -622,7 +599,7 @@ const WorkerNewReport = () => {
               }
               selectOptions={[
                 { timeOfReport: "דוח חדש", id: 0 },
-                ...filteredStationsResult, //clientStationId
+                ...(filteredStationsResult ?? []), //clientStationId
               ]}
               name={"previousReports"}
               errorMessage={
