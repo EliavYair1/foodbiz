@@ -36,7 +36,6 @@ const Accordion = ({
   onDragEndCb,
 }) => {
   const [open, setOpen] = useState(false);
-
   const handleAccordionOpening = useCallback(() => {
     setOpen((prevOpen) => !prevOpen);
     if (toggleHandler) {
@@ -55,7 +54,6 @@ const Accordion = ({
   }, [open, heightAnim, contentHeight]);
 
   const renderAccordionItem = ({ item, index, drag, isActive }) => {
-    // console.log("innnn", item.text);
     return (
       <TouchableOpacity style={{}} onLongPress={drag}>
         <View

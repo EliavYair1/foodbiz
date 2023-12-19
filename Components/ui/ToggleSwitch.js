@@ -11,12 +11,15 @@ const ToggleSwitch = ({
   falsyText,
 }) => {
   const [isChecked, setIsChecked] = useState(switchStates[id]);
-
+  useEffect(() => {
+    setIsChecked(switchStates[id]);
+  }, [switchStates]);
   const handleToggle = () => {
     const newState = !isChecked;
     setIsChecked(newState);
     toggleSwitch(id);
   };
+
   return (
     <>
       <View

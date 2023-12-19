@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 
-const useToggleSwitch = () => {
+const useToggleSwitch = (updateTogglesStatusOnPreviousReports) => {
   const [switchStates, setSwitchStates] = useState({
     haveFine: false,
     haveAmountOfItems: false,
@@ -9,11 +9,8 @@ const useToggleSwitch = () => {
     haveNutritionGrade: true,
     haveCategoriesNameForCriticalItems: false,
   });
-  // ! to see why the formdata dosent update and dont access updateTogglesStatusOnPreviousReports in the WorkerNewReport.
-  const handleSwitchStateChange = (
-    selectedReport,
-    updateTogglesStatusOnPreviousReports
-  ) => {
+
+  const handleSwitchStateChange = (selectedReport) => {
     const newSwitchStates = {
       haveFine: selectedReport?.getData("haveFine") == 1,
       haveAmountOfItems: selectedReport?.getData("haveAmountOfItems") == 1,
@@ -33,6 +30,7 @@ const useToggleSwitch = () => {
         ...prevState,
         [id]: !prevState[id],
       };
+      updateTogglesStatusOnPreviousReports(newState);
       return newState;
     });
   };
