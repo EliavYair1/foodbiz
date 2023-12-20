@@ -262,29 +262,29 @@ const WorkerNewReport = () => {
     return isOpen ? 172 + contentHeight : 172;
   };
 
+  // * general handle form change
+  const handleFormChange = (name, value) => {
+    console.log("form handler : ", name, value);
+    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
+    setValue(name, value);
+    trigger(name);
+    setIsSchemaValid(true);
+  };
+
   // old code
   // * filtering the current client based on selected station
 
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
-    setValue("newGeneralCommentTopText", content);
-    trigger("newGeneralCommentTopText");
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      newGeneralCommentTopText: content,
-    }));
+    handleFormChange("newGeneralCommentTopText", content);
   }, 300);
 
   // * setting the oldReportId from selected report
   const handleReportId = (selectedReport) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      oldReportId: selectedReport.getData("id"),
-    }));
-    setValue("oldReportId", selectedReport.getData("id"));
+    handleFormChange("oldReportId", selectedReport.getData("id"));
     trigger("clientStationId");
-    trigger("oldReportId");
   };
+
   // * parsing the data coming from the current report
   const parsedArrayOfStr = (arr) => {
     const parsedSelectedReportCategory = new Set(
@@ -304,7 +304,6 @@ const WorkerNewReport = () => {
     const parsedSelectedReportCategory = parsedArrayOfStr(
       selectedReportCategory
     );
-
     return parsedSelectedReportCategory;
   };
 
@@ -329,36 +328,10 @@ const WorkerNewReport = () => {
         ...checkboxStatus?.culinaryReviewCbStatus,
         ...checkboxStatus?.nutritionReviewCbStatus,
       ];
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        categorys: categories,
-      }));
 
-      setValue("categorys", categories);
-      trigger("categorys");
+      handleFormChange("categorys", categories);
     }
   }, [checkboxStatus]);
-
-  // * setting the accompany
-  const handleAccompanyChange = (selectedReport) => {
-    const accompanyName = selectedReport.getData("accompany");
-    if (accompanyName == "ללא ליווי") {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        accompany: "ללא ליווי",
-      }));
-      setValue("accompany", "ללא ליווי");
-      trigger("accompany");
-    } else {
-      setAccompanySelected(accompanyName);
-      setValue("accompany", accompanyName);
-      trigger("accompany");
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        accompany: accompanyName,
-      }));
-    }
-  };
 
   //  * handling report time
   const handleReportTime = (selectedReport) => {
@@ -366,16 +339,19 @@ const WorkerNewReport = () => {
     const reportTime = reportsTimes.find(
       (item) => item.id === reportTimeDisplayed
     );
-
     setValue("reportTime", reportTime?.name);
     trigger("reportTime");
   };
 
-  // * general handle form change
-  const handleFormChange = debounce((name, value) => {
-    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-    setIsSchemaValid(true);
-  }, 300);
+  // * setting the accompany
+  const handleAccompanyChange = (selectedReport) => {
+    const accompanyName = selectedReport.getData("accompany");
+    if (accompanyName == "ללא ליווי") {
+      handleFormChange("accompany", "ללא ליווי");
+    } else {
+      handleFormChange("accompany", accompanyName);
+    }
+  };
 
   const memoRizedCats = memoizedCategories?.categories;
   const globalCategoriesObj = memoRizedCats
@@ -454,14 +430,29 @@ const WorkerNewReport = () => {
     );
   };
 
-  const handlePreviousReportsChange = debounce((value) => {
-    let newCheckboxStatus = {
-      foodSafetyReviewCbStatus: [],
-      culinaryReviewCbStatus: [],
-      nutritionReviewCbStatus: [],
-    };
+  const updateFormForNewReport = async (checkboxStatus, switchStates) => {
+    // Resetting the form for a new report
+    handleFormChange("previousReports", "דוח חדש");
+    setCheckboxStatus(checkboxStatus);
+    setSwitchStates(switchStates);
 
-    let newSwitchStates = {
+    // Reset other form data as needed
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      oldReportId: "0",
+      accompany: "",
+      reportTime: "",
+      ...switchStates,
+    }));
+
+    // Form validation for switch state
+    Object.entries(switchStates).forEach(([key, value]) => {
+      setValue(key, value ? 1 : 0);
+    });
+  };
+
+  const getNewSwitchStates = () => {
+    return {
       haveFine: false,
       haveAmountOfItems: false,
       haveSafetyGrade: true,
@@ -469,29 +460,32 @@ const WorkerNewReport = () => {
       haveNutritionGrade: true,
       haveCategoriesNameForCriticalItems: false,
     };
+  };
 
+  const getNewCheckboxStatus = () => {
+    return {
+      foodSafetyReviewCbStatus: [],
+      culinaryReviewCbStatus: [],
+      nutritionReviewCbStatus: [],
+    };
+  };
+
+  const handleNewReport = async () => {
+    const newCheckboxStatus = getNewCheckboxStatus();
+    const newSwitchStates = getNewSwitchStates();
+
+    await updateFormForNewReport(newCheckboxStatus, newSwitchStates);
+  };
+
+  const handlePreviousReportsChange = debounce(async (value) => {
     try {
       // * when new report is chosen in the previous report field.
       if (value === "דוח חדש") {
-        handleFormChange("previousReports", "דוח חדש");
-        setValue("previousReports", "דוח חדש");
-        trigger("previousReports");
-        setCheckboxStatus(newCheckboxStatus);
-        setSwitchStates(newSwitchStates);
-        // setValue("reportTime", "בחירה");
-        setFormData((prevFormData) => ({
-          ...prevFormData,
-          oldReportId: "0",
-          accompany: "",
-          reportTime: "",
-          ...newSwitchStates,
-        }));
-        Object.entries(newSwitchStates).forEach(([key, value]) => {
-          setValue(key, value ? 1 : 0);
-        });
+        await handleNewReport();
       } else {
         // * when old report is chosen in the previous report field.
         const selectedReport = findSelectedReport(value);
+        handleFormChange("previousReports", value);
         if (selectedReport) {
           handleReportId(selectedReport);
           const parsedSelectedReportCategory =
@@ -509,9 +503,9 @@ const WorkerNewReport = () => {
           );
           handleAccompanyChange(selectedReport);
           handleReportTime(selectedReport);
-          handleFormChange("previousReports", value);
-          setValue("previousReports", value);
-          trigger("previousReports");
+          // handleFormChange("previousReports", value);
+          // setValue("previousReports", value);
+          // trigger("previousReports");
         } else {
           true;
           setSwitchStates(newSwitchStates);
@@ -521,8 +515,7 @@ const WorkerNewReport = () => {
       console.log("error", error);
     }
   }, 300);
-
-  console.log("render....");
+  // console.log("form data:", formData);
   // * accordion FlatList array of Content
   const settingsAccordion = [
     {
