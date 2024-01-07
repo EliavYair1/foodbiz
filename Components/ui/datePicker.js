@@ -34,28 +34,13 @@ const DatePicker = ({
   };
 
   const handleConfirm = (date) => {
-    console.log("A date has been picked: ", date);
+    // console.log("A date has been picked: ", date);
     setDatePicked(date);
     onchange(date);
     hideDatePicker();
   };
   //   console.log(datePicked);
-  const styles = StyleSheet.create({
-    text: {
-      fontSize: datePicked ? 22 : 18,
-      alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center",
-      fontFamily: datePicked ? fonts.AMedium : fonts.ABold,
-      color: errorMessage && !datePicked ? "#b3261e" : colors.black,
-    },
-    label: {
-      marginBottom: 10,
-      alignSelf: "flex-start",
-      color: errorMessage && !datePicked ? "#b3261e" : colors.black,
-      fontFamily: fonts.ARegular,
-    },
-  });
+  // console.log("errorMessage", errorMessage);
   return (
     <View>
       <Controller
@@ -64,7 +49,7 @@ const DatePicker = ({
         defaultValue={defaultDate}
         render={({ field: { onChange, value } }) => (
           <View>
-            {/* <Text style={styles.label}>{label}</Text> */}
+            {/* <Text style={{      color: errorMessage && !datePicked ? "#b3261e" : colors.black,},[styles.label]}>{label}</Text> */}
             <TouchableWithoutFeedback
               title="Show Date Picker"
               onPress={showDatePicker}
@@ -89,7 +74,17 @@ const DatePicker = ({
                   source={datePickerIcon}
                   style={{ width: 20, height: 20 }}
                 />
-                <Text style={{}}>
+                <Text
+                  style={[
+                    {
+                      // fontSize: datePicked ? 22 : 18,
+                      // fontFamily: datePicked ? fonts.AMedium : fonts.ABold,
+                      // color:
+                      //   errorMessage && !datePicked ? "#b3261e" : colors.black,
+                    },
+                    styles.text,
+                  ]}
+                >
                   {datePicked
                     ? datePicked.toDateString()
                     : defaultDate
@@ -101,17 +96,24 @@ const DatePicker = ({
             <DateTimePickerModal
               isVisible={isDatePickerVisible}
               mode="date"
-              onConfirm={handleConfirm}
+              // onConfirm={handleConfirm}
+              onConfirm={(date) => {
+                console.log("Date picked in Controller: ", date);
+                handleConfirm(date);
+                onChange(date); // This should update the form state
+              }}
               onCancel={hideDatePicker}
             />
           </View>
         )}
         rules={{ required: true }}
       />
+
       <HelperText
         type="error"
         style={{
           fontFamily: fonts.AMedium,
+          fontSize: datePicked ? 22 : 18,
         }}
       >
         {datePicked ? null : errorMessage}
@@ -119,5 +121,16 @@ const DatePicker = ({
     </View>
   );
 };
-
+const styles = StyleSheet.create({
+  text: {
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
+  },
+  label: {
+    marginBottom: 10,
+    alignSelf: "flex-start",
+    fontFamily: fonts.ARegular,
+  },
+});
 export default DatePicker;

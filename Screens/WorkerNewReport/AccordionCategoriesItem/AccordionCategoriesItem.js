@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo } from "react";
+import React, { useCallback, useState, useMemo, useEffect } from "react";
 import { Image, View } from "react-native";
 import CheckboxItem from "../CheckboxItem/CheckboxItem";
 import onDragIcon from "../../../assets/imgs/onDragIcon.png";
@@ -31,14 +31,37 @@ export const handleCategoriesCheckboxesToggle = (
   return statusChanged ? updatedStatus : status;
 };
 
-export const useAccordionCategoriesItem = () => {
-  // console.log("initialStatus", initialStatus);
+export const useAccordionCategoriesItem = (updateCategories) => {
+  // ? categories hook
   const [checkboxStatus, setCheckboxStatus] = useState({
     foodSafetyReviewCbStatus: [],
     culinaryReviewCbStatus: [],
     nutritionReviewCbStatus: [],
   });
   const debounceCheckboxStatus = debounce(setCheckboxStatus, 0);
+  console.log(object);
+  useEffect(() => {
+    if (checkboxStatus !== undefined) {
+      const categories = [
+        ...checkboxStatus?.foodSafetyReviewCbStatus,
+        ...checkboxStatus?.culinaryReviewCbStatus,
+        ...checkboxStatus?.nutritionReviewCbStatus,
+      ];
+      updateCategories("categorys", categories);
+    }
+  }, [checkboxStatus]);
+
+  function countItemsInObjectArrays(obj) {
+    const counts = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        counts[key] = obj[key].length;
+      }
+    }
+    return counts;
+  }
+  const itemCounts = countItemsInObjectArrays(checkboxStatus);
+
   //  * 1. checking if the ids of the categories match to the selected report
   // *  2.  sorting them by type to their right location of major category
   const handleCheckboxStatusChange = (
@@ -62,7 +85,6 @@ export const useAccordionCategoriesItem = () => {
       culinaryReviewCbStatus: [],
       nutritionReviewCbStatus: [],
     };
-    // todo to change the way the categories change according to the onDragCb function logic
 
     if (globalStateCategories) {
       newCheckboxStatus = globalStateCategories.reduce((status, category) => {
@@ -114,7 +136,6 @@ export const useAccordionCategoriesItem = () => {
       ...newOrderedCategories.culinaryReviewCbStatus,
       ...newOrderedCategories.nutritionReviewCbStatus,
     ];
-
     updateFormData(categories);
     setCheckboxStatus(newOrderedCategories);
   };
@@ -169,5 +190,6 @@ export const useAccordionCategoriesItem = () => {
     checkboxStatus,
     setCheckboxStatus,
     handleCheckboxStatusChange,
+    itemCounts,
   };
 };

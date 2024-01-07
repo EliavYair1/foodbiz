@@ -13,7 +13,7 @@ const useFilteredStations = () => {
   // const filteredStationsResult = currentClient
   //   .fetchReports()
   //   .filter((report) => report.getData("clientStationId") === selectedStation);
-
+  // console.log("selectedStation", selectedStation);
   useEffect(() => {
     async function getReports() {
       if (currentClient) {
@@ -21,7 +21,8 @@ const useFilteredStations = () => {
           const reports = await currentClient.fetchReports();
           if (selectedStation) {
             const filteredReports = reports.filter(
-              (report) => report.getData("clientStationId") === selectedStation
+              (report) =>
+                report.getData("clientStationId") === selectedStation?.id
             );
             setFilteredStationsResult(filteredReports);
           }

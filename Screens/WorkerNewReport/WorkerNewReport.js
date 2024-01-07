@@ -4,20 +4,12 @@ import {
   View,
   TouchableOpacity,
   Image,
-  ScrollView,
-  KeyboardAvoidingView,
   Alert,
   SafeAreaView,
   Dimensions,
   Platform,
 } from "react-native";
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import ScreenWrapper from "../../utiles/ScreenWrapper";
 import fonts from "../../styles/fonts";
@@ -32,12 +24,6 @@ import { useDispatch, useSelector } from "react-redux";
 import Input from "../../Components/ui/Input";
 import ToggleSwitch from "../../Components/ui/ToggleSwitch";
 import DatePicker from "../../Components/ui/datePicker";
-import {
-  RichEditor,
-  RichToolbar,
-  actions,
-} from "react-native-pell-rich-editor";
-import ColorPicker from "react-native-wheel-color-picker";
 import accordionCloseIcon from "../../assets/imgs/accordionCloseIndicator.png";
 import accordionOpenIcon from "../../assets/imgs/accordionOpenIndicator.png";
 import ClientItemArrow from "../../assets/imgs/ClientItemArrow.png";
@@ -64,21 +50,12 @@ import CategoriesPickerModal from "./CategoriesPickerModal/CategoriesPickerModal
 import useFilteredStations from "../../Hooks/useFilteredStations";
 import useToggleSwitch from "../../Hooks/useToggleSwitch";
 import { FlatList } from "react-native-gesture-handler";
+import SummaryAccordion from "./SummaryAccordion/SummaryAccordion";
+import getSettingsAccordionData from "./SettingsAccordionContent/SettingsAccordionContent";
+import useSettingsAccordion from "./SettingsAccordionContent/SettingsAccordionContent";
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
-  const richText = useRef();
   const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState(false);
-  const { navigateToRoute } = useScreenNavigator();
-  const saveEditedReport = useSaveEditedReport();
-  const { postNewReport } = usePostNewReport();
-  const {
-    accordionCategoriesItem,
-    checkboxStatus,
-    setCheckboxStatus,
-    getCheckedCount,
-    handleCheckboxStatusChange,
-  } = useAccordionCategoriesItem();
   // ? global state management
   const currentClient = useSelector(
     (state) => state.currentClient.currentClient
@@ -97,26 +74,25 @@ const WorkerNewReport = () => {
   );
 
   // * local state management
-  const [colorSelected, setColorSelected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [IsRearrangement, setIsRearrangement] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [formData, setFormData] = useState({
-    clientId: currentClient?.id,
-    id: userId,
-    haveNewGeneralCommentsVersion: 1,
-    haveFine: false,
-    haveAmountOfItems: false,
-    haveSafetyGrade: true,
-    haveCulinaryGrade: true,
-    haveNutritionGrade: true,
-    haveCategoriesNameForCriticalItems: false,
-    rearrangement: IsRearrangement,
-  });
-
-  // const [currentReportTime, setCurrentReportTime] = useState(null);
+  // const initialFormState = {
+  //   clientId: currentClient?.id,
+  //   id: userId,
+  //   haveNewGeneralCommentsVersion: 1,
+  //   haveFine: false,
+  //   haveAmountOfItems: false,
+  //   haveSafetyGrade: true,
+  //   haveCulinaryGrade: true,
+  //   haveNutritionGrade: true,
+  //   haveCategoriesNameForCriticalItems: false,
+  //   rearrangement: IsRearrangement,
+  // };
+  // const [formData, setFormData] = useState(initialFormState);
+  const [currentReportTime, setCurrentReportTime] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
   const [currentReportDate, setCurrentReportDate] = useState(null);
 
@@ -131,17 +107,39 @@ const WorkerNewReport = () => {
     memoizedCategories?.categories?.[3]?.categories ?? []
   );
 
-  const { filteredStationsResult, setSelectedStation } = useFilteredStations();
+  // * custom hooks
+  const { navigateToRoute } = useScreenNavigator();
+  const saveEditedReport = useSaveEditedReport();
+  const { postNewReport } = usePostNewReport();
+  const { filteredStationsResult, selectedStation, setSelectedStation } =
+    useFilteredStations();
+
+  // * general handle form change
+  const handleFormChange = (name, value) => {
+    // console.log("form handler1111111 : ", name, value);
+    // setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
+    setValue(name, value);
+    // trigger(name);
+  };
+
+  const updateCategories = (name, data) => {
+    handleFormChange(name, data);
+    trigger(name);
+    // console.log("inside...", name, data);
+  };
+
+  // console.log("categorys formData:", formData);
+  const {
+    accordionCategoriesItem,
+    checkboxStatus,
+    setCheckboxStatus,
+    getCheckedCount,
+    handleCheckboxStatusChange,
+    itemCounts,
+  } = useAccordionCategoriesItem(updateCategories);
 
   // * when chosing an existing previous report it update's the previous seleted toggle switches .
   const updateTogglesStatusOnPreviousReports = (data) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      ...Object.fromEntries(
-        Object.entries(data).map(([key, value]) => [key, value ? 1 : 0])
-      ),
-    }));
-
     Object.entries(data).forEach(([key, value]) => {
       setValue(key, value ? 1 : 0);
     });
@@ -158,6 +156,7 @@ const WorkerNewReport = () => {
     []
   );
   const [sortedCategories, setSortedCategories] = useState({});
+
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
     previousReports: yup.string().required("previous report is required"),
@@ -211,30 +210,20 @@ const WorkerNewReport = () => {
     resolver: yupResolver(schema),
   });
 
-  useEffect(() => {
-    schema
-      .validate(formData)
-      .then(() => setIsSchemaValid(true))
-      .catch((err) => {
-        setIsSchemaValid(false);
-        // console.log("err:", err);
-      });
-    // setValue("clientId", currentClient?.id);
-  }, [formData, schema]);
-  // console.log("form:", formData);
+  // * getValues
+  // console.log("getValues:", getValues());
+
   const findReportTimeName = (data) => {
     const reportTimeId = currentReport?.getReportTime();
-
     const reportTime = data.find((item) => item.id === reportTimeId);
-    return reportTime ? reportTime.name : "";
+    return reportTime ? reportTime.name : "בחירה";
   };
-  const [currentReportTime, setCurrentReportTime] = useState(
-    findReportTimeName(reportsTimes)
-  );
+
   //  * edit mode existing current report initialization
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
     if (currentReport) {
+      console.log("currentReport", currentReport);
       setSwitchStates({
         haveFine: currentReport.getData("haveFine") == "1",
         haveAmountOfItems: currentReport.getData("haveAmountOfItems") == "1",
@@ -249,30 +238,26 @@ const WorkerNewReport = () => {
       setCurrentReportDate(currentReport.getData("timeOfReport"));
       setCurrentReportTime(reportTimeName);
       handleContentChange(currentReport.getData("newGeneralCommentTopText"));
-      handleCheckboxStatusChange(
-        parsedArrayOfStr(currentReport.getData("categorys")),
-        memoizedCategories,
-        updateCategoriesStatusOnPreviousReports
-      );
+      // handleCheckboxStatusChange(
+      //   parsedArrayOfStr(currentReport.getData("categorys")),
+      //   memoizedCategories
+      // );
     }
-  }, [currentReport]);
+  }, [currentReport, currentReportTime]);
 
+  // * initiate neccesry form data
+  useEffect(() => {
+    handleFormChange("workerId", userId);
+    handleFormChange("id", userId);
+    handleFormChange("clientId", currentClient?.id);
+    handleFormChange("haveNewGeneralCommentsVersion", 1);
+    handleFormChange("rearrangement", IsRearrangement);
+  }, [IsRearrangement]);
+  console.log("getValues data:", getValues());
   // * redefine the Accordion height
   const changeCategoryAccordionHeight = (contentHeight, isOpen) => {
     return isOpen ? 172 + contentHeight : 172;
   };
-
-  // * general handle form change
-  const handleFormChange = (name, value) => {
-    console.log("form handler : ", name, value);
-    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-    setValue(name, value);
-    trigger(name);
-    setIsSchemaValid(true);
-  };
-
-  // old code
-  // * filtering the current client based on selected station
 
   // * newGeneralCommentTopText change handler
   const handleContentChange = debounce((content) => {
@@ -282,7 +267,7 @@ const WorkerNewReport = () => {
   // * setting the oldReportId from selected report
   const handleReportId = (selectedReport) => {
     handleFormChange("oldReportId", selectedReport.getData("id"));
-    trigger("clientStationId");
+    // trigger("clientStationId");
   };
 
   // * parsing the data coming from the current report
@@ -309,38 +294,34 @@ const WorkerNewReport = () => {
 
   // * when chosing an existing previous report it update's the previous seleted categories .
   const updateCategoriesStatusOnPreviousReports = (data) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      categorys:
-        data.length > 0 || Object.keys(data).length > 0
-          ? data
-          : parsedSelectedReportCategory,
-    }));
-    // console.log("data2222", data);
-    setValue("categorys", data);
+    // setFormData((prevFormData) => ({
+    //   ...prevFormData,
+    //   categorys:
+    //     data.length > 0 || Object.keys(data).length > 0
+    //       ? data
+    //       : parsedSelectedReportCategory,
+    // }));
+    // // console.log("data2222", data);
+    // setValue("categorys", data);
+    handleFormChange(
+      "categorys",
+      data.length > 0 || Object.keys(data).length > 0
+        ? data
+        : parsedSelectedReportCategory
+    );
     trigger("categorys");
   };
 
-  useEffect(() => {
-    if (checkboxStatus !== undefined) {
-      const categories = [
-        ...checkboxStatus?.foodSafetyReviewCbStatus,
-        ...checkboxStatus?.culinaryReviewCbStatus,
-        ...checkboxStatus?.nutritionReviewCbStatus,
-      ];
-
-      handleFormChange("categorys", categories);
-    }
-  }, [checkboxStatus]);
-
+  // console.log("formData", formData);
   //  * handling report time
   const handleReportTime = (selectedReport) => {
     const reportTimeDisplayed = selectedReport.getData("reportTime");
     const reportTime = reportsTimes.find(
       (item) => item.id === reportTimeDisplayed
     );
-    setValue("reportTime", reportTime?.name);
-    trigger("reportTime");
+    // setValue("reportTime", reportTime?.name);
+    // trigger("reportTime");
+    handleFormChange("reportTime", reportTime?.name);
   };
 
   // * setting the accompany
@@ -349,6 +330,7 @@ const WorkerNewReport = () => {
     if (accompanyName == "ללא ליווי") {
       handleFormChange("accompany", "ללא ליווי");
     } else {
+      console.log("dsads");
       handleFormChange("accompany", accompanyName);
     }
   };
@@ -357,15 +339,16 @@ const WorkerNewReport = () => {
   const globalCategoriesObj = memoRizedCats
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
     : null;
+
   // * comparing between the categories names to the ids in the forms to display it in the drawer
   const categoryIdToNameMap = {};
-  globalCategoriesObj && formData.categorys
+  globalCategoriesObj && getValues().categorys
     ? globalCategoriesObj?.forEach((item) => {
         categoryIdToNameMap[item.id] = item.name;
       })
     : [];
   const checkedCategories =
-    formData && formData.categorys?.map((id) => categoryIdToNameMap[id]);
+    getValues() && getValues().categorys?.map((id) => categoryIdToNameMap[id]);
 
   // * submit the form
   const onSubmitForm = async () => {
@@ -373,7 +356,7 @@ const WorkerNewReport = () => {
     // console.log("isValid", isValid);
     const formErrors = {};
     try {
-      await schema.validate(formData, { abortEarly: false });
+      await schema.validate(getValues(), { abortEarly: false });
     } catch (err) {
       err.inner.forEach((validationError) => {
         formErrors[validationError.path] = validationError.message;
@@ -386,7 +369,7 @@ const WorkerNewReport = () => {
 
       setIsLoading(true);
       try {
-        await postNewReport(formData, IsRearrangement);
+        await postNewReport(getValues(), IsRearrangement);
         setIsLoading(false);
       } catch (error) {
         setIsLoading(false);
@@ -394,7 +377,6 @@ const WorkerNewReport = () => {
       }
     }
   };
-
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
@@ -405,10 +387,10 @@ const WorkerNewReport = () => {
     if (currentReport) {
       try {
         setIsLoading(true);
-        const response = await saveEditedReport(formData);
+        const response = await saveEditedReport(getValues());
         console.log("edit post response:", response);
         dispatch(setIndex(0));
-        dispatch(getCurrentCategory(formData.categorys[0]));
+        dispatch(getCurrentCategory(getValues().categorys[0]));
         setIsLoading(false);
         navigateToRoute(routes.ONBOARDING.CategoryEdit);
       } catch (error) {
@@ -416,6 +398,7 @@ const WorkerNewReport = () => {
       }
     }
   };
+
   const previousReportsSelectOptions = useMemo(
     () => [
       { timeOfReport: "דוח חדש", id: 0 },
@@ -429,30 +412,36 @@ const WorkerNewReport = () => {
       (report) => report.getData("timeOfReport") === value
     );
   };
-
-  const updateFormForNewReport = async (checkboxStatus, switchStates) => {
-    // Resetting the form for a new report
+  // todo to update the state from the setFormData to handleFormChange .
+  const updateFormForNewReport = (checkboxStatus, switchStates) => {
     handleFormChange("previousReports", "דוח חדש");
+    handleFormChange("oldReportId", "0");
+    handleFormChange("accompany", "");
+    handleFormChange("reportTime", "");
     setCheckboxStatus(checkboxStatus);
     setSwitchStates(switchStates);
 
-    // Reset other form data as needed
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      oldReportId: "0",
-      accompany: "",
-      reportTime: "",
-      ...switchStates,
-    }));
-
-    // Form validation for switch state
     Object.entries(switchStates).forEach(([key, value]) => {
       setValue(key, value ? 1 : 0);
     });
+    // setFormData((prevFormData) => ({
+    //   ...prevFormData,
+    //   oldReportId: "0",
+    //   accompany: "",
+    //   reportTime: "",
+    //   ...switchStates,
+    // }));
   };
+  // console.log("formdata", formData);
+  // console.log("getValues", getValues());
 
-  const getNewSwitchStates = () => {
-    return {
+  const handleNewReport = async () => {
+    let newCheckboxStatus = {
+      foodSafetyReviewCbStatus: [],
+      culinaryReviewCbStatus: [],
+      nutritionReviewCbStatus: [],
+    };
+    let newSwitchStates = {
       haveFine: false,
       haveAmountOfItems: false,
       haveSafetyGrade: true,
@@ -460,23 +449,10 @@ const WorkerNewReport = () => {
       haveNutritionGrade: true,
       haveCategoriesNameForCriticalItems: false,
     };
-  };
-
-  const getNewCheckboxStatus = () => {
-    return {
-      foodSafetyReviewCbStatus: [],
-      culinaryReviewCbStatus: [],
-      nutritionReviewCbStatus: [],
-    };
-  };
-
-  const handleNewReport = async () => {
-    const newCheckboxStatus = getNewCheckboxStatus();
-    const newSwitchStates = getNewSwitchStates();
-
     await updateFormForNewReport(newCheckboxStatus, newSwitchStates);
   };
 
+  // todo to update the state from the setFormData to setValue of useform everywhere in the code.
   const handlePreviousReportsChange = debounce(async (value) => {
     try {
       // * when new report is chosen in the previous report field.
@@ -488,6 +464,7 @@ const WorkerNewReport = () => {
         handleFormChange("previousReports", value);
         if (selectedReport) {
           handleReportId(selectedReport);
+
           const parsedSelectedReportCategory =
             handleSelectedReportCategory(selectedReport);
 
@@ -497,15 +474,9 @@ const WorkerNewReport = () => {
             updateCategoriesStatusOnPreviousReports
           );
 
-          handleSwitchStateChange(
-            selectedReport,
-            updateTogglesStatusOnPreviousReports
-          );
+          handleSwitchStateChange(selectedReport);
           handleAccompanyChange(selectedReport);
           handleReportTime(selectedReport);
-          // handleFormChange("previousReports", value);
-          // setValue("previousReports", value);
-          // trigger("previousReports");
         } else {
           true;
           setSwitchStates(newSwitchStates);
@@ -515,254 +486,50 @@ const WorkerNewReport = () => {
       console.log("error", error);
     }
   }, 300);
-  // console.log("form data:", formData);
+
+  const handleStationChange = debounce((value) => {
+    try {
+      console.log("station value:", value);
+      handleFormChange("clientStationId", value.id);
+      setSelectedStation(value);
+      // setValue("clientStationId", value.company);
+      // trigger("clientStationId");
+    } catch (error) {
+      console.log("[handleStationChange]error:", error);
+    }
+  }, 300);
+
+  // console.log(getValues().clientStationId);
+  // console.log(formData);
+
+  const handleReportTimeChange = debounce((value) => {
+    setCurrentReportTime(value.id);
+    handleFormChange("reportTime", value.id);
+    // setValue("reportTime");
+    // trigger("reportTime");
+    console.log("reportTime:", value);
+  }, 0);
+
   // * accordion FlatList array of Content
-  const settingsAccordion = [
-    {
-      key: "settings",
-      headerText: "הגדרות הדוח",
-      contentText: "world",
-      contentHeight: 959,
-      headerHeight: 48,
-      headerTogglerStyling: styles.headerStyle,
-      iconDisplay: true,
-      boxHeight: 80.5,
-      hasDivider: true,
-      draggable: false,
-      accordionCloseIndicator: accordionCloseIcon,
-      accordionOpenIndicator: accordionOpenIcon,
-      contentItemStyling: styles.contentBoxSetting,
-      accordionContent: [
-        {
-          id: 0,
-          text: <Text>תחנה</Text>,
-          boxItem: (
-            <SelectMenu
-              control={control}
-              selectWidth={240}
-              optionsHeight={200}
-              defaultText={
-                currentReport ? currentReport.getData("station_name") : "בחירה"
-              }
-              displayedValue={getValues().clientStationId}
-              selectMenuStyling={{
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "flex-start",
-              }}
-              centeredViewStyling={
-                {
-                  // marginRight: 12,
-                  // alignItems: "flex-end",
-                  // marginTop: -530,
-                }
-              }
-              selectOptions={currentClient.getStations()}
-              name={"clientStationId"}
-              errorMessage={
-                errors.clientStationId && errors.clientStationId.message
-              }
-              onChange={(value) => {
-                handleFormChange("clientStationId", value.id);
-                setSelectedStation(value.id);
-                setValue("clientStationId", value.company);
-                trigger("clientStationId");
-                console.log("value-station:", value);
-              }}
-              propertyName="company"
-              returnObject={true}
-            />
-          ),
-        },
-
-        {
-          id: 1,
-          text: <Text>התבסס על דוח קודם</Text>,
-          boxItem: (
-            <SelectMenu
-              control={control}
-              selectWidth={240}
-              optionsHeight={750}
-              defaultText={"בחירה"}
-              selectMenuStyling={{
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "flex-start",
-              }}
-              centeredViewStyling={{}}
-              selectOptions={previousReportsSelectOptions}
-              name={"previousReports"}
-              errorMessage={
-                errors.previousReports && errors.previousReports.message
-              }
-              onChange={handlePreviousReportsChange}
-              propertyName="timeOfReport"
-            />
-          ),
-        },
-        {
-          id: 2,
-          text: <Text>יש קנסות</Text>,
-          boxItem: (
-            <ToggleSwitch
-              id={"haveFine"}
-              switchStates={switchStates}
-              toggleSwitch={toggleSwitch}
-              truthyText={"כן"}
-              falsyText={"לא"}
-            />
-          ),
-        },
-        {
-          id: 3,
-          text: <Text>להציג כמות סעיפים</Text>,
-          boxItem: (
-            <ToggleSwitch
-              id={"haveAmountOfItems"}
-              switchStates={switchStates}
-              toggleSwitch={toggleSwitch}
-              truthyText={"כן"}
-              falsyText={"לא"}
-            />
-          ),
-        },
-        {
-          id: 4,
-          text: <Text>הצג ציון ביקורת בטיחות מזון</Text>,
-          boxItem: (
-            <ToggleSwitch
-              id={"haveSafetyGrade"}
-              switchStates={switchStates}
-              toggleSwitch={toggleSwitch}
-              truthyText={"כן"}
-              falsyText={"לא"}
-            />
-          ),
-        },
-        {
-          id: 5,
-          text: <Text>הצג ציון ביקורת קולינארית</Text>,
-          boxItem: (
-            <ToggleSwitch
-              id={"haveCulinaryGrade"}
-              switchStates={switchStates}
-              toggleSwitch={toggleSwitch}
-              truthyText={"כן"}
-              falsyText={"לא"}
-            />
-          ),
-        },
-        {
-          id: 6,
-          text: <Text>הצג ציון תזונה</Text>,
-          boxItem: (
-            <ToggleSwitch
-              id={"haveNutritionGrade"}
-              switchStates={switchStates}
-              toggleSwitch={toggleSwitch}
-              truthyText={"כן"}
-              falsyText={"לא"}
-            />
-          ),
-        },
-        {
-          id: 7,
-          text: <Text>הצג שמות קטגוריות בתמצית עבור ליקויים קריטיים</Text>,
-          boxItem: (
-            <ToggleSwitch
-              id={"haveCategoriesNameForCriticalItems"}
-              switchStates={switchStates}
-              toggleSwitch={toggleSwitch}
-              truthyText={"כן"}
-              falsyText={"לא"}
-            />
-          ),
-        },
-        {
-          id: 8,
-          text: <Text>שם המלווה</Text>,
-          boxItem: (
-            <View style={{ justifyContent: "flex-end", alignSelf: "center" }}>
-              <Input
-                mode={"outlined"}
-                control={control}
-                name={"accompany"}
-                inputStyle={{
-                  backgroundColor: colors.white,
-                  width: 240,
-                  alignSelf: "center",
-                }}
-                activeOutlineColor={colors.blue}
-                // label={accompanySelected ? accompanySelected : "ללא  מלווה"}
-                // label={null}
-                defaultValue={
-                  currentReport
-                    ? currentReport.getData("accompany")
-                    : formData.accompany
-                }
-                // placeholder={" "}
-                outlineColor={"rgba(12, 20, 48, 0.2)"}
-                onChangeFunction={(value) => {
-                  handleFormChange("accompany", value);
-                }}
-              />
-            </View>
-          ),
-        },
-        {
-          id: 9,
-          text: <Text>תאריך ביקורת</Text>,
-          boxItem: (
-            <DatePicker
-              control={control}
-              name={"timeOfReport"}
-              errorMessage={errors.timeOfReport && errors.timeOfReport.message}
-              onchange={(value) => {
-                const date = new Date(value);
-                const formattedDate = date.toLocaleDateString("en-GB");
-                handleFormChange("timeOfReport", formattedDate);
-                setValue("timeOfReport", formattedDate);
-                trigger("timeOfReport");
-              }}
-              dateInputWidth={240}
-              defaultDate={currentReport?.getData("timeOfReport")}
-            />
-          ),
-        },
-        {
-          id: 10,
-          text: <Text>זמן הביקורת</Text>,
-          boxItem: (
-            <SelectMenu
-              control={control}
-              selectWidth={240}
-              optionsHeight={200}
-              defaultText={currentReport ? currentReportTime : "בחירה"}
-              displayedValue={currentReportTime}
-              selectMenuStyling={{
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "flex-start",
-              }}
-              selectOptions={reportsTimes}
-              name={"reportTime"}
-              errorMessage={errors.reportTime && errors.reportTime.message}
-              onChange={(value) => {
-                setCurrentReportTime(value.id);
-                handleFormChange("reportTime", value.id);
-                setValue("reportTime");
-                trigger("reportTime");
-                console.log("reportTime:", value);
-              }}
-              propertyName={"name"}
-              returnObject={true}
-            />
-          ),
-        },
-      ],
-    },
-  ];
-
+  const settingsAccordion = getSettingsAccordionData({
+    handleFormChange,
+    handleStationChange,
+    handlePreviousReportsChange,
+    handleReportTimeChange,
+    previousReportsSelectOptions,
+    // formData,
+    currentReport,
+    currentClient,
+    reportsTimes,
+    switchStates,
+    toggleSwitch,
+    control,
+    errors,
+    getValues,
+    currentReportTime,
+    selectedStation,
+  });
+  // console.log("checkboxStatus",checkboxStatus);
   const categoriesAccordion = [
     {
       key: "categories",
@@ -800,9 +567,7 @@ const WorkerNewReport = () => {
                 memoizedCategories &&
                 memoizedCategories.categories &&
                 memoizedCategories.categories[1].name
-              } (נבחרו ${getCheckedCount(
-                checkboxStatus.foodSafetyReviewCbStatus
-              )} דוחות)`}
+              } (נבחרו ${itemCounts.foodSafetyReviewCbStatus} דוחות)`}
               contentHeight={336}
               headerHeight={50}
               accordionCloseIndicator={ClientItemArrow}
@@ -821,10 +586,10 @@ const WorkerNewReport = () => {
               }}
               scrollEnabled={true}
               accordionContent={accordionCategoriesItem(
-                formData && formData.categorys
+                getValues() && getValues().categorys
                   ? [...foodSafetyReviewTexts].sort((a, b) => {
-                      const aIdx = formData.categorys.indexOf(Number(a.id));
-                      const bIdx = formData.categorys.indexOf(Number(b.id));
+                      const aIdx = getValues().categorys.indexOf(Number(a.id));
+                      const bIdx = getValues().categorys.indexOf(Number(b.id));
 
                       if (aIdx >= 0 && bIdx >= 0) {
                         return aIdx - bIdx;
@@ -905,10 +670,10 @@ const WorkerNewReport = () => {
                 fontFamily: fonts.ABold,
               }}
               accordionContent={accordionCategoriesItem(
-                formData && formData.categorys
+                getValues() && getValues().categorys
                   ? [...culinaryReviewTexts].sort((a, b) => {
-                      const aIdx = formData.categorys.indexOf(Number(a.id));
-                      const bIdx = formData.categorys.indexOf(Number(b.id));
+                      const aIdx = getValues().categorys.indexOf(Number(a.id));
+                      const bIdx = getValues().categorys.indexOf(Number(b.id));
 
                       if (aIdx >= 0 && bIdx >= 0) {
                         return aIdx - bIdx;
@@ -996,10 +761,14 @@ const WorkerNewReport = () => {
                   fontFamily: fonts.ABold,
                 }}
                 accordionContent={accordionCategoriesItem(
-                  formData && formData.categorys
+                  getValues() && getValues().categorys
                     ? [...nutritionReviewTexts].sort((a, b) => {
-                        const aIdx = formData.categorys.indexOf(Number(a.id));
-                        const bIdx = formData.categorys.indexOf(Number(b.id));
+                        const aIdx = getValues().categorys.indexOf(
+                          Number(a.id)
+                        );
+                        const bIdx = getValues().categorys.indexOf(
+                          Number(b.id)
+                        );
 
                         if (aIdx >= 0 && bIdx >= 0) {
                           return aIdx - bIdx;
@@ -1079,123 +848,10 @@ const WorkerNewReport = () => {
         {
           id: 0,
           boxItem: (
-            <View
-              style={{
-                flex: 1,
-                width: "100%",
-                marginTop: 20,
-                height: "100%",
-                direction: "rtl",
-                // backgroundColor: "red",
-              }}
-            >
-              <View
-                style={{
-                  backgroundColor: "#D3E0FF",
-                  width: "100%",
-                  alignItems: "flex-start",
-                  // marginBottom: 200,
-                  position: "relative",
-                  zIndex: 3,
-                }}
-              >
-                <RichToolbar
-                  editor={richText}
-                  selectedButtonStyle={{ backgroundColor: "#baceff" }}
-                  unselectedButtonStyle={{ backgroundColor: "#D3E0FF" }}
-                  iconTint="#000000"
-                  selectedIconTint="#000000"
-                  actions={[
-                    actions.insertOrderedList,
-                    actions.insertBulletsList,
-                    actions.setUnderline,
-                    actions.setItalic,
-                    actions.setBold,
-                    "custom",
-                  ]}
-                  // onPressAddImage={onPressAddImage}
-                  // onAction={onAction} // Add the onAction prop for custom actions
-                  iconMap={{
-                    ["custom"]: ({}) => <Text>C</Text>,
-                  }}
-                  custom={() => {
-                    setColorSelected(!colorSelected);
-                    console.log("object");
-                  }}
-                />
-              </View>
-              {colorSelected && (
-                <View
-                  style={{
-                    direction: "ltr",
-                    width: 200,
-                    position: "absolute",
-                    top: 20,
-                    zIndex: 3,
-                  }}
-                >
-                  <ColorPicker
-                    onColorChange={(color) => {
-                      console.log(color);
-                      richText.current?.setForeColor(color);
-                    }}
-                    sliderSize={20}
-                    thumbSize={60}
-                    gapSize={5}
-                    // noSnap={true}
-                    color="#000000"
-                    palette={[
-                      "#000000",
-                      "#ffff00",
-                      "#0000ff",
-                      "#ff0000",
-                      "#00ff00",
-                    ]}
-                    swatches={true}
-                  />
-                </View>
-              )}
-              <ScrollView
-                onLayout={(event) => {
-                  // const { height, width } = event.nativeEvent.layout;
-                  // setRichTextHeight(height);
-                }}
-                style={{
-                  flex: 1,
-                  overflow: "visible",
-                  // height: 200,
-                  minHeight: Platform.OS == "ios" ? 200 : 200,
-                  direction: "rtl",
-                  borderWidth: 1,
-                  // borderColor: "#000",
-                  borderColor: "#eee",
-                  zIndex: 2,
-                }}
-              >
-                <KeyboardAvoidingView
-                  behavior={Platform.OS == "ios" ? "height" : "height"}
-                  style={{ flex: 1, direction: "rtl" }}
-                >
-                  <RichEditor
-                    ref={richText}
-                    onChange={handleContentChange}
-                    initialContentHTML={
-                      currentReport
-                        ? currentReport.getData("newGeneralCommentTopText")
-                        : ""
-                    }
-                    styleWithCSS={true}
-                    useContainer={false}
-                    style={{
-                      direction: "rtl",
-                      // borderWidth: 1,
-                      // borderColor: "#000",
-                      height: 200,
-                    }}
-                  />
-                </KeyboardAvoidingView>
-              </ScrollView>
-            </View>
+            <SummaryAccordion
+              currentReport={currentReport}
+              handleContentChange={handleContentChange}
+            />
           ),
         },
       ],
@@ -1228,7 +884,7 @@ const WorkerNewReport = () => {
             onBackPress={async () => {
               setIsLoading(true);
               if (currentReport) {
-                const res = await saveEditedReport(formData);
+                const res = await saveEditedReport(getValues());
                 setIsLoading(false);
                 console.log("edit on back press button successfully", res);
               } else {
@@ -1253,7 +909,7 @@ const WorkerNewReport = () => {
               onSummeryIconPress={async () => {
                 setIsLoading(true);
                 try {
-                  await saveEditedReport(formData);
+                  await saveEditedReport(getValues());
                   dispatch(setMajorCategoryHeaders(majorCategoryHeadersToPass));
                   dispatch(setCategoryNamesSubHeaders(sortedCategories));
                   setIsLoading(false);
@@ -1306,9 +962,9 @@ const WorkerNewReport = () => {
                       flexDirection: "row",
                     }}
                   >
-                    {formData &&
-                      formData.categorys &&
-                      formData.categorys[0] && (
+                    {getValues() &&
+                      getValues().categorys &&
+                      getValues().categorys[0] && (
                         <TouchableOpacity
                           onPress={saveEditEdReportAndNavigate}
                           style={{
@@ -1353,10 +1009,7 @@ const WorkerNewReport = () => {
                 justifyContent: "center",
                 alignItems: "center",
               }}
-              onPress={
-                handleSubmit(onSubmitForm)
-                // console.log("new report");
-              }
+              onPress={handleSubmit(onSubmitForm)}
             >
               <Text
                 style={{
@@ -1374,7 +1027,7 @@ const WorkerNewReport = () => {
         )}
         {modalVisible && (
           <CategoriesPickerModal
-            formData={formData}
+            formData={getValues()}
             setLoading={setIsLoading}
             globalCategoriesObj={globalCategoriesObj}
             isLoading={isLoading}

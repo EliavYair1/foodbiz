@@ -1,6 +1,6 @@
 import { Searchbar } from "react-native-paper";
 import colors from "../../styles/colors";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 const SearchBar = ({
   placeholder,

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 
 const useToggleSwitch = (updateTogglesStatusOnPreviousReports) => {
+  // ! toggles hook
   const [switchStates, setSwitchStates] = useState({
     haveFine: false,
     haveAmountOfItems: false,

@@ -7,24 +7,15 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Platform,
-  Dimensions,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Button,
-  Menu,
-  Divider,
-  PaperProvider,
-  HelperText,
-} from "react-native-paper";
+import React, { useState, useRef } from "react";
+import { Menu, Divider, HelperText } from "react-native-paper";
 import { FlatList } from "react-native-gesture-handler";
 import selectorIcon from "../../assets/imgs/selectorIcon.png";
 import fonts from "../../styles/fonts";
 import colors from "../../styles/colors";
-import { useForm, Controller } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import uuid from "uuid-random";
-import { findNodeHandle } from "react-native";
-import { LayoutAnimation, UIManager } from "react-native";
 const SelectMenu = ({
   selectOptions,
   selectWidth,
@@ -63,13 +54,14 @@ const SelectMenu = ({
 
   const handleItemPick = (item) => {
     setSelectedItem(item);
-    console.log("item selected:", item);
+    // console.log("item selected:", item);
     onChange(item);
 
     closeMenu();
   };
 
   const renderMenuItem = ({ item, idx }) => {
+    // console.log("selectedStation", item.company);
     return (
       <TouchableOpacity
         key={item.id}
