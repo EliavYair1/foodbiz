@@ -100,7 +100,7 @@ export const fetchClientReports = async ({
   errorCallback = () => {},
   finallyCallback = () => {},
 }) => {
-  console.log("fetchGeneral");
+  // console.log("fetchGeneral");
   let data = await fetchGeneral({
     endpoint: "api/client_reports.php",
     body: { id: user, client_id: client },

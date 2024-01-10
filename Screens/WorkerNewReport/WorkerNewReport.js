@@ -55,6 +55,7 @@ import getSettingsAccordionData from "./SettingsAccordionContent/SettingsAccordi
 import useSettingsAccordion from "./SettingsAccordionContent/SettingsAccordionContent";
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
+  // console.log("WorkerNewReport");
   const dispatch = useDispatch();
   // ? global state management
   const currentClient = useSelector(
@@ -125,7 +126,7 @@ const WorkerNewReport = () => {
   const updateCategories = (name, data) => {
     handleFormChange(name, data);
     trigger(name);
-    // console.log("inside...", name, data);
+    // console.log("updateCategories...", name, data);
   };
 
   // console.log("categorys formData:", formData);
@@ -223,7 +224,6 @@ const WorkerNewReport = () => {
   useEffect(() => {
     const reportTimeName = findReportTimeName(reportsTimes);
     if (currentReport) {
-      console.log("currentReport", currentReport);
       setSwitchStates({
         haveFine: currentReport.getData("haveFine") == "1",
         haveAmountOfItems: currentReport.getData("haveAmountOfItems") == "1",
@@ -238,10 +238,10 @@ const WorkerNewReport = () => {
       setCurrentReportDate(currentReport.getData("timeOfReport"));
       setCurrentReportTime(reportTimeName);
       handleContentChange(currentReport.getData("newGeneralCommentTopText"));
-      // handleCheckboxStatusChange(
-      //   parsedArrayOfStr(currentReport.getData("categorys")),
-      //   memoizedCategories
-      // );
+      handleCheckboxStatusChange(
+        parsedArrayOfStr(currentReport.getData("categorys")),
+        memoizedCategories
+      );
     }
   }, [currentReport, currentReportTime]);
 
@@ -252,8 +252,10 @@ const WorkerNewReport = () => {
     handleFormChange("clientId", currentClient?.id);
     handleFormChange("haveNewGeneralCommentsVersion", 1);
     handleFormChange("rearrangement", IsRearrangement);
+    // handleFormChange("newGeneralCommentTopText", IsRearrangement);
   }, [IsRearrangement]);
-  console.log("getValues data:", getValues());
+
+  // console.log("getValues data:", getValues());
   // * redefine the Accordion height
   const changeCategoryAccordionHeight = (contentHeight, isOpen) => {
     return isOpen ? 172 + contentHeight : 172;
@@ -289,6 +291,7 @@ const WorkerNewReport = () => {
     const parsedSelectedReportCategory = parsedArrayOfStr(
       selectedReportCategory
     );
+    // console.log("parsedSelectedReportCategory", parsedSelectedReportCategory);
     return parsedSelectedReportCategory;
   };
 
@@ -301,15 +304,16 @@ const WorkerNewReport = () => {
     //       ? data
     //       : parsedSelectedReportCategory,
     // }));
-    // // console.log("data2222", data);
     // setValue("categorys", data);
+    // console.log("data2222", data);
+    // console.log("parsedSelectedReportCategory", parsedSelectedReportCategory);
     handleFormChange(
       "categorys",
       data.length > 0 || Object.keys(data).length > 0
         ? data
         : parsedSelectedReportCategory
     );
-    trigger("categorys");
+    // trigger("categorys");
   };
 
   // console.log("formData", formData);
@@ -319,9 +323,8 @@ const WorkerNewReport = () => {
     const reportTime = reportsTimes.find(
       (item) => item.id === reportTimeDisplayed
     );
-    // setValue("reportTime", reportTime?.name);
-    // trigger("reportTime");
     handleFormChange("reportTime", reportTime?.name);
+    // trigger("reportTime");
   };
 
   // * setting the accompany
@@ -330,8 +333,8 @@ const WorkerNewReport = () => {
     if (accompanyName == "ללא ליווי") {
       handleFormChange("accompany", "ללא ליווי");
     } else {
-      console.log("dsads");
       handleFormChange("accompany", accompanyName);
+      // trigger("accompany");
     }
   };
 
@@ -342,13 +345,14 @@ const WorkerNewReport = () => {
 
   // * comparing between the categories names to the ids in the forms to display it in the drawer
   const categoryIdToNameMap = {};
-  globalCategoriesObj && getValues().categorys
+  globalCategoriesObj && getValues()?.categorys
     ? globalCategoriesObj?.forEach((item) => {
         categoryIdToNameMap[item.id] = item.name;
       })
     : [];
+
   const checkedCategories =
-    getValues() && getValues().categorys?.map((id) => categoryIdToNameMap[id]);
+    getValues() && getValues()?.categorys?.map((id) => categoryIdToNameMap[id]);
 
   // * submit the form
   const onSubmitForm = async () => {
@@ -418,6 +422,7 @@ const WorkerNewReport = () => {
     handleFormChange("oldReportId", "0");
     handleFormChange("accompany", "");
     handleFormChange("reportTime", "");
+    // handleFormChange("categorys", []);
     setCheckboxStatus(checkboxStatus);
     setSwitchStates(switchStates);
 
@@ -464,9 +469,12 @@ const WorkerNewReport = () => {
         handleFormChange("previousReports", value);
         if (selectedReport) {
           handleReportId(selectedReport);
-
           const parsedSelectedReportCategory =
             handleSelectedReportCategory(selectedReport);
+          // console.log(
+          //   "parsedSelectedReportCategory",
+          //   parsedSelectedReportCategory
+          // );
 
           handleCheckboxStatusChange(
             parsedSelectedReportCategory,
@@ -483,7 +491,7 @@ const WorkerNewReport = () => {
         }
       }
     } catch (error) {
-      console.log("error", error);
+      console.log("error111", error);
     }
   }, 300);
 

@@ -271,7 +271,7 @@ const ClientItem = ({ client, tablePadding, logo, loadingCallback }) => {
             return report.data.status == 1;
           },
           action: (report) => {
-            console.log("click edit...");
+            // console.log("click edit...");
             initiateLoader(true);
             try {
               fetchData(process.env.API_BASE_URL + "api/getReportData.php", {

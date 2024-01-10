@@ -39,7 +39,7 @@ export const useAccordionCategoriesItem = (updateCategories) => {
     nutritionReviewCbStatus: [],
   });
   const debounceCheckboxStatus = debounce(setCheckboxStatus, 0);
-  console.log(object);
+
   useEffect(() => {
     if (checkboxStatus !== undefined) {
       const categories = [
@@ -47,6 +47,7 @@ export const useAccordionCategoriesItem = (updateCategories) => {
         ...checkboxStatus?.culinaryReviewCbStatus,
         ...checkboxStatus?.nutritionReviewCbStatus,
       ];
+      // console.log("useAccordionCategoriesItem", categories);
       updateCategories("categorys", categories);
     }
   }, [checkboxStatus]);
@@ -69,7 +70,7 @@ export const useAccordionCategoriesItem = (updateCategories) => {
     memoizedCategories,
     updateFormData
   ) => {
-    console.log("innn", 2);
+    // console.log("handleCheckboxStatusChange");
     const memoRizedCats = memoizedCategories?.categories;
     const globalStateCategories = memoRizedCats
       ? Object.values(memoRizedCats).flatMap((category) => category.categories)
@@ -136,9 +137,10 @@ export const useAccordionCategoriesItem = (updateCategories) => {
       ...newOrderedCategories.culinaryReviewCbStatus,
       ...newOrderedCategories.nutritionReviewCbStatus,
     ];
-    updateFormData(categories);
+    updateFormData && updateFormData(categories);
     setCheckboxStatus(newOrderedCategories);
   };
+
   // console.log("debounceCheckboxStatus", checkboxStatus);
 
   // * checkbox counter
