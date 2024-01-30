@@ -18,12 +18,13 @@ const usePostNewReport = () => {
   const postNewReport = async (formData, IsRearrangement) => {
     try {
       setIsLoading(true);
-      console.log("formData", formData);
+      console.log("[postNewReport]:formData", formData);
+      // console.log("[postNewReport]:stationId", stationId);
       const response = await axios.post(
         process.env.API_BASE_URL + "api/duplicateReport.php",
         { ...formData, rearrangement: IsRearrangement }
       );
-      console.log("duplicateReport:", response);
+      console.log("[postNewReport]:duplicateReport:", response);
       if (response.status === 200 || response.status === 201) {
         console.log("responseDuplicateReport in", response.status);
         const responseClients = await fetchData(

@@ -10,7 +10,7 @@ const useToggleSwitch = (updateTogglesStatusOnPreviousReports) => {
     haveNutritionGrade: true,
     haveCategoriesNameForCriticalItems: false,
   });
-
+  // console.log("switchStates", switchStates);
   const handleSwitchStateChange = (selectedReport) => {
     const newSwitchStates = {
       haveFine: selectedReport?.getData("haveFine") == 1,

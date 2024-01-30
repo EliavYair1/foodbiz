@@ -32,13 +32,15 @@ const SelectMenu = ({
   displayedValue = false,
   disabled = false,
   defaultText,
+  // type,
 }) => {
   const [visible, setVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const elementRef = useRef(null);
   const [positionHorizontal, setPositionHorizontal] = useState(0);
   const [PositionVertical, setPositionVertical] = useState(0);
-
+  // const [objectSelected, setObjectSelected] = useState(false);
+  // console.log("defaultText", defaultText);
   const openMenu = () => {
     if (disabled) return;
     if (elementRef.current) {
@@ -53,28 +55,32 @@ const SelectMenu = ({
   const closeMenu = () => setVisible(false);
 
   const handleItemPick = (item) => {
-    setSelectedItem(item);
-    // console.log("item selected:", item);
-    onChange(item);
+    // type && setObjectSelected(item[type]);
 
+    setSelectedItem(item);
+    // console.log("[SelectMenu]handleItemPick:", item);
+    onChange(item);
     closeMenu();
   };
 
   const renderMenuItem = ({ item, idx }) => {
-    // console.log("selectedStation", item.company);
+    // console.log("item", item);
     return (
       <TouchableOpacity
         key={item.id}
         style={[styles.menuItem, { width: selectWidth }]}
-        onPress={() =>
+        onPress={() => {
           handleItemPick(
+            // if returnObject
             returnObject
               ? item
               : item.getData
-              ? item.getData(propertyName)
+              ? // else if
+                item.getData(propertyName)
               : item[propertyName]
-          )
-        }
+          );
+          // type && setObjectSelected(item[type]);
+        }}
       >
         <Text style={styles.menuItemText}>
           {item.getData
@@ -84,7 +90,6 @@ const SelectMenu = ({
       </TouchableOpacity>
     );
   };
-
   return (
     <>
       <Controller
@@ -141,17 +146,22 @@ const SelectMenu = ({
                         }}
                       />
                       <Text style={styles.menuItemText}>
-                        {value
-                          ? value
-                          : selectedItem
-                          ? `${
-                              returnObject
-                                ? selectedItem.getData
-                                  ? selectedItem.getData(propertyName)
-                                  : selectedItem[propertyName]
-                                : selectedItem
-                            } ${value ? "(נבחר)" : ""}`
-                          : defaultText}
+                        {
+                          // type
+                          //   ? objectSelected
+                          //   :
+                          value
+                            ? value
+                            : selectedItem
+                            ? `${
+                                returnObject
+                                  ? selectedItem.getData
+                                    ? selectedItem.getData(propertyName)
+                                    : selectedItem[propertyName]
+                                  : selectedItem
+                              } ${value ? "(נבחר)" : ""}`
+                            : defaultText
+                        }
                       </Text>
                     </View>
                   </TouchableOpacity>

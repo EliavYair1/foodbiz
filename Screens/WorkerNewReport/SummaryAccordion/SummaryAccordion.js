@@ -15,7 +15,6 @@ import ColorPicker from "react-native-wheel-color-picker";
 const SummaryAccordion = ({ handleContentChange, currentReport }) => {
   const [colorSelected, setColorSelected] = useState(false);
   const richText = useRef();
-
   return (
     <View
       style={{

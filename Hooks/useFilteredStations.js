@@ -6,8 +6,11 @@ const useFilteredStations = () => {
   );
 
   const [filteredStationsResult, setFilteredStationsResult] = useState([]);
-  const [selectedStation, setSelectedStation] = useState(null);
-
+  const [selectedStation, setSelectedStation] = useState(false);
+  // todo the selectedStation return the company instead all of the object
+  // console.log("[useFilteredStations] selected Station", selectedStation);
+  // console.log("filteredStationsResult", filteredStationsResult);
+  // console.log("currentClient.getStations()", currentClient.getStations());
   // old code
   // * filtering the current client based on selected station
   // const filteredStationsResult = currentClient
@@ -22,7 +25,7 @@ const useFilteredStations = () => {
           if (selectedStation) {
             const filteredReports = reports.filter(
               (report) =>
-                report.getData("clientStationId") === selectedStation?.id
+                report.getData("clientStationId") == selectedStation?.id
             );
             setFilteredStationsResult(filteredReports);
           }

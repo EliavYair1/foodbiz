@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import SelectMenu from "../../../Components/ui/SelectMenu";
 import ToggleSwitch from "../../../Components/ui/ToggleSwitch";
@@ -7,18 +7,18 @@ import Input from "../../../Components/ui/Input";
 import colors from "../../../styles/colors";
 import accordionOpenIcon from "../../../assets/imgs/accordionOpenIndicator.png";
 import accordionCloseIcon from "../../../assets/imgs/accordionCloseIndicator.png";
-import { debounce } from "lodash";
+import { useSelector } from "react-redux";
 const getSettingsAccordionData = (props) => {
   const {
     handleFormChange,
-    handleStationChange,
+    // handleStationChange,
     handlePreviousReportsChange,
-    handleReportTimeChange,
+    // handleReportTimeChange,
     previousReportsSelectOptions,
     // formData,
     currentReport,
     currentClient,
-    reportsTimes,
+    // reportsTimes,
     switchStates,
     toggleSwitch,
     control,
@@ -26,10 +26,53 @@ const getSettingsAccordionData = (props) => {
     errors,
     currentReportTime,
     selectedStation,
+    setSelectedStation,
+    accompanySelected,
+    IsRearrangement,
   } = props;
-  // console.log("getSettingsAccordionData", selectedStation?.company);
-  // console.log("getValues", getValues());
+  const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
+  const userId = useSelector((state) => state.user);
+  // console.log("user", userId);
+  // console.log("getSettingsAccordionData", selectedStation);
+  const findReportTimeName = (data) => {
+    const reportTimeId = currentReport?.getReportTime();
+    const reportTime = data.find((item) => item.id === reportTimeId);
+    return reportTime ? reportTime.name : "בחירה";
+  };
+  // const findStationName = (data) => {
+  //   const stationId = getValues()?.clientStationId;
+  //   const stationName = data.find((item) => item.id === stationId);
+  //   // console.log("data", data);
+  //   // console.log("stationId", stationId);
+  //   // console.log("stationName", stationName);
+  //   return stationName ? stationName.company : "בחירה";
+  // };
 
+  // const stationName = findStationName(currentClient.getStations());
+  const reportTimeName = findReportTimeName(reportsTimes);
+  // todo try to see why the post and update req dosent load properly
+  // * initiate neccesry form data
+  // useEffect(() => {
+  //   handleFormChange("id", userId);
+  //   handleFormChange("workerId", userId);
+  //   handleFormChange("clientId", currentClient?.id);
+  //   handleFormChange("haveNewGeneralCommentsVersion", 1);
+  //   handleFormChange("rearrangement", false);
+  //   handleFormChange("accompany", "");
+  //   handleFormChange("haveAmountOfItems", switchStates.haveFine);
+  //   handleFormChange("haveAmountOfItems", switchStates.haveAmountOfItems);
+  //   handleFormChange("haveAmountOfItems", switchStates.haveSafetyGrade);
+  //   handleFormChange("haveAmountOfItems", switchStates.haveCulinaryGrade);
+  //   handleFormChange("haveAmountOfItems", switchStates.haveNutritionGrade);
+  //   handleFormChange(
+  //     "haveAmountOfItems",
+  //     switchStates.haveCategoriesNameForCriticalItems
+  //   );
+  //   handleFormChange("newGeneralCommentTopText", "");
+  // }, [getValues()]);
+  // console.log("switchStates", switchStates);
+  // console.log("getValues", getValues());
+  // console.log("accompany", getValues().accompany);
   return [
     {
       key: "settings",
@@ -54,11 +97,13 @@ const getSettingsAccordionData = (props) => {
               control={control}
               selectWidth={240}
               optionsHeight={"auto"}
+              type={"company"}
               defaultText={
                 currentReport ? currentReport.getData("station_name") : "בחירה"
               }
-              displayedValue={selectedStation?.company}
-              // displayedValue={"בחירה"}
+              // displayedValue={stationName}
+              // displayedValue={getValues()?.clientStationId ?? "בחירה2"}
+              // displayedValue={"yבחירה"}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",
@@ -70,7 +115,19 @@ const getSettingsAccordionData = (props) => {
               errorMessage={
                 errors.clientStationId && errors.clientStationId.message
               }
-              onChange={handleStationChange}
+              // onChange={handleStationChange}
+              onChange={(value) => {
+                try {
+                  console.log("station value:", value);
+                  // todo need to display the company but to send to post the id of the station
+                  handleFormChange("clientStationId", value.id);
+                  // setSelectedStation(value);
+                  // setValue("clientStationId", value.company);
+                  // trigger("clientStationId");
+                } catch (error) {
+                  console.log("[handleStationChange]error:", error);
+                }
+              }}
               propertyName="company"
               // * if the returned value is an object then set to true.
               returnObject={true}
@@ -196,17 +253,9 @@ const getSettingsAccordionData = (props) => {
                   alignSelf: "center",
                 }}
                 activeOutlineColor={colors.blue}
-                // label={accompanySelected ? accompanySelected : "ללא  מלווה"}
-                // label={null}
                 defaultValue={
-                  // currentReport
-                  //   ? currentReport.getData("accompany")
-                  //   : formData.accompany
-                  currentReport
-                    ? currentReport.getData("accompany")
-                    : getValues().accompany
+                  currentReport ? currentReport.getData("accompany") : ""
                 }
-                // placeholder={" "}
                 outlineColor={"rgba(12, 20, 48, 0.2)"}
                 onChangeFunction={(value) => {
                   handleFormChange("accompany", value);
@@ -226,6 +275,7 @@ const getSettingsAccordionData = (props) => {
               onchange={(value) => {
                 const date = new Date(value);
                 const formattedDate = date.toLocaleDateString("en-GB");
+                console.log("[DatePicker]timeOfReport", formattedDate);
                 handleFormChange("timeOfReport", formattedDate);
               }}
               dateInputWidth={240}
@@ -241,7 +291,14 @@ const getSettingsAccordionData = (props) => {
               control={control}
               selectWidth={240}
               optionsHeight={200}
-              defaultText={currentReport ? currentReportTime : "בחירה"}
+              type={"name"}
+              defaultText={
+                currentReport ? currentReport.getData("reportTime") : "בחירה"
+              }
+              // displayedValue={
+              //   getValues()?.reportTime ? getValues()?.reportTime : "בחירה"
+              // }
+              // displayedValue={reportTimeName}
               displayedValue={currentReportTime}
               selectMenuStyling={{
                 flexDirection: "column",
@@ -251,7 +308,13 @@ const getSettingsAccordionData = (props) => {
               selectOptions={reportsTimes}
               name={"reportTime"}
               errorMessage={errors.reportTime && errors.reportTime.message}
-              onChange={handleReportTimeChange}
+              // onChange={handleReportTimeChange}
+              onChange={(value) => {
+                // todo need to display the text but to send to post the id of the station
+                setCurrentReportTime(value.name);
+                console.log("reportTime:", value);
+                handleFormChange("reportTime", value.id);
+              }}
               propertyName={"name"}
               returnObject={true}
             />

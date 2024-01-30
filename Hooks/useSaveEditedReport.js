@@ -17,6 +17,7 @@ const useSaveEditedReport = () => {
   // * post request on the changes of the report edit
   const saveEditedReport = async (formData) => {
     try {
+      console.log("[saveEditedReport]formData", formData);
       const bodyFormData = new FormData();
       bodyFormData.append("id", currentReport.getData("id"));
       bodyFormData.append("workerId", currentReport.getData("workerId"));

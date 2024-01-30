@@ -52,7 +52,6 @@ import useToggleSwitch from "../../Hooks/useToggleSwitch";
 import { FlatList } from "react-native-gesture-handler";
 import SummaryAccordion from "./SummaryAccordion/SummaryAccordion";
 import getSettingsAccordionData from "./SettingsAccordionContent/SettingsAccordionContent";
-import useSettingsAccordion from "./SettingsAccordionContent/SettingsAccordionContent";
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
   // console.log("WorkerNewReport");
@@ -96,7 +95,8 @@ const WorkerNewReport = () => {
   const [currentReportTime, setCurrentReportTime] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
   const [currentReportDate, setCurrentReportDate] = useState(null);
-
+  console.log("currentReportTime", currentReportTime);
+  // console.log("report time:", currentReport.getData("reportTime"));
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
     memoizedCategories?.categories?.[1]?.categories ?? []
@@ -107,57 +107,6 @@ const WorkerNewReport = () => {
   const [nutritionReviewTexts, setNutritionReviewTexts] = useState(
     memoizedCategories?.categories?.[3]?.categories ?? []
   );
-
-  // * custom hooks
-  const { navigateToRoute } = useScreenNavigator();
-  const saveEditedReport = useSaveEditedReport();
-  const { postNewReport } = usePostNewReport();
-  const { filteredStationsResult, selectedStation, setSelectedStation } =
-    useFilteredStations();
-
-  // * general handle form change
-  const handleFormChange = (name, value) => {
-    // console.log("form handler1111111 : ", name, value);
-    // setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-    setValue(name, value);
-    // trigger(name);
-  };
-
-  const updateCategories = (name, data) => {
-    handleFormChange(name, data);
-    trigger(name);
-    // console.log("updateCategories...", name, data);
-  };
-
-  // console.log("categorys formData:", formData);
-  const {
-    accordionCategoriesItem,
-    checkboxStatus,
-    setCheckboxStatus,
-    getCheckedCount,
-    handleCheckboxStatusChange,
-    itemCounts,
-  } = useAccordionCategoriesItem(updateCategories);
-
-  // * when chosing an existing previous report it update's the previous seleted toggle switches .
-  const updateTogglesStatusOnPreviousReports = (data) => {
-    Object.entries(data).forEach(([key, value]) => {
-      setValue(key, value ? 1 : 0);
-    });
-  };
-
-  const {
-    switchStates,
-    handleSwitchStateChange,
-    toggleSwitch,
-    setSwitchStates,
-  } = useToggleSwitch(updateTogglesStatusOnPreviousReports);
-
-  const [majorCategoryHeadersToPass, setMajorCategoryHeadersToPass] = useState(
-    []
-  );
-  const [sortedCategories, setSortedCategories] = useState({});
-
   const schema = yup.object().shape({
     clientStationId: yup.string().required("station is required"),
     previousReports: yup.string().required("previous report is required"),
@@ -214,15 +163,65 @@ const WorkerNewReport = () => {
   // * getValues
   // console.log("getValues:", getValues());
 
-  const findReportTimeName = (data) => {
-    const reportTimeId = currentReport?.getReportTime();
-    const reportTime = data.find((item) => item.id === reportTimeId);
-    return reportTime ? reportTime.name : "בחירה";
+  // * custom hooks
+  const { navigateToRoute } = useScreenNavigator();
+  const saveEditedReport = useSaveEditedReport();
+  const { postNewReport } = usePostNewReport();
+  const { filteredStationsResult, selectedStation, setSelectedStation } =
+    useFilteredStations();
+
+  // * general handle form change
+  const handleFormChange = (name, value) => {
+    // console.log("form handler1111111 : ", name, value);
+    // setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
+    setValue(name, value);
+    // trigger(name);
   };
+  // console.log(selectedStation.company);
+  const updateCategories = (name, data) => {
+    handleFormChange(name, data);
+    trigger(name);
+    // console.log("updateCategories...", name, data);
+  };
+
+  // console.log("categorys formData:", formData);
+  const {
+    accordionCategoriesItem,
+    checkboxStatus,
+    setCheckboxStatus,
+    getCheckedCount,
+    handleCheckboxStatusChange,
+    itemCounts,
+  } = useAccordionCategoriesItem(updateCategories);
+
+  // * when chosing an existing previous report it update's the previous seleted toggle switches .
+  const updateTogglesStatusOnPreviousReports = (data) => {
+    Object.entries(data).forEach(([key, value]) => {
+      setValue(key, value ? 1 : 0);
+    });
+  };
+
+  const {
+    switchStates,
+    handleSwitchStateChange,
+    toggleSwitch,
+    setSwitchStates,
+  } = useToggleSwitch(updateTogglesStatusOnPreviousReports);
+
+  const [majorCategoryHeadersToPass, setMajorCategoryHeadersToPass] = useState(
+    []
+  );
+  const [sortedCategories, setSortedCategories] = useState({});
+
+  // const findReportTimeName = (data) => {
+  //   const reportTimeId = currentReport?.getReportTime();
+  //   const reportTime = data.find((item) => item.id === reportTimeId);
+  //   return reportTime ? reportTime.name : "בחירה";
+  // };
 
   //  * edit mode existing current report initialization
   useEffect(() => {
-    const reportTimeName = findReportTimeName(reportsTimes);
+    // const reportTimeName = findReportTimeName(reportsTimes);
     if (currentReport) {
       setSwitchStates({
         haveFine: currentReport.getData("haveFine") == "1",
@@ -233,29 +232,52 @@ const WorkerNewReport = () => {
         haveCategoriesNameForCriticalItems:
           currentReport.getData("haveCategoriesNameForCriticalItems") == "1",
       });
+      // console.log("switchStates", switchStates);
       setSelectedStation(currentReport.getData("station_name"));
       setAccompanySelected(currentReport.getData("accompany"));
       setCurrentReportDate(currentReport.getData("timeOfReport"));
-      setCurrentReportTime(reportTimeName);
+      // setCurrentReportTime(reportTimeName);
+
+      // handleFormChange("reportTime", reportTimeName);
+      handleFormChange(
+        "clientStationId",
+        currentReport.getData("station_name")
+      );
+
       handleContentChange(currentReport.getData("newGeneralCommentTopText"));
       handleCheckboxStatusChange(
         parsedArrayOfStr(currentReport.getData("categorys")),
         memoizedCategories
       );
     }
-  }, [currentReport, currentReportTime]);
-
+  }, [currentReport]);
+  // console.log(currentReport.getData("reportTime"));
   // * initiate neccesry form data
   useEffect(() => {
-    handleFormChange("workerId", userId);
     handleFormChange("id", userId);
+    handleFormChange("workerId", userId);
     handleFormChange("clientId", currentClient?.id);
     handleFormChange("haveNewGeneralCommentsVersion", 1);
     handleFormChange("rearrangement", IsRearrangement);
-    // handleFormChange("newGeneralCommentTopText", IsRearrangement);
-  }, [IsRearrangement]);
+    handleFormChange("accompany", getValues().accompany ?? "");
+    handleFormChange("haveFine", switchStates.haveFine);
+    handleFormChange("haveAmountOfItems", switchStates.haveAmountOfItems);
+    handleFormChange("haveSafetyGrade", switchStates.haveSafetyGrade);
+    handleFormChange("haveCulinaryGrade", switchStates.haveCulinaryGrade);
+    handleFormChange("haveNutritionGrade", switchStates.haveNutritionGrade);
+    handleFormChange(
+      "haveCategoriesNameForCriticalItems",
+      switchStates.haveCategoriesNameForCriticalItems
+    );
+    handleFormChange(
+      "newGeneralCommentTopText",
+      getValues().newGeneralCommentTopText ?? ""
+    );
+    handleFormChange("clientStationId", getValues().clientStationId ?? false);
+    handleFormChange("reportTime", getValues().reportTime ?? false);
+    console.log("getValues", getValues());
+  }, [getValues(), IsRearrangement]);
 
-  // console.log("getValues data:", getValues());
   // * redefine the Accordion height
   const changeCategoryAccordionHeight = (contentHeight, isOpen) => {
     return isOpen ? 172 + contentHeight : 172;
@@ -291,32 +313,19 @@ const WorkerNewReport = () => {
     const parsedSelectedReportCategory = parsedArrayOfStr(
       selectedReportCategory
     );
-    // console.log("parsedSelectedReportCategory", parsedSelectedReportCategory);
     return parsedSelectedReportCategory;
   };
 
   // * when chosing an existing previous report it update's the previous seleted categories .
   const updateCategoriesStatusOnPreviousReports = (data) => {
-    // setFormData((prevFormData) => ({
-    //   ...prevFormData,
-    //   categorys:
-    //     data.length > 0 || Object.keys(data).length > 0
-    //       ? data
-    //       : parsedSelectedReportCategory,
-    // }));
-    // setValue("categorys", data);
-    // console.log("data2222", data);
-    // console.log("parsedSelectedReportCategory", parsedSelectedReportCategory);
     handleFormChange(
       "categorys",
       data.length > 0 || Object.keys(data).length > 0
         ? data
         : parsedSelectedReportCategory
     );
-    // trigger("categorys");
   };
 
-  // console.log("formData", formData);
   //  * handling report time
   const handleReportTime = (selectedReport) => {
     const reportTimeDisplayed = selectedReport.getData("reportTime");
@@ -324,6 +333,7 @@ const WorkerNewReport = () => {
       (item) => item.id === reportTimeDisplayed
     );
     handleFormChange("reportTime", reportTime?.name);
+    // handleFormChange("reportTime", reportTime?.id);
     // trigger("reportTime");
   };
 
@@ -381,6 +391,7 @@ const WorkerNewReport = () => {
       }
     }
   };
+
   // * Drawer
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
@@ -416,6 +427,7 @@ const WorkerNewReport = () => {
       (report) => report.getData("timeOfReport") === value
     );
   };
+
   // todo to update the state from the setFormData to handleFormChange .
   const updateFormForNewReport = (checkboxStatus, switchStates) => {
     handleFormChange("previousReports", "דוח חדש");
@@ -425,18 +437,11 @@ const WorkerNewReport = () => {
     // handleFormChange("categorys", []);
     setCheckboxStatus(checkboxStatus);
     setSwitchStates(switchStates);
-
     Object.entries(switchStates).forEach(([key, value]) => {
       setValue(key, value ? 1 : 0);
     });
-    // setFormData((prevFormData) => ({
-    //   ...prevFormData,
-    //   oldReportId: "0",
-    //   accompany: "",
-    //   reportTime: "",
-    //   ...switchStates,
-    // }));
   };
+
   // console.log("formdata", formData);
   // console.log("getValues", getValues());
 
@@ -471,10 +476,6 @@ const WorkerNewReport = () => {
           handleReportId(selectedReport);
           const parsedSelectedReportCategory =
             handleSelectedReportCategory(selectedReport);
-          // console.log(
-          //   "parsedSelectedReportCategory",
-          //   parsedSelectedReportCategory
-          // );
 
           handleCheckboxStatusChange(
             parsedSelectedReportCategory,
@@ -491,39 +492,14 @@ const WorkerNewReport = () => {
         }
       }
     } catch (error) {
-      console.log("error111", error);
+      console.log("handlePreviousReportsChange[Error]", error);
     }
   }, 300);
-
-  const handleStationChange = debounce((value) => {
-    try {
-      console.log("station value:", value);
-      handleFormChange("clientStationId", value.id);
-      setSelectedStation(value);
-      // setValue("clientStationId", value.company);
-      // trigger("clientStationId");
-    } catch (error) {
-      console.log("[handleStationChange]error:", error);
-    }
-  }, 300);
-
-  // console.log(getValues().clientStationId);
-  // console.log(formData);
-
-  const handleReportTimeChange = debounce((value) => {
-    setCurrentReportTime(value.id);
-    handleFormChange("reportTime", value.id);
-    // setValue("reportTime");
-    // trigger("reportTime");
-    console.log("reportTime:", value);
-  }, 0);
 
   // * accordion FlatList array of Content
   const settingsAccordion = getSettingsAccordionData({
     handleFormChange,
-    handleStationChange,
     handlePreviousReportsChange,
-    handleReportTimeChange,
     previousReportsSelectOptions,
     // formData,
     currentReport,
@@ -536,7 +512,11 @@ const WorkerNewReport = () => {
     getValues,
     currentReportTime,
     selectedStation,
+    setSelectedStation,
+    accompanySelected,
   });
+  // console.log("[WorkerNewReport]getValues", getValues());
+
   // console.log("checkboxStatus",checkboxStatus);
   const categoriesAccordion = [
     {
@@ -877,7 +857,6 @@ const WorkerNewReport = () => {
         return section;
       })
     : settingsAccordion;
-
   return (
     <>
       <ScreenWrapper
@@ -907,7 +886,7 @@ const WorkerNewReport = () => {
             <Header
               HeaderText={
                 currentReport
-                  ? `עריכת דוח עבור ${currentReport.data.station_name}`
+                  ? `עריכת דוח עבור ${currentReport.getData("station_name")}`
                   : `יצירת דוח חדש עבור ${currentClient.getCompany()}`
               }
               iconList={currentReport}
@@ -930,7 +909,7 @@ const WorkerNewReport = () => {
             />
           </View>
           {isLoading ? (
-            <Loader visible={isLoading} isSetting={true} />
+            <Loader visible={isLoading} isSetting={false} />
           ) : (
             <FlatList
               data={[
