@@ -358,7 +358,7 @@ const PopUp = ({
           { cancelable: true }
         );
       } else {
-        console.error("Error posting data:", error);
+        console.error("Error posting file:", error);
         // try {
         //   await saveFileInfo();
         //   console.log("object");

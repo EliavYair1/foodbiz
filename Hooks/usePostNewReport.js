@@ -1,20 +1,22 @@
 import { useState } from "react";
 import axios from "axios";
-import Client from "../Components/modals/client";
+// import Client from "../Components/modals/client";
 import { setClients } from "../store/redux/reducers/clientSlice";
 import { useDispatch, useSelector } from "react-redux";
 import useScreenNavigator from "./useScreenNavigator";
 import routes from "../Navigation/routes";
 import { Alert } from "react-native";
-import FetchDataService from "../Services/FetchDataService";
+// import FetchDataService from "../Services/FetchDataService";
 import "@env";
+import { fetchAllClients } from "../Services/fetchClients";
 const usePostNewReport = () => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const { navigateToRoute } = useScreenNavigator();
-  const { fetchData } = FetchDataService();
+  // const { fetchData } = FetchDataService();
   const userId = useSelector((state) => state.user);
-
+  const clients = useSelector((state) => state.clients);
+  // console.log("before", clients);
   const postNewReport = async (formData, IsRearrangement) => {
     try {
       setIsLoading(true);
@@ -24,19 +26,18 @@ const usePostNewReport = () => {
         process.env.API_BASE_URL + "api/duplicateReport.php",
         { ...formData, rearrangement: IsRearrangement }
       );
-      console.log("[postNewReport]:duplicateReport:", response);
+      // console.log("[postNewReport]:duplicateReport:", response);
       if (response.status === 200 || response.status === 201) {
-        console.log("responseDuplicateReport in", response.status);
-        const responseClients = await fetchData(
-          process.env.API_BASE_URL + "api/clients.php",
-          { id: userId }
-        );
+        // console.log("responseDuplicateReport in", response);
 
-        if (responseClients.success) {
-          let clients = [];
-          responseClients.data.forEach((element) => {
-            clients.push(new Client(element));
-          });
+        const clients = await fetchAllClients({
+          user: userId,
+          errorCallback: (error) => {
+            console.log("postNewReport]:error:", error);
+          },
+        });
+
+        if (clients) {
           dispatch(setClients({ clients: clients }));
           setIsLoading(false);
           Alert.alert(

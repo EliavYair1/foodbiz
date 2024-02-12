@@ -70,59 +70,6 @@ const Home = () => {
     prepare();
   }, []);
 
-  // * old
-  // useEffect(() => {
-  //   async function prepare() {
-  //     try {
-  //       await SplashScreen.preventAutoHideAsync();
-  //     } catch (e) {
-  //       console.warn(e);
-  //     }
-  //   }
-
-  //   const checkLoginStatus = async () => {
-  //     try {
-  //       const user_id = await retrieveData("user_id");
-  //       if (user_id) {
-  //         console.log(1);
-
-  //         const [responseClients, responseCategories] = await Promise.all([
-  // fetchData(process.env.API_BASE_URL + "api/clients.php", {
-  //   id: user_id,
-  // }),
-  //           axios.get(process.env.API_BASE_URL + "api/categories.php"),
-  //         ]);
-
-  //         if (responseClients.success) {
-  //           let clients = [];
-  //           responseClients.data.forEach((element) => {
-  //             clients.push(new Client(element));
-  //           });
-  //           console.log(1.5);
-  //           dispatch(setClients({ clients: clients }));
-  //           dispatch(setUser(user_id));
-  //           console.log(2);
-
-  //           console.log("responseCategories", responseCategories);
-  //           dispatch(setGlobalCategories(responseCategories.data.categories));
-  //           dispatch(setReportsTimes(responseCategories.data.reports_times));
-  //           console.log(3);
-  //           navigateToRoute(routes.ONBOARDING.ClientsList);
-  //           // navigateToRoute(routes.ONBOARDING.WorkerNewReport);
-  //         } else {
-  //           console.log("Clients error:", responseClients.error);
-  //         }
-  //       } else {
-  //         navigateToRoute(routes.ONBOARDING.Login);
-  //       }
-  //     } catch (error) {
-  //       console.log("Login error:", error);
-  //     }
-  //   };
-  //   checkLoginStatus();
-  //   prepare();
-  // }, []);
-
   const onAppLoaded = async () => {
     await SplashScreen.hideAsync();
     setTimeout(async () => {

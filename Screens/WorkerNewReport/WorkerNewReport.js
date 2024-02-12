@@ -52,9 +52,16 @@ import useToggleSwitch from "../../Hooks/useToggleSwitch";
 import { FlatList } from "react-native-gesture-handler";
 import SummaryAccordion from "./SummaryAccordion/SummaryAccordion";
 import getSettingsAccordionData from "./SettingsAccordionContent/SettingsAccordionContent";
+// import axios from "axios";
+// import FetchDataService from "../../Services/FetchDataService";
+// import Client from "../../Components/modals/client";
+// import { setCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
+// import { setCurrentReport } from "../../store/redux/reducers/getCurrentReport";
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
   // console.log("WorkerNewReport");
+  // const { fetchData } = FetchDataService();
+
   const dispatch = useDispatch();
   // ? global state management
   const currentClient = useSelector(
@@ -95,7 +102,7 @@ const WorkerNewReport = () => {
   const [currentReportTime, setCurrentReportTime] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
   const [currentReportDate, setCurrentReportDate] = useState(null);
-  console.log("currentReportTime", currentReportTime);
+  // console.log("currentReportTime", currentReportTime);
   // console.log("report time:", currentReport.getData("reportTime"));
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
@@ -251,6 +258,7 @@ const WorkerNewReport = () => {
       );
     }
   }, [currentReport]);
+
   // console.log(currentReport.getData("reportTime"));
   // * initiate neccesry form data
   useEffect(() => {
@@ -275,7 +283,7 @@ const WorkerNewReport = () => {
     );
     handleFormChange("clientStationId", getValues().clientStationId ?? false);
     handleFormChange("reportTime", getValues().reportTime ?? false);
-    console.log("getValues", getValues());
+    // console.log("getValues", getValues());
   }, [getValues(), IsRearrangement]);
 
   // * redefine the Accordion height
@@ -396,6 +404,96 @@ const WorkerNewReport = () => {
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
   };
+
+  // * post request on the changes of the report edit
+  // const saveEditedReport = async (formData) => {
+  //   // console.log(formData);
+  //   console.log("formData", formData);
+  //   const bodyFormData = new FormData();
+  //   bodyFormData.append("id", currentReport.getData("id")); // ! requierd
+  //   bodyFormData.append("workerId", currentReport.getData("workerId")); //! requierd 4069114 (userid)
+  //   bodyFormData.append("clientId", currentReport.getData("clientId")); // ! requierd
+  //   formData.clientStationId &&
+  //     bodyFormData.append("clientStationId", formData.clientStationId); //checked expected output : 66
+  //   formData.accompany && bodyFormData.append("accompany", formData.accompany); //checked expected output : 66
+  //   bodyFormData.append("haveFine", formData.haveFine); //checked expected output : 66
+
+  //   bodyFormData.append("haveAmountOfItems", formData.haveAmountOfItems); //checked expected output : 1
+
+  //   bodyFormData.append("haveSafetyGrade", formData.haveSafetyGrade); //checked expected output : 1
+
+  //   bodyFormData.append("haveCulinaryGrade", formData.haveCulinaryGrade); //checked expected output : 1
+
+  //   bodyFormData.append("haveNutritionGrade", formData.haveNutritionGrade); //checked expected output : 1
+
+  //   bodyFormData.append(
+  //     "haveCategoriesNameForCriticalItems",
+  //     formData.haveCategoriesNameForCriticalItems
+  //   ); //checked expected output : 0
+  //   formData.reportTime &&
+  //     bodyFormData.append("reportTime", formData.reportTime); //checked expected output : 11
+  //   formData.newGeneralCommentTopText &&
+  //     bodyFormData.append(
+  //       "newGeneralCommentTopText",
+  //       formData.newGeneralCommentTopText
+  //     ); // ! requierd -can be empty
+  //   formData.timeOfReport &&
+  //     bodyFormData.append("timeOfReport", formData.timeOfReport); //checked expected output : 12/09/2023
+  //   bodyFormData.append("data", []); // ! requierd
+
+  //   bodyFormData.append("status", currentReport.getData("status")); // ! requierd
+  //   bodyFormData.append(
+  //     "newCategorys",
+  //     ";" + formData.categorys.join("|;") + "|"
+  //   ); // ! requierd
+
+  //   bodyFormData.append("file1", currentReport.getData("file1")); //checked expected output : ""
+  //   bodyFormData.append("file2", currentReport.getData("file2")); //checked expected output : ""
+  //   bodyFormData.append(
+  //     "positiveFeedback",
+  //     currentReport.getData("positiveFeedback")
+  //   ); //checked expected output: ""
+  //   bodyFormData.append(
+  //     "newGeneralCommentTopText",
+  //     formData.newGeneralCommentTopText
+  //   ); //checked expected output: ""
+
+  //   try {
+  //     setIsLoading(true);
+  //     const apiUrl = process.env.API_BASE_URL + "ajax/saveReport2.php";
+  //     // console.log("saving...", apiUrl);
+  //     console.log("bodyFormData:", bodyFormData);
+  //     const response = await axios.post(apiUrl, bodyFormData);
+  //     console.log("res", response);
+  //     console.log("saving edited report..");
+  //     if (response.status == 200 || response.status == 201) {
+  //       currentReport.setData(
+  //         "newGeneralCommentTopText",
+  //         formData.newGeneralCommentTopText
+  //       );
+
+  //       const responseClients = await fetchData(
+  //         process.env.API_BASE_URL + "api/clients.php",
+  //         { id: userId }
+  //       );
+  //       if (responseClients.success) {
+  //         let clients = [];
+  //         responseClients.data.forEach((element) => {
+  //           clients.push(new Client(element));
+  //         });
+  //         dispatch(setClients({ clients: clients }));
+  //       }
+  //       dispatch(setCurrentReport(currentReport));
+  //       dispatch(setCurrentCategories(formData.categorys));
+  //       setIsLoading(false);
+  //       console.log("success saving the changes...");
+  //     }
+  //     return response.data;
+  //   } catch (error) {
+  //     setIsLoading(false);
+  //     console.error("Error making POST request:", error);
+  //   }
+  // };
 
   // * pagination between categories names : Next
   const saveEditEdReportAndNavigate = async () => {

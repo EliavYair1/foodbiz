@@ -43,6 +43,7 @@ import { setClients } from "../../../store/redux/reducers/clientSlice";
 import FetchDataService from "../../../Services/FetchDataService";
 import { UIManager, LayoutAnimation, InteractionManager } from "react-native";
 import { debounce } from "lodash";
+import { fetchAllClients } from "../../../Services/fetchClients";
 const windowWidth = Dimensions.get("screen").width;
 const ClientItem = ({ client, tablePadding, logo, loadingCallback }) => {
   const contentRef = useRef();
@@ -147,15 +148,15 @@ const ClientItem = ({ client, tablePadding, logo, loadingCallback }) => {
       );
 
       if (response.status == 200 || response.status == 201) {
-        const responseClients = await fetchData(
-          process.env.API_BASE_URL + "api/clients.php",
-          { id: userId }
-        );
-        if (responseClients.success) {
-          let clients = [];
-          responseClients.data.forEach((element) => {
-            clients.push(new Client(element));
-          });
+        const clients = await fetchAllClients({
+          user: userId,
+          errorCallback: (error) => {
+            console.log("DeleteReport]:error:", error);
+          },
+        });
+
+        if (clients) {
+          console.log("DeleteReport]:clients:", clients);
           dispatch(setClients({ clients: clients }));
         }
         setIsLoading(false);

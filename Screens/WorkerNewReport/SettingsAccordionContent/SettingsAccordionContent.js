@@ -311,7 +311,7 @@ const getSettingsAccordionData = (props) => {
               // onChange={handleReportTimeChange}
               onChange={(value) => {
                 // todo need to display the text but to send to post the id of the station
-                setCurrentReportTime(value.name);
+                // setCurrentReportTime(value.name);
                 console.log("reportTime:", value);
                 handleFormChange("reportTime", value.id);
               }}

@@ -39,6 +39,7 @@ import useSaveCurrentScreenData from "../../../../Hooks/useSaveReport";
 import FetchDataService from "../../../../Services/FetchDataService";
 import { setClients } from "../../../../store/redux/reducers/clientSlice";
 import Client from "../../../../Components/modals/client";
+import { fetchAllClients } from "../../../../Services/fetchClients";
 const CategoryEdit = () => {
   // console.log("EditExistingReport");
   const { navigateToRoute } = useScreenNavigator();
@@ -71,7 +72,7 @@ const CategoryEdit = () => {
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
     : null;
   // * looking for a categories names in the global state
-  const matchedNames = currentCategories.categories.map(
+  const matchedNames = currentCategories?.categories?.map(
     (obj) => globalStateCategories.find((obj2) => obj == obj2.id).name
   );
   // console.log(currentCategories.categories);
@@ -485,15 +486,25 @@ const CategoryEdit = () => {
         let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
         currentReport.setData("data", updatedValues);
         currentReport.setData("newGeneralCommentTopText", content);
-        const responseClients = await fetchData(
-          process.env.API_BASE_URL + "api/clients.php",
-          { id: userId }
-        );
-        if (responseClients.success) {
-          let clients = [];
-          responseClients.data.forEach((element) => {
-            clients.push(new Client(element));
-          });
+
+        const clients = await fetchAllClients({
+          user: userId,
+          errorCallback: (error) => {
+            console.log("handleRefreshClients]:error:", error);
+          },
+        });
+
+        // const responseClients = await fetchData(
+        //   process.env.API_BASE_URL + "api/clients.php",
+        //   { id: userId }
+        // );
+        // if (responseClients.success) {
+        if (clients) {
+          console.log("[saveReport]clients:", clients);
+          // let clients = [];
+          // responseClients.data.forEach((element) => {
+          //   clients.push(new Client(element));
+          // });
           dispatch(setClients({ clients: clients }));
           console.log("client refreshed");
         }

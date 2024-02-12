@@ -4,29 +4,40 @@ import "@env";
 import { Alert } from "react-native";
 import { setClients } from "../store/redux/reducers/clientSlice";
 import { useDispatch, useSelector } from "react-redux";
-import FetchDataService from "../Services/FetchDataService";
-import Client from "../Components/modals/client";
+// import FetchDataService from "../Services/FetchDataService";
+// import Client from "../Components/modals/client";
+import { fetchAllClients } from "../Services/fetchClients";
+
 const useSaveCurrentScreenData = () => {
   const [PostLoading, setPostLoading] = useState(false);
   const dispatch = useDispatch();
-  const { fetchData } = FetchDataService();
+  // const { fetchData } = FetchDataService();
   const userId = useSelector((state) => state.user);
 
   const handleRefreshClients = async () => {
     setPostLoading(true);
 
     try {
-      const responseClients = await fetchData(
-        process.env.API_BASE_URL + "api/clients.php",
-        { id: userId }
-      );
+      // const responseClients = await fetchData(
+      //   process.env.API_BASE_URL + "api/clients.php",
+      //   { id: userId }
+      // );
 
-      if (responseClients.success) {
+      const clients = await fetchAllClients({
+        user: userId,
+        errorCallback: (error) => {
+          console.log("handleRefreshClients]:error:", error);
+        },
+      });
+
+      // if (responseClients.success) {
+      if (clients) {
+        console.log("[handleRefreshClients]clients", clients);
         setPostLoading(false);
-        let clients = [];
-        responseClients.data.forEach((element) => {
-          clients.push(new Client(element));
-        });
+        // let clients = [];
+        // responseClients.data.forEach((element) => {
+        //   clients.push(new Client(element));
+        // });
         dispatch(setClients({ clients: clients }));
       }
       console.log("clients refreshed...");

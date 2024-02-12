@@ -22,6 +22,7 @@ import axios from "axios";
 import { setGlobalCategories } from "../../../store/redux/reducers/globalCategories";
 import { setReportsTimes } from "../../../store/redux/reducers/reportsTimesSlice";
 import Loader from "../../../utiles/Loader";
+import { fetchAllClients } from "../../../Services/fetchClients";
 const LoginBox = () => {
   const [passwordShowToggle, setPasswordShowToggle] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +30,7 @@ const LoginBox = () => {
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const { navigateToRoute } = useScreenNavigator();
   const user = useSelector((state) => state.user);
-  const clients = useSelector((state) => state.clients);
+  // const clients = useSelector((state) => state.clients);
 
   const { fetchData } = FetchDataService();
   const dispatch = useDispatch();
@@ -130,16 +131,25 @@ const LoginBox = () => {
         dispatch(setUser(response.user_id));
         console.log("in");
         // fetch the client data
-        const responseClients = await fetchData(
-          process.env.API_BASE_URL + "api/clients.php",
-          { id: response.user_id }
-        );
+        // const responseClients = await fetchData(
+        //   process.env.API_BASE_URL + "api/clients.php",
+        //   { id: response.user_id }
+        // );
+
+        const clients = await fetchAllClients({
+          user: user,
+          errorCallback: (error) => {
+            console.log("handleRefreshClients]:error:", error);
+          },
+        });
         // console.log("responseClients:", responseClients.data[1].reports[0]);
-        if (responseClients.success) {
-          let clients = [];
-          responseClients.data.forEach((element) => {
-            clients.push(new Client(element));
-          });
+        // if (responseClients.success) {
+        //   let clients = [];
+        //   responseClients.data.forEach((element) => {
+        //     clients.push(new Client(element));
+        //   });
+        if (clients) {
+          console.log("LoginBox", clients);
           dispatch(setClients({ clients: clients }));
           // console.log("clients[Home]:", clients);
 

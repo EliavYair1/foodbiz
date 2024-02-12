@@ -29,7 +29,7 @@ import Loader from "../../../../utiles/Loader";
 import { setClients } from "../../../../store/redux/reducers/clientSlice";
 import Client from "../../../../Components/modals/client";
 import FetchDataService from "../../../../Services/FetchDataService";
-
+import { fetchAllClients } from "../../../../Services/fetchClients";
 const FileCategoryRow = ({
   children,
   items,
@@ -38,7 +38,7 @@ const FileCategoryRow = ({
   stations,
   company,
 }) => {
-  const { fetchData } = FetchDataService();
+  // const { fetchData } = FetchDataService();
   const dispatch = useDispatch();
   const heightAnim = useRef(new Animated.Value(0)).current;
   const userId = useSelector((state) => state.user);
@@ -63,16 +63,23 @@ const FileCategoryRow = ({
   const updateClients = async () => {
     try {
       setIsLoading(true);
-
-      const responseClients = await fetchData(
-        process.env.API_BASE_URL + "api/clients.php",
-        { id: userId }
-      );
-      if (responseClients.success) {
-        let clients = [];
-        responseClients.data.forEach((element) => {
-          clients.push(new Client(element));
-        });
+      const clients = await fetchAllClients({
+        user: userId,
+        errorCallback: (error) => {
+          console.log("handleRefreshClients]:error:", error);
+        },
+      });
+      // const responseClients = await fetchData(
+      //   process.env.API_BASE_URL + "api/clients.php",
+      //   { id: userId }
+      // );
+      // if (responseClients.success) {
+      //   let clients = [];
+      //   responseClients.data.forEach((element) => {
+      //     clients.push(new Client(element));
+      //   });
+      if (clients) {
+        console.log("updateClients", clients);
         dispatch(setClients({ clients: clients }));
       }
       setIsLoading(false);

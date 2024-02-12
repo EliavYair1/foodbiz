@@ -1,11 +1,12 @@
 import { Platform, StyleSheet, Text, View, Dimensions } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, RefreshControl } from "react-native-gesture-handler";
-import FetchDataService from "../../../Services/FetchDataService";
 import colors from "../../../styles/colors";
 import ClientItem from "../ClientsItem/ClientItem";
-import Client from "../../../Components/modals/client";
+// import FetchDataService from "../../../Services/FetchDataService";
+// import Client from "../../../Components/modals/client";
 import Loader from "../../../utiles/Loader";
+import { fetchAllClients } from "../../../Services/fetchClients";
 const windowWidth = Dimensions.get("screen").width;
 const windowHeight = Dimensions.get("window").height;
 const bigDevice = windowHeight > 1200;
@@ -21,21 +22,31 @@ const ClientListComponent = ({
   const flatListRef = useRef(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [listOffset, setListOffset] = useState(clientPerScreen);
-  const { fetchData } = FetchDataService();
+  // const { fetchData } = FetchDataService();
+  // const userId = useSelector((state) => state.user);
   const handleRefreshClients = async () => {
     setIsRefreshing(true);
     try {
-      const responseClients = await fetchData(
-        process.env.API_BASE_URL + "api/clients.php",
-        { id: user }
-      );
+      const clients = await fetchAllClients({
+        user: user,
+        errorCallback: (error) => {
+          console.log("handleRefreshClients]:error:", error);
+        },
+      });
 
-      if (responseClients.success) {
+      // const responseClients = await fetchData(
+      //   process.env.API_BASE_URL + "api/clients.php",
+      //   { id: user }
+      // );
+
+      // if (responseClients.success) {
+      if (clients) {
+        console.log("handleRefreshClients", clients);
         setIsRefreshing(false);
-        let clients = [];
-        responseClients.data.forEach((element) => {
-          clients.push(new Client(element));
-        });
+        // let clients = [];
+        // responseClients.data.forEach((element) => {
+        //   clients.push(new Client(element));
+        // });
 
         clientFilterCallback(clients.slice(0, clientPerScreen));
       }
