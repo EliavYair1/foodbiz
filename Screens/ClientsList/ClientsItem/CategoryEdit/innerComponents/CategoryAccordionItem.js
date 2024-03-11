@@ -141,7 +141,7 @@ const CategoryAccordionItem = ({
         let fileName = selectedAssets[0].fileName ?? "camera.jpg";
         let fileSize = selectedAssets[0].fileSize;
         const fileToUpload = selectedAssets[0];
-        console.log("selectedAssets", selectedAssets);
+        // console.log("selectedAssets", selectedAssets);
         const apiUrl =
           process.env.API_BASE_URL +
           "imageUpload.php?ax-file-path=uploads%2F&ax-allow-ext=jpg%7Cgif%7Cpng&ax-file-name=" +
@@ -149,7 +149,7 @@ const CategoryAccordionItem = ({
           "&ax-thumbHeight=0&ax-thumbWidth=0&ax-thumbPostfix=_thumb&ax-thumbPath=&ax-thumbFormat=&ax-maxFileSize=1001M&ax-fileSize=" +
           fileSize +
           "&ax-start-byte=0&isLast=true";
-        console.log("apiUrl", apiUrl);
+        // console.log("apiUrl", apiUrl);
         const response = await FileSystem.uploadAsync(
           apiUrl,
           fileToUpload.uri,

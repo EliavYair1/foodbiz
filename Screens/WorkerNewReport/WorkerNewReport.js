@@ -16,14 +16,10 @@ import fonts from "../../styles/fonts";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../styles/colors";
 import Accordion from "../../Components/ui/Accordion";
-import SelectMenu from "../../Components/ui/SelectMenu";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
-import Input from "../../Components/ui/Input";
-import ToggleSwitch from "../../Components/ui/ToggleSwitch";
-import DatePicker from "../../Components/ui/datePicker";
 import accordionCloseIcon from "../../assets/imgs/accordionCloseIndicator.png";
 import accordionOpenIcon from "../../assets/imgs/accordionOpenIndicator.png";
 import ClientItemArrow from "../../assets/imgs/ClientItemArrow.png";
@@ -52,16 +48,9 @@ import useToggleSwitch from "../../Hooks/useToggleSwitch";
 import { FlatList } from "react-native-gesture-handler";
 import SummaryAccordion from "./SummaryAccordion/SummaryAccordion";
 import getSettingsAccordionData from "./SettingsAccordionContent/SettingsAccordionContent";
-// import axios from "axios";
-// import FetchDataService from "../../Services/FetchDataService";
-// import Client from "../../Components/modals/client";
-// import { setCurrentCategories } from "../../store/redux/reducers/getCurrentCategories";
-// import { setCurrentReport } from "../../store/redux/reducers/getCurrentReport";
+
 const windowWidth = Dimensions.get("window").width;
 const WorkerNewReport = () => {
-  // console.log("WorkerNewReport");
-  // const { fetchData } = FetchDataService();
-
   const dispatch = useDispatch();
   // ? global state management
   const currentClient = useSelector(
@@ -71,8 +60,8 @@ const WorkerNewReport = () => {
     (state) => state.currentReport.currentReport
   );
 
-  const userId = useSelector((state) => state.user);
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
+
   const globalCategories = useSelector((state) => state.globalCategories);
 
   const memoizedCategories = useMemo(
@@ -86,24 +75,8 @@ const WorkerNewReport = () => {
 
   const [IsRearrangement, setIsRearrangement] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  // const initialFormState = {
-  //   clientId: currentClient?.id,
-  //   id: userId,
-  //   haveNewGeneralCommentsVersion: 1,
-  //   haveFine: false,
-  //   haveAmountOfItems: false,
-  //   haveSafetyGrade: true,
-  //   haveCulinaryGrade: true,
-  //   haveNutritionGrade: true,
-  //   haveCategoriesNameForCriticalItems: false,
-  //   rearrangement: IsRearrangement,
-  // };
-  // const [formData, setFormData] = useState(initialFormState);
-  const [currentReportTime, setCurrentReportTime] = useState(null);
   const [accompanySelected, setAccompanySelected] = useState(null);
-  const [currentReportDate, setCurrentReportDate] = useState(null);
-  // console.log("currentReportTime", currentReportTime);
-  // console.log("report time:", currentReport.getData("reportTime"));
+
   // * categories checkboxes Texts
   const [foodSafetyReviewTexts, setFoodSafetyReviewTexts] = useState(
     memoizedCategories?.categories?.[1]?.categories ?? []
@@ -167,9 +140,6 @@ const WorkerNewReport = () => {
     resolver: yupResolver(schema),
   });
 
-  // * getValues
-  // console.log("getValues:", getValues());
-
   // * custom hooks
   const { navigateToRoute } = useScreenNavigator();
   const saveEditedReport = useSaveEditedReport();
@@ -179,10 +149,7 @@ const WorkerNewReport = () => {
 
   // * general handle form change
   const handleFormChange = (name, value) => {
-    // console.log("form handler1111111 : ", name, value);
-    // setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
     setValue(name, value);
-    // trigger(name);
   };
   // console.log(selectedStation.company);
   const updateCategories = (name, data) => {
@@ -219,39 +186,11 @@ const WorkerNewReport = () => {
     []
   );
   const [sortedCategories, setSortedCategories] = useState({});
-
-  // const findReportTimeName = (data) => {
-  //   const reportTimeId = currentReport?.getReportTime();
-  //   const reportTime = data.find((item) => item.id === reportTimeId);
-  //   return reportTime ? reportTime.name : "בחירה";
-  // };
+  // const [currentReportTime, setCurrentReportTime] = useState(null);
 
   //  * edit mode existing current report initialization
   useEffect(() => {
-    // const reportTimeName = findReportTimeName(reportsTimes);
     if (currentReport) {
-      setSwitchStates({
-        haveFine: currentReport.getData("haveFine") == "1",
-        haveAmountOfItems: currentReport.getData("haveAmountOfItems") == "1",
-        haveSafetyGrade: currentReport.getData("haveSafetyGrade") == "1",
-        haveCulinaryGrade: currentReport.getData("haveCulinaryGrade") == "1",
-        haveNutritionGrade: currentReport.getData("haveNutritionGrade") == "1",
-        haveCategoriesNameForCriticalItems:
-          currentReport.getData("haveCategoriesNameForCriticalItems") == "1",
-      });
-      // console.log("switchStates", switchStates);
-      setSelectedStation(currentReport.getData("station_name"));
-      setAccompanySelected(currentReport.getData("accompany"));
-      setCurrentReportDate(currentReport.getData("timeOfReport"));
-      // setCurrentReportTime(reportTimeName);
-
-      // handleFormChange("reportTime", reportTimeName);
-      handleFormChange(
-        "clientStationId",
-        currentReport.getData("station_name")
-      );
-
-      handleContentChange(currentReport.getData("newGeneralCommentTopText"));
       handleCheckboxStatusChange(
         parsedArrayOfStr(currentReport.getData("categorys")),
         memoizedCategories
@@ -259,15 +198,12 @@ const WorkerNewReport = () => {
     }
   }, [currentReport]);
 
-  // console.log(currentReport.getData("reportTime"));
   // * initiate neccesry form data
   useEffect(() => {
-    handleFormChange("id", userId);
-    handleFormChange("workerId", userId);
     handleFormChange("clientId", currentClient?.id);
     handleFormChange("haveNewGeneralCommentsVersion", 1);
     handleFormChange("rearrangement", IsRearrangement);
-    handleFormChange("accompany", getValues().accompany ?? "");
+    handleFormChange("accompany", getValues()?.accompany ?? "");
     handleFormChange("haveFine", switchStates.haveFine);
     handleFormChange("haveAmountOfItems", switchStates.haveAmountOfItems);
     handleFormChange("haveSafetyGrade", switchStates.haveSafetyGrade);
@@ -281,20 +217,12 @@ const WorkerNewReport = () => {
       "newGeneralCommentTopText",
       getValues().newGeneralCommentTopText ?? ""
     );
-    handleFormChange("clientStationId", getValues().clientStationId ?? false);
-    handleFormChange("reportTime", getValues().reportTime ?? false);
-    // console.log("getValues", getValues());
   }, [getValues(), IsRearrangement]);
 
   // * redefine the Accordion height
   const changeCategoryAccordionHeight = (contentHeight, isOpen) => {
     return isOpen ? 172 + contentHeight : 172;
   };
-
-  // * newGeneralCommentTopText change handler
-  const handleContentChange = debounce((content) => {
-    handleFormChange("newGeneralCommentTopText", content);
-  }, 300);
 
   // * setting the oldReportId from selected report
   const handleReportId = (selectedReport) => {
@@ -337,12 +265,13 @@ const WorkerNewReport = () => {
   //  * handling report time
   const handleReportTime = (selectedReport) => {
     const reportTimeDisplayed = selectedReport.getData("reportTime");
+
     const reportTime = reportsTimes.find(
       (item) => item.id === reportTimeDisplayed
     );
-    handleFormChange("reportTime", reportTime?.name);
-    // handleFormChange("reportTime", reportTime?.id);
-    // trigger("reportTime");
+
+    handleFormChange("reportTime", reportTime?.id);
+    trigger("reportTime");
   };
 
   // * setting the accompany
@@ -404,96 +333,6 @@ const WorkerNewReport = () => {
   const handleDrawerToggle = (isOpen) => {
     setIsDrawerOpen(isOpen);
   };
-
-  // * post request on the changes of the report edit
-  // const saveEditedReport = async (formData) => {
-  //   // console.log(formData);
-  //   console.log("formData", formData);
-  //   const bodyFormData = new FormData();
-  //   bodyFormData.append("id", currentReport.getData("id")); // ! requierd
-  //   bodyFormData.append("workerId", currentReport.getData("workerId")); //! requierd 4069114 (userid)
-  //   bodyFormData.append("clientId", currentReport.getData("clientId")); // ! requierd
-  //   formData.clientStationId &&
-  //     bodyFormData.append("clientStationId", formData.clientStationId); //checked expected output : 66
-  //   formData.accompany && bodyFormData.append("accompany", formData.accompany); //checked expected output : 66
-  //   bodyFormData.append("haveFine", formData.haveFine); //checked expected output : 66
-
-  //   bodyFormData.append("haveAmountOfItems", formData.haveAmountOfItems); //checked expected output : 1
-
-  //   bodyFormData.append("haveSafetyGrade", formData.haveSafetyGrade); //checked expected output : 1
-
-  //   bodyFormData.append("haveCulinaryGrade", formData.haveCulinaryGrade); //checked expected output : 1
-
-  //   bodyFormData.append("haveNutritionGrade", formData.haveNutritionGrade); //checked expected output : 1
-
-  //   bodyFormData.append(
-  //     "haveCategoriesNameForCriticalItems",
-  //     formData.haveCategoriesNameForCriticalItems
-  //   ); //checked expected output : 0
-  //   formData.reportTime &&
-  //     bodyFormData.append("reportTime", formData.reportTime); //checked expected output : 11
-  //   formData.newGeneralCommentTopText &&
-  //     bodyFormData.append(
-  //       "newGeneralCommentTopText",
-  //       formData.newGeneralCommentTopText
-  //     ); // ! requierd -can be empty
-  //   formData.timeOfReport &&
-  //     bodyFormData.append("timeOfReport", formData.timeOfReport); //checked expected output : 12/09/2023
-  //   bodyFormData.append("data", []); // ! requierd
-
-  //   bodyFormData.append("status", currentReport.getData("status")); // ! requierd
-  //   bodyFormData.append(
-  //     "newCategorys",
-  //     ";" + formData.categorys.join("|;") + "|"
-  //   ); // ! requierd
-
-  //   bodyFormData.append("file1", currentReport.getData("file1")); //checked expected output : ""
-  //   bodyFormData.append("file2", currentReport.getData("file2")); //checked expected output : ""
-  //   bodyFormData.append(
-  //     "positiveFeedback",
-  //     currentReport.getData("positiveFeedback")
-  //   ); //checked expected output: ""
-  //   bodyFormData.append(
-  //     "newGeneralCommentTopText",
-  //     formData.newGeneralCommentTopText
-  //   ); //checked expected output: ""
-
-  //   try {
-  //     setIsLoading(true);
-  //     const apiUrl = process.env.API_BASE_URL + "ajax/saveReport2.php";
-  //     // console.log("saving...", apiUrl);
-  //     console.log("bodyFormData:", bodyFormData);
-  //     const response = await axios.post(apiUrl, bodyFormData);
-  //     console.log("res", response);
-  //     console.log("saving edited report..");
-  //     if (response.status == 200 || response.status == 201) {
-  //       currentReport.setData(
-  //         "newGeneralCommentTopText",
-  //         formData.newGeneralCommentTopText
-  //       );
-
-  //       const responseClients = await fetchData(
-  //         process.env.API_BASE_URL + "api/clients.php",
-  //         { id: userId }
-  //       );
-  //       if (responseClients.success) {
-  //         let clients = [];
-  //         responseClients.data.forEach((element) => {
-  //           clients.push(new Client(element));
-  //         });
-  //         dispatch(setClients({ clients: clients }));
-  //       }
-  //       dispatch(setCurrentReport(currentReport));
-  //       dispatch(setCurrentCategories(formData.categorys));
-  //       setIsLoading(false);
-  //       console.log("success saving the changes...");
-  //     }
-  //     return response.data;
-  //   } catch (error) {
-  //     setIsLoading(false);
-  //     console.error("Error making POST request:", error);
-  //   }
-  // };
 
   // * pagination between categories names : Next
   const saveEditEdReportAndNavigate = async () => {
@@ -574,13 +413,11 @@ const WorkerNewReport = () => {
           handleReportId(selectedReport);
           const parsedSelectedReportCategory =
             handleSelectedReportCategory(selectedReport);
-
           handleCheckboxStatusChange(
             parsedSelectedReportCategory,
             memoizedCategories,
             updateCategoriesStatusOnPreviousReports
           );
-
           handleSwitchStateChange(selectedReport);
           handleAccompanyChange(selectedReport);
           handleReportTime(selectedReport);
@@ -608,10 +445,12 @@ const WorkerNewReport = () => {
     control,
     errors,
     getValues,
-    currentReportTime,
     selectedStation,
     setSelectedStation,
     accompanySelected,
+    setSwitchStates,
+    // currentReportTime,
+    // setCurrentReportTime,
   });
   // console.log("[WorkerNewReport]getValues", getValues());
 
@@ -915,6 +754,7 @@ const WorkerNewReport = () => {
       ],
     },
   ];
+
   const summaryAccordion = [
     {
       key: "summary",
@@ -936,7 +776,8 @@ const WorkerNewReport = () => {
           boxItem: (
             <SummaryAccordion
               currentReport={currentReport}
-              handleContentChange={handleContentChange}
+              // handleContentChange={handleContentChange}
+              handleFormChange={handleFormChange}
             />
           ),
         },
@@ -971,7 +812,7 @@ const WorkerNewReport = () => {
               if (currentReport) {
                 const res = await saveEditedReport(getValues());
                 setIsLoading(false);
-                console.log("edit on back press button successfully", res);
+                // console.log("edit on back press button successfully", res);
               } else {
                 setIsLoading(false);
                 console.log("unable o save on back press..");

@@ -11,68 +11,70 @@ import { useSelector } from "react-redux";
 const getSettingsAccordionData = (props) => {
   const {
     handleFormChange,
-    // handleStationChange,
     handlePreviousReportsChange,
-    // handleReportTimeChange,
     previousReportsSelectOptions,
-    // formData,
     currentReport,
     currentClient,
-    // reportsTimes,
     switchStates,
     toggleSwitch,
     control,
-    getValues,
     errors,
-    currentReportTime,
-    selectedStation,
     setSelectedStation,
+    setSwitchStates,
+    getValues,
+    selectedStation,
     accompanySelected,
     IsRearrangement,
   } = props;
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
-  const userId = useSelector((state) => state.user);
-  // console.log("user", userId);
-  // console.log("getSettingsAccordionData", selectedStation);
+  // const [currentReportTime, setCurrentReportTime] = useState(null);
+
   const findReportTimeName = (data) => {
-    const reportTimeId = currentReport?.getReportTime();
-    const reportTime = data.find((item) => item.id === reportTimeId);
+    // console.log("data", data);
+    let reportTimeId;
+    if (currentReport) {
+      reportTimeId = currentReport?.getReportTime();
+    } else {
+      reportTimeId = getValues().reportTime;
+    }
+    const reportTime = data.find((item) => {
+      return item.id == reportTimeId;
+    });
     return reportTime ? reportTime.name : "בחירה";
   };
-  // const findStationName = (data) => {
-  //   const stationId = getValues()?.clientStationId;
-  //   const stationName = data.find((item) => item.id === stationId);
-  //   // console.log("data", data);
-  //   // console.log("stationId", stationId);
-  //   // console.log("stationName", stationName);
-  //   return stationName ? stationName.company : "בחירה";
-  // };
-
-  // const stationName = findStationName(currentClient.getStations());
   const reportTimeName = findReportTimeName(reportsTimes);
-  // todo try to see why the post and update req dosent load properly
-  // * initiate neccesry form data
-  // useEffect(() => {
-  //   handleFormChange("id", userId);
-  //   handleFormChange("workerId", userId);
-  //   handleFormChange("clientId", currentClient?.id);
-  //   handleFormChange("haveNewGeneralCommentsVersion", 1);
-  //   handleFormChange("rearrangement", false);
-  //   handleFormChange("accompany", "");
-  //   handleFormChange("haveAmountOfItems", switchStates.haveFine);
-  //   handleFormChange("haveAmountOfItems", switchStates.haveAmountOfItems);
-  //   handleFormChange("haveAmountOfItems", switchStates.haveSafetyGrade);
-  //   handleFormChange("haveAmountOfItems", switchStates.haveCulinaryGrade);
-  //   handleFormChange("haveAmountOfItems", switchStates.haveNutritionGrade);
-  //   handleFormChange(
-  //     "haveAmountOfItems",
-  //     switchStates.haveCategoriesNameForCriticalItems
-  //   );
-  //   handleFormChange("newGeneralCommentTopText", "");
-  // }, [getValues()]);
-  // console.log("switchStates", switchStates);
-  // console.log("getValues", getValues());
-  // console.log("accompany", getValues().accompany);
+
+  useEffect(() => {
+    // setCurrentReportTime(reportTimeName);
+
+    if (currentReport) {
+      const date = new Date(currentReport.getData("timeOfReport"));
+      const formattedDate = date.toLocaleDateString("en-GB");
+      setSelectedStation(currentReport.getData("station_name"));
+      // setCurrentReportTime(reportTimeName);
+      console.log("reportTime", currentReport.getData("reportTime"));
+
+      setSwitchStates({
+        haveFine: currentReport.getData("haveFine") == "1",
+        haveAmountOfItems: currentReport.getData("haveAmountOfItems") == "1",
+        haveSafetyGrade: currentReport.getData("haveSafetyGrade") == "1",
+        haveCulinaryGrade: currentReport.getData("haveCulinaryGrade") == "1",
+        haveNutritionGrade: currentReport.getData("haveNutritionGrade") == "1",
+        haveCategoriesNameForCriticalItems:
+          currentReport.getData("haveCategoriesNameForCriticalItems") == "1",
+      });
+      handleFormChange("accompany", currentReport.getData("accompany"));
+      // handleFormChange("reportTime", currentReportTime.id);
+      handleFormChange("reportTime", currentReport.getData("reportTime"));
+      handleFormChange(
+        "clientStationId",
+        currentReport.getData("clientStationId")
+      );
+      handleFormChange("timeOfReport", formattedDate);
+    }
+  }, [currentReport]);
+  // console.log("station", currentReport.getData("timeOfReport"));
+  // console.log("get values", getValues());
   return [
     {
       key: "settings",
@@ -100,6 +102,7 @@ const getSettingsAccordionData = (props) => {
               type={"company"}
               defaultText={
                 currentReport ? currentReport.getData("station_name") : "בחירה"
+                // currentReport ? currentReport.getData("station_name") : "בחירה"
               }
               // displayedValue={stationName}
               // displayedValue={getValues()?.clientStationId ?? "בחירה2"}
@@ -111,7 +114,8 @@ const getSettingsAccordionData = (props) => {
               }}
               centeredViewStyling={{}}
               selectOptions={currentClient.getStations()}
-              name={"clientStationId"}
+              name={"station_name"}
+              // name={"clientStationId"}
               errorMessage={
                 errors.clientStationId && errors.clientStationId.message
               }
@@ -119,11 +123,8 @@ const getSettingsAccordionData = (props) => {
               onChange={(value) => {
                 try {
                   console.log("station value:", value);
-                  // todo need to display the company but to send to post the id of the station
+                  setSelectedStation(value);
                   handleFormChange("clientStationId", value.id);
-                  // setSelectedStation(value);
-                  // setValue("clientStationId", value.company);
-                  // trigger("clientStationId");
                 } catch (error) {
                   console.log("[handleStationChange]error:", error);
                 }
@@ -292,30 +293,30 @@ const getSettingsAccordionData = (props) => {
               selectWidth={240}
               optionsHeight={200}
               type={"name"}
-              defaultText={
-                currentReport ? currentReport.getData("reportTime") : "בחירה"
-              }
-              // displayedValue={
-              //   getValues()?.reportTime ? getValues()?.reportTime : "בחירה"
+              // defaultText={
+              //   currentReport ? currentReport.getData("reportTime") : "בחירה"
               // }
+              defaultText={reportTimeName}
+              // displayedValue={currentReportTime}
               // displayedValue={reportTimeName}
-              displayedValue={currentReportTime}
               selectMenuStyling={{
                 flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "flex-start",
               }}
               selectOptions={reportsTimes}
-              name={"reportTime"}
+              // name={"reportTime"}
+              name={"name"}
               errorMessage={errors.reportTime && errors.reportTime.message}
-              // onChange={handleReportTimeChange}
               onChange={(value) => {
+                console.log("report time pick:", value);
                 // todo need to display the text but to send to post the id of the station
-                // setCurrentReportTime(value.name);
-                console.log("reportTime:", value);
                 handleFormChange("reportTime", value.id);
+                // setCurrentReportTime(value);
+                // console.log("reportTime 01123:", value);
               }}
               propertyName={"name"}
+              // propertyName={"reportTime"}
               returnObject={true}
             />
           ),

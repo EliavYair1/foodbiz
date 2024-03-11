@@ -24,7 +24,7 @@ const usePostNewReport = () => {
       // console.log("[postNewReport]:stationId", stationId);
       const response = await axios.post(
         process.env.API_BASE_URL + "api/duplicateReport.php",
-        { ...formData, rearrangement: IsRearrangement }
+        { ...formData, rearrangement: IsRearrangement, id: userId }
       );
       // console.log("[postNewReport]:duplicateReport:", response);
       if (response.status === 200 || response.status === 201) {

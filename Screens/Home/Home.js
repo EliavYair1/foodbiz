@@ -35,11 +35,10 @@ const Home = () => {
         const user_id = await retrieveData("user_id");
         if (user_id) {
           console.log(1);
-
           const [responseClients, responseCategories] = await Promise.all([
             fetchAllClients({
               user: user_id,
-              errorCallback: (error) => console.log("Clients error:", error),
+              errorCallback: (error) => console.log("Clients error11:", error),
             }),
             axios.get(process.env.API_BASE_URL + "api/categories.php"),
           ]);

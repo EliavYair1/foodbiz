@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -11,10 +11,24 @@ import {
   RichToolbar,
   actions,
 } from "react-native-pell-rich-editor";
+import { debounce } from "lodash";
 import ColorPicker from "react-native-wheel-color-picker";
-const SummaryAccordion = ({ handleContentChange, currentReport }) => {
+const SummaryAccordion = ({ currentReport, handleFormChange }) => {
   const [colorSelected, setColorSelected] = useState(false);
   const richText = useRef();
+  // console.log(currentReport.getData("newGeneralCommentTopText"));
+  // todo to see why it dosent load the changes in the newGeneralCommentTopText in the current report
+  useEffect(() => {
+    if (currentReport) {
+      // console.log(true);
+      handleContentChange(currentReport.getData("newGeneralCommentTopText"));
+    }
+  }, []);
+
+  // * newGeneralCommentTopText change handler
+  const handleContentChange = debounce((content) => {
+    handleFormChange("newGeneralCommentTopText", content);
+  }, 300);
   return (
     <View
       style={{

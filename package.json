@@ -19,7 +19,7 @@
     "@react-navigation/stack": "^6.3.16",
     "@reduxjs/toolkit": "^1.9.5",
     "axios": "^1.4.0",
-    "expo": "~48.0.21",
+    "expo": "^48.0.21",
     "expo-blur": "~12.2.2",
     "expo-camera": "~13.2.1",
     "expo-device": "^5.6.0",

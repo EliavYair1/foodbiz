@@ -10,6 +10,7 @@ export const fetchGeneral = async ({
 }) => {
   try {
     const url = process.env.API_BASE_URL + endpoint;
+    // console.log("fetchgeneral url", url, JSON.stringify(body));
     const response = await fetch(url, {
       method: "POST",
       headers: {

@@ -446,9 +446,10 @@ const CategoryEdit = () => {
       saveReport();
     }
   };
-  console.log("categoryEdit", content);
+  // console.log("categoryEdit", content);
   // * post request on the changes of the report edit
   const saveReport = async () => {
+    // todo to debug this req error.
     const targetId = currentCategories.categories[currentCategoryIndex];
     let foundCategory = null;
     // let parsedCategoriesDataFromReport = JSON.parse(categoriesDataFromReport);
