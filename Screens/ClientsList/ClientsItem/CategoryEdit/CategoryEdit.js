@@ -35,7 +35,7 @@ import {
 } from "../../../../store/redux/reducers/summerySlice";
 import SummaryDrawer from "./innerComponents/SummeryDrawer";
 import { setCurrentCategories } from "../../../../store/redux/reducers/getCurrentCategories";
-import useSaveCurrentScreenData from "../../../../Hooks/useSaveReport";
+// import useSaveCurrentScreenData from "../../../../Hooks/useSaveReport";
 import FetchDataService from "../../../../Services/FetchDataService";
 import { setClients } from "../../../../store/redux/reducers/clientSlice";
 import Client from "../../../../Components/modals/client";
@@ -66,7 +66,7 @@ const CategoryEdit = () => {
     () => globalCategories,
     [globalCategories]
   );
-  const { saveCurrentScreenData } = useSaveCurrentScreenData();
+  // const { saveCurrentScreenData } = useSaveCurrentScreenData();
   const memoRizedCats = memoizedCategories?.categories;
   const globalStateCategories = memoRizedCats
     ? Object.values(memoRizedCats).flatMap((category) => category.categories)
@@ -482,8 +482,11 @@ const CategoryEdit = () => {
     try {
       setIsLoading(true);
       const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
-      const response = await axios.post(apiUrl, bodyFormData);
-      if (response.status == 200 || response.status == 201) {
+      // const response = await axios.post(apiUrl, bodyFormData);
+      const response = await fetchData(apiUrl, bodyFormData);
+      console.log("response:", response);
+      // if (response.status == 200 || response.status == 201) {
+      if (response.success) {
         let updatedValues = JSON.stringify(parsedCategoriesDataFromReport);
         currentReport.setData("data", updatedValues);
         currentReport.setData("newGeneralCommentTopText", content);

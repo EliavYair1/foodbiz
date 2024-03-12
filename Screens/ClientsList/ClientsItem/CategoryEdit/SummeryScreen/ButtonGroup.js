@@ -165,13 +165,12 @@ const ButtonGroup = ({
   if (hasPermission === false) {
     return <Loader visible={isLoading} size={30} isSetting={false} />;
   }
-  // console.log("selectedFileToDisplay", selectedFileToDisplay);
   return (
     <View style={styles.uploadGroup}>
       <Text style={styles.uploadText}>{headerText}</Text>
       {isLoading ? (
         <Loader visible={isLoading} size={30} isSetting={false} />
-      ) : selectedFileToDisplay ? (
+      ) : selectedFileToDisplay != false ? (
         <>
           {/* bug to fix on existing file display */}
           <View>

@@ -41,7 +41,7 @@ const ClientListComponent = ({
 
       // if (responseClients.success) {
       if (clients) {
-        console.log("handleRefreshClients", clients);
+        // console.log("handleRefreshClients", clients);
         setIsRefreshing(false);
         // let clients = [];
         // responseClients.data.forEach((element) => {

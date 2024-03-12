@@ -313,12 +313,19 @@ const PopUp = ({
     if (editFileObject) {
       bodyFormData.append("id3", editFileObject.id);
     }
-    console.log(bodyFormData);
-    const newFileSaved = await saveNewFile(bodyFormData);
-    if (newFileSaved.message == "Ok!") {
-      onCloseModalButtonPress();
-      // navigateToRoute(routes.ONBOARDING.ClientsList);
-    }
+    // console.log(bodyFormData);
+    console.log("bodyFormData", bodyFormData);
+
+    const newFileSaved = await saveNewFile(
+      bodyFormData,
+      onCloseModalButtonPress()
+    );
+    console.log("newFileSaved", newFileSaved);
+    // if (newFileSaved.message == "Ok!") {
+    // if (newFileSaved.success) {
+    //   onCloseModalButtonPress();
+    //   // navigateToRoute(routes.ONBOARDING.ClientsList);
+    // }
   };
   // * validate and display generic errors
   const formatErrors = (formErrors) => {
@@ -337,7 +344,7 @@ const PopUp = ({
       console.log("schema is valid");
       // Proceed with form submission
       await saveFileInfo();
-      console.log("object");
+      // console.log("object");
     } catch (error) {
       if (error.name === "ValidationError") {
         error.inner.forEach((validationError) => {

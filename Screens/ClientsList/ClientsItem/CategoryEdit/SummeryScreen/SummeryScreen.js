@@ -32,10 +32,12 @@ import ModalUi from "../../../../../Components/ui/ModalUi";
 import { setIndex } from "../../../../../store/redux/reducers/indexSlice";
 import routes from "../../../../../Navigation/routes";
 import useSaveCurrentScreenData from "../../../../../Hooks/useSaveReport";
+import FetchDataService from "../../../../../Services/FetchDataService";
 const windowWidth = Dimensions.get("window").width;
 const SummeryScreen = () => {
   const { navigateToRoute } = useScreenNavigator();
   const dispatch = useDispatch();
+  const { fetchData } = FetchDataService();
   const currentReport = useSelector(
     (state) => state.currentReport.currentReport
   );
@@ -58,12 +60,15 @@ const SummeryScreen = () => {
     file2: null,
     newGeneralCommentTopText: null,
   });
+  console.log("SummeryForm", SummeryForm);
+
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const drawerRef = useRef();
   const inputRef = useRef();
   const [content, setContent] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
-  const { saveCurrentScreenData, PostLoading } = useSaveCurrentScreenData();
+  const { saveCurrentScreenData, PostLoading, setPostLoading } =
+    useSaveCurrentScreenData();
   const memoizedCategories = useMemo(
     () => globalCategories,
     [globalCategories]
@@ -103,37 +108,59 @@ const SummeryScreen = () => {
         "positiveFeedback",
         currentReport.getData("positiveFeedback")
       );
+      handleFormChange("file1", currentReport.getData("file1"));
+      handleFormChange("file2", currentReport.getData("file2"));
     }
   }, []);
 
   const handleSaveReport = async (navigationRoute, status) => {
-    const bodyFormData = new FormData();
-    bodyFormData.append("id", currentReport.getData("id"));
-    bodyFormData.append("workerId", currentReport.getData("workerId"));
-    bodyFormData.append("clientId", currentReport.getData("clientId"));
-    bodyFormData.append("status", status);
-    bodyFormData.append(
-      "newGeneralCommentTopText",
-      SummeryForm.newGeneralCommentTopText
-    );
-    bodyFormData.append("newCategorys", currentReport.getData("categorys"));
-    bodyFormData.append("positiveFeedback", SummeryForm.positiveFeedback);
-    bodyFormData.append("file1", SummeryForm.file1);
-    bodyFormData.append("file2", SummeryForm.file2);
-    bodyFormData.append("data", []);
+    try {
+      setPostLoading(true);
+      const apiUrl = process.env.API_BASE_URL + "ajax/saveReport.php";
 
-    const reportSaved = await saveCurrentScreenData(
-      bodyFormData,
-      "ajax/saveReport.php"
-    );
-    if (reportSaved) {
-      currentReport.setData("status", status);
-      currentReport.setData("positiveFeedback", SummeryForm.positiveFeedback);
-      currentReport.setData("file1", SummeryForm.file1);
-      currentReport.setData("file2", SummeryForm.file2);
-      dispatch(setCurrentReport(currentReport));
-      navigateToRoute(navigationRoute);
-      console.log("summery sent successfully...");
+      const bodyFormData = new FormData();
+      bodyFormData.append("id", currentReport.getData("id"));
+      bodyFormData.append("workerId", currentReport.getData("workerId"));
+      bodyFormData.append("clientId", currentReport.getData("clientId"));
+      bodyFormData.append("status", status);
+      bodyFormData.append(
+        "newGeneralCommentTopText",
+        SummeryForm.newGeneralCommentTopText
+      );
+      bodyFormData.append("newCategorys", currentReport.getData("categorys"));
+      bodyFormData.append("positiveFeedback", SummeryForm.positiveFeedback);
+      bodyFormData.append("file1", SummeryForm.file1);
+      bodyFormData.append("file2", SummeryForm.file2);
+      bodyFormData.append("data", []);
+
+      const response = await fetchData(apiUrl, bodyFormData);
+
+      // console.log("response", response);
+
+      // const reportSaved = await saveCurrentScreenData(
+      //   bodyFormData,
+      //   "ajax/saveReport.php",
+      //   false,
+      //   navigationRoute
+      // );
+      // console.log("reportSaved", reportSaved);
+
+      if (response.success) {
+        setPostLoading(false);
+        saveCurrentScreenData(true);
+        // if (reportSaved) {
+        currentReport.setData("status", status);
+        currentReport.setData("positiveFeedback", SummeryForm.positiveFeedback);
+        currentReport.setData("file1", SummeryForm.file1);
+        currentReport.setData("file2", SummeryForm.file2);
+        dispatch(setCurrentReport(currentReport));
+        navigateToRoute(navigationRoute);
+        console.log("summery sent successfully...");
+        return response.data;
+      }
+    } catch (error) {
+      setPostLoading(false);
+      console.error("[saveCurrentScreenData]Error making POST request:", error);
     }
   };
 
@@ -141,7 +168,7 @@ const SummeryScreen = () => {
     schema
       .validate(SummeryForm)
       .then((res) => {
-        console.log("res", res);
+        // console.log("[SummeryScreen]validation response:", res);
         setIsSchemaValid(true);
       })
       .catch((err) => {
@@ -208,9 +235,12 @@ const SummeryScreen = () => {
     try {
       await schema.validate(SummeryForm, { abortEarly: false });
       console.log("schema is valid");
+      await handleSaveReport(routes.ONBOARDING.ClientsList, 1);
+      return;
       // Proceed with form submission
       await handleSaveReport(routes.ONBOARDING.ClientsList, 2);
-      console.log("object");
+      // navigateToRoute(routes.ONBOARDING.ClientsList);
+      // console.log("object");
     } catch (error) {
       if (error.name === "ValidationError") {
         error.inner.forEach((validationError) => {

@@ -71,7 +71,7 @@ const SummaryAccordion = ({ currentReport, handleFormChange }) => {
           }}
           custom={() => {
             setColorSelected(!colorSelected);
-            console.log("object");
+            // console.log("object");
           }}
         />
       </View>
