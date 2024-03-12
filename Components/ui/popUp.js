@@ -298,27 +298,44 @@ const PopUp = ({
   };
   // console.log("station_name", editFileObject.station_name);
   const saveFileInfo = async () => {
-    const bodyFormData = new FormData();
-    bodyFormData.append("id", userId);
-    bodyFormData.append("stationId", formData.station);
-    bodyFormData.append("authorName", formData.authorName);
-    bodyFormData.append("date", formData.date);
-    formData.comments && bodyFormData.append("comments", formData.comments);
-    bodyFormData.append("url", formData.imagePicker);
-    bodyFormData.append("fileName", formData.fileName);
+    const urlencoded = new URLSearchParams();
+
+    urlencoded.append("id", userId);
+    urlencoded.append("stationId", formData.station);
+    urlencoded.append("authorName", formData.authorName);
+    urlencoded.append("date", formData.date);
+    formData.comments && urlencoded.append("comments", formData.comments);
+    urlencoded.append("url", formData.imagePicker);
+    urlencoded.append("fileName", formData.fileName);
     clientId == null
-      ? bodyFormData.append("clientId", selectorClientId)
-      : bodyFormData.append("clientId", clientId);
-    bodyFormData.append("categoryId", categoryId);
+      ? urlencoded.append("clientId", selectorClientId)
+      : urlencoded.append("clientId", clientId);
+    urlencoded.append("categoryId", categoryId);
     if (editFileObject) {
-      bodyFormData.append("id3", editFileObject.id);
+      urlencoded.append("id3", editFileObject.id);
     }
+    // todo to get thr response of massage "ok"
+    // const bodyFormData = new FormData();
+    // bodyFormData.append("id", userId);
+    // bodyFormData.append("stationId", formData.station);
+    // bodyFormData.append("authorName", formData.authorName);
+    // bodyFormData.append("date", formData.date);
+    // formData.comments && bodyFormData.append("comments", formData.comments);
+    // bodyFormData.append("url", formData.imagePicker);
+    // bodyFormData.append("fileName", formData.fileName);
+    // clientId == null
+    //   ? bodyFormData.append("clientId", selectorClientId)
+    //   : bodyFormData.append("clientId", clientId);
+    // bodyFormData.append("categoryId", categoryId);
+    // if (editFileObject) {
+    //   bodyFormData.append("id3", editFileObject.id);
+    // }
     // console.log(bodyFormData);
-    console.log("bodyFormData", bodyFormData);
+    // console.log("bodyFormData", bodyFormData);
 
     const newFileSaved = await saveNewFile(
-      bodyFormData,
-      onCloseModalButtonPress()
+      urlencoded
+      // onCloseModalButtonPress()
     );
     console.log("newFileSaved", newFileSaved);
     // if (newFileSaved.message == "Ok!") {
@@ -346,6 +363,8 @@ const PopUp = ({
       await saveFileInfo();
       // console.log("object");
     } catch (error) {
+      console.log("error", error);
+
       if (error.name === "ValidationError") {
         error.inner.forEach((validationError) => {
           formErrors[validationError.path] = validationError.message;
