@@ -19,12 +19,9 @@ const getSettingsAccordionData = (props) => {
     toggleSwitch,
     control,
     errors,
+    getValues,
     setSelectedStation,
     setSwitchStates,
-    getValues,
-    selectedStation,
-    accompanySelected,
-    IsRearrangement,
   } = props;
   const reportsTimes = useSelector((state) => state.reportsTimes.reportsTimes);
   // const [currentReportTime, setCurrentReportTime] = useState(null);

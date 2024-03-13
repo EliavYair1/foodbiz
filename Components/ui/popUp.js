@@ -9,13 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BlurView } from "expo-blur";
 import colors from "../../styles/colors";
 import fonts from "../../styles/fonts";
@@ -33,7 +27,6 @@ import { Camera } from "expo-camera";
 import Loader from "../../utiles/Loader";
 import useSaveNewFile from "../../Hooks/useSaveNewFile";
 import { useSelector } from "react-redux";
-import useScreenNavigator from "../../Hooks/useScreenNavigator";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 const PopUp = ({
@@ -53,7 +46,7 @@ const PopUp = ({
 }) => {
   const [imagePicked, setImagePicked] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
-  const [CameraCaptureImageUrl, setCameraCaptureImageUrl] = useState(null);
+
   const [isSchemaValid, setIsSchemaValid] = useState(false);
   const [formData, setFormData] = useState({
     station: "",
@@ -100,6 +93,7 @@ const PopUp = ({
   } = useForm({
     resolver: yupResolver(schema),
   });
+
   // validate the scheme on every change of the state
   useEffect(() => {
     schema
@@ -197,7 +191,6 @@ const PopUp = ({
       name: "fileName",
       // value: "fileName",
       label: "שם קובץ",
-
       control: control,
       returnKeyType: "done",
       // inputIcon: <TextInput.Icon icon="eye" onPress={handlepasswordToggle} />,
@@ -269,6 +262,7 @@ const PopUp = ({
       }
     }
   };
+
   useEffect(() => {
     if (editFileObject) {
       setImagePicked(false);
@@ -291,7 +285,6 @@ const PopUp = ({
   }, [editFileObject]);
 
   const handleDeleteImg = () => {
-    // console.log("handleDeleteImg-inside");
     handleFormChange("imagePicker", null);
     setImagePicked(false);
     setActiveOption(null);
@@ -314,7 +307,6 @@ const PopUp = ({
       if (editFileObject) {
         saveFileBody.id3 = editFileObject.id;
       }
-      console.log("saveFileBody", saveFileBody);
 
       await saveNewFile(saveFileBody, onCloseModalButtonPress);
     } catch (error) {
@@ -364,12 +356,6 @@ const PopUp = ({
         );
       } else {
         console.error("Error posting file:", error);
-        // try {
-        //   await saveFileInfo();
-        //   console.log("object");
-        // } catch (error) {
-        //   console.error("Error posting data:", error);
-        // }
       }
     }
   };
@@ -612,7 +598,6 @@ const PopUp = ({
                           <Camera
                             style={{
                               borderRadius: 8,
-                              // backgroundColor: "transparent",
                               height: 46,
                             }}
                             type={Camera.Constants.Type.back}

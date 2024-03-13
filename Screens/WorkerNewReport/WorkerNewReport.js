@@ -151,14 +151,12 @@ const WorkerNewReport = () => {
   const handleFormChange = (name, value) => {
     setValue(name, value);
   };
-  // console.log(selectedStation.company);
+
   const updateCategories = (name, data) => {
     handleFormChange(name, data);
     trigger(name);
-    // console.log("updateCategories...", name, data);
   };
 
-  // console.log("categorys formData:", formData);
   const {
     accordionCategoriesItem,
     checkboxStatus,
@@ -379,9 +377,6 @@ const WorkerNewReport = () => {
     });
   };
 
-  // console.log("formdata", formData);
-  // console.log("getValues", getValues());
-
   const handleNewReport = async () => {
     let newCheckboxStatus = {
       foodSafetyReviewCbStatus: [],
@@ -436,25 +431,17 @@ const WorkerNewReport = () => {
     handleFormChange,
     handlePreviousReportsChange,
     previousReportsSelectOptions,
-    // formData,
     currentReport,
     currentClient,
-    reportsTimes,
     switchStates,
     toggleSwitch,
     control,
     errors,
     getValues,
-    selectedStation,
     setSelectedStation,
-    accompanySelected,
     setSwitchStates,
-    // currentReportTime,
-    // setCurrentReportTime,
   });
-  // console.log("[WorkerNewReport]getValues", getValues());
 
-  // console.log("checkboxStatus",checkboxStatus);
   const categoriesAccordion = [
     {
       key: "categories",
