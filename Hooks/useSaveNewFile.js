@@ -15,7 +15,7 @@ const useSaveNewFile = () => {
   const { fetchData } = FetchDataService();
   const userId = useSelector((state) => state.user);
 
-  const saveNewFile = async (reportData) => {
+  const saveNewFile = async (reportData, cb) => {
     try {
       setIsLoading(true);
       // todo to debug the create file and edit req
@@ -28,6 +28,7 @@ const useSaveNewFile = () => {
       const response = await fetchData(apiUrl, reportData);
       console.log("[saveNewFile]response", response);
       if (response.success == true) {
+        // if (response.message == "Ok!") {
         // if (response.status == 200 || response.status == 201) {
         setIsLoading(false);
 
@@ -38,7 +39,7 @@ const useSaveNewFile = () => {
             {
               text: "ok",
               onPress: () => {
-                // cb();
+                cb();
                 // navigateToRoute(routes.ONBOARDING.ClientsList);
                 // onCloseModal();
                 // {"authorName": "Sddf", "categoryId": "4", "clientId": "34", "comments": "Dfsdf", "createTime": "1695724119", "date": "2023-09-26", "fileName": "Dads", "id": "554", "stationId": "66", "station_name": "תחנה להדגמה", "url": "http://system.foodbiz.co.il/uploads/1695724114.jpg"}

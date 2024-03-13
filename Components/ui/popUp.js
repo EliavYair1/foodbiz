@@ -296,54 +296,32 @@ const PopUp = ({
     setImagePicked(false);
     setActiveOption(null);
   };
-  // console.log("station_name", editFileObject.station_name);
+
+  // * sending post req for creating/editing new file.
   const saveFileInfo = async () => {
-    const urlencoded = new URLSearchParams();
+    try {
+      const saveFileBody = {
+        id: userId,
+        stationId: formData.station,
+        authorName: formData.authorName,
+        date: formData.date,
+        comments: formData.comments && formData.comments,
+        fileName: formData.fileName,
+        url: formData.imagePicker,
+        clientId: clientId == null ? selectorClientId : clientId,
+        categoryId: categoryId,
+      };
+      if (editFileObject) {
+        saveFileBody.id3 = editFileObject.id;
+      }
+      console.log("saveFileBody", saveFileBody);
 
-    urlencoded.append("id", userId);
-    urlencoded.append("stationId", formData.station);
-    urlencoded.append("authorName", formData.authorName);
-    urlencoded.append("date", formData.date);
-    formData.comments && urlencoded.append("comments", formData.comments);
-    urlencoded.append("url", formData.imagePicker);
-    urlencoded.append("fileName", formData.fileName);
-    clientId == null
-      ? urlencoded.append("clientId", selectorClientId)
-      : urlencoded.append("clientId", clientId);
-    urlencoded.append("categoryId", categoryId);
-    if (editFileObject) {
-      urlencoded.append("id3", editFileObject.id);
+      await saveNewFile(saveFileBody, onCloseModalButtonPress);
+    } catch (error) {
+      console.error("Error posting file:", error);
     }
-    // todo to get thr response of massage "ok"
-    // const bodyFormData = new FormData();
-    // bodyFormData.append("id", userId);
-    // bodyFormData.append("stationId", formData.station);
-    // bodyFormData.append("authorName", formData.authorName);
-    // bodyFormData.append("date", formData.date);
-    // formData.comments && bodyFormData.append("comments", formData.comments);
-    // bodyFormData.append("url", formData.imagePicker);
-    // bodyFormData.append("fileName", formData.fileName);
-    // clientId == null
-    //   ? bodyFormData.append("clientId", selectorClientId)
-    //   : bodyFormData.append("clientId", clientId);
-    // bodyFormData.append("categoryId", categoryId);
-    // if (editFileObject) {
-    //   bodyFormData.append("id3", editFileObject.id);
-    // }
-    // console.log(bodyFormData);
-    // console.log("bodyFormData", bodyFormData);
-
-    const newFileSaved = await saveNewFile(
-      urlencoded
-      // onCloseModalButtonPress()
-    );
-    console.log("newFileSaved", newFileSaved);
-    // if (newFileSaved.message == "Ok!") {
-    // if (newFileSaved.success) {
-    //   onCloseModalButtonPress();
-    //   // navigateToRoute(routes.ONBOARDING.ClientsList);
-    // }
   };
+
   // * validate and display generic errors
   const formatErrors = (formErrors) => {
     const errorFields = Object.keys(formErrors);
@@ -354,6 +332,7 @@ const PopUp = ({
     const errorMessages = errorFields.map((field) => formErrors[field]);
     return `The following errors occurred: ${errorMessages.join(" and ")}`;
   };
+
   const onSubmitForm = async () => {
     const formErrors = {};
     try {
