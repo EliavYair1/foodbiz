@@ -27,7 +27,7 @@ Before starting, ensure you have the following installed:
 1. Clone the repository:
 
    ```bash
-   git clone git@github.com:EliavYair1/ipad-app.git
+   git clone git@github.com:EliavYair1/foodbiz.git
    ```
 
 2. Navigate to the project directory:
