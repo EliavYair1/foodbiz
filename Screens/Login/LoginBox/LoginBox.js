@@ -122,8 +122,7 @@ const LoginBox = () => {
       //   formData
       // );
 
-      // console.log("response", response);
-      // console.log("formData", formData);
+ 
 
       // if success push the user && fetch client data
       if (response.success) {
@@ -142,7 +141,6 @@ const LoginBox = () => {
             console.log("handleRefreshClients]:error:", error);
           },
         });
-        // console.log("responseClients:", responseClients.data[1].reports[0]);
         // if (responseClients.success) {
         //   let clients = [];
         //   responseClients.data.forEach((element) => {
@@ -151,7 +149,6 @@ const LoginBox = () => {
         if (clients) {
           console.log("LoginBox", clients);
           dispatch(setClients({ clients: clients }));
-          // console.log("clients[Home]:", clients);
 
           const responseCategories = await axios.get(
             process.env.API_BASE_URL + "api/categories.php"
@@ -166,7 +163,6 @@ const LoginBox = () => {
         }
         setIsLoading(false);
       } else {
-        // if fail to fetch user data
         setIsLoading(false);
         console.log("Login error:", response.error);
         Alert.alert("Login error", response.error);
